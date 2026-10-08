@@ -70,7 +70,7 @@ def pie(canvas, doc):
 
 doc = SimpleDocTemplate("docs/informe/Aproximacion_tecnica_CAM.pdf", pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm,
                         topMargin=16 * mm, bottomMargin=17 * mm, title="Aproximación técnica · Localización de oficinas CAM",
-                        author="Equipo Datathon CAM", subject="Descripción de la aproximación técnica propuesta")
+                        author="Gregorio García Velasco; Guillermo Franco Gimeno", subject="Descripción de la aproximación técnica propuesta")
 W = A4[0] - 36 * mm
 
 ARQ = [

@@ -286,5 +286,5 @@ story.append(P("Reproducir: <font face='Mono'>python backend/pipeline/auditoria_
 
 SimpleDocTemplate("docs/informe/Calculo_CPTs_CAM.pdf", pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm,
                   bottomMargin=17 * mm, title="Cálculo de las tablas de probabilidad · Red bayesiana CAM",
-                  author="Equipo Datathon CAM").build(story, onFirstPage=pie, onLaterPages=pie)
+                  author="Gregorio García Velasco; Guillermo Franco Gimeno").build(story, onFirstPage=pie, onLaterPages=pie)
 print("ok: docs/informe/Calculo_CPTs_CAM.pdf")

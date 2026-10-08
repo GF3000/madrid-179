@@ -128,7 +128,7 @@ def pie(canvas, doc):
 
 doc = SimpleDocTemplate("docs/informe/Fuentes_de_datos_CAM.pdf", pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm,
                         topMargin=16 * mm, bottomMargin=17 * mm, title="Fuentes de datos · Localización de oficinas CAM",
-                        author="Equipo Datathon CAM", subject="Anexo de fuentes públicas y privadas")
+                        author="Gregorio García Velasco; Guillermo Franco Gimeno", subject="Anexo de fuentes públicas y privadas")
 W = A4[0] - 36 * mm
 story = [
     P("ANEXO · FUENTES DE DATOS", "eyebrow"),
