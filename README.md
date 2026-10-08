@@ -51,6 +51,11 @@ Ejecuta siempre desde la raíz del repositorio: los scripts usan rutas relativas
 - [Red bayesiana: método y validación](docs/informe/RED_BAYESIANA.md)
 - [Fichas de fuentes](docs/informe/FICHAS_FUENTES.md)
 
+## Autores
+
+- **Gregorio García Velasco** · Universidad Carlos III de Madrid (UC3M)
+- **Guillermo Franco Gimeno** · Universidad Politécnica de Madrid (UPM)
+
 ## Licencia
 
 El código se publica con licencia [MIT](LICENSE). Los datos derivados conservan la licencia de su fuente original (ver [`data/README.md`](data/README.md)).
