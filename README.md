@@ -48,6 +48,7 @@ Ejecuta siempre desde la raíz del repositorio: los scripts usan rutas relativas
 
 - [Hoja de ruta y pendientes](docs/memoria/PENDIENTES.md)
 - [Hechos técnicos y decisiones](docs/memoria/ESTADO.md)
+- [Arquitectura del backend](docs/arquitectura/BACKEND.md)
 - [Red bayesiana: método y validación](docs/informe/RED_BAYESIANA.md)
 - [Fichas de fuentes](docs/informe/FICHAS_FUENTES.md)
 

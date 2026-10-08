@@ -63,7 +63,7 @@ Decisión tomada (2026-10-07): las ayudas **no** son nodo de la red. Por defecto
 
 ## 5. Aplicación
 
-- [ ] **#28 P2 · Backend FastAPI.** Endpoints: puntuación de los 179 municipios dada evidencia y filtros, explicación por municipio, simulación `do()`. Datos en Parquet en memoria. → requiere #5
+- [ ] **#28 P2 · Backend FastAPI.** (arquitectura propuesta 2026-10-08 en `docs/arquitectura/BACKEND.md`: paquete `madrid179`, artefacto `modelo.joblib`, API v1 sin `do()` hasta #3, prototipo Streamlit contra la API) Endpoints: puntuación de los 179 municipios dada evidencia y filtros, explicación por municipio, simulación `do()`. Datos en Parquet en memoria. → requiere #5
 - [ ] **#29 P2 · Esquema de salida estructurada del LLM** para el onboarding (filtros duros, evidencias blandas, variables inciertas) y su mapeo a los estados de los nodos.
 - [ ] **#30 P2 · Preguntas por valor de la información:** elegir la pregunta que más reduce la entropía esperada del ranking entre candidatos.
 - [ ] **#31 P2 · Descomposición XAI por municipio:** (avance: `data/processed/ga2m_contribuciones.csv` ya da la contribución de cada término del GA²M por municipio) contribución de cada evidencia y atributo (cambio en log-odds), más la parte de ayudas si se activa #12.
