@@ -1,0 +1,51 @@
+digraph G {
+  graph [rankdir=TB, compound=true, newrank=true, bgcolor="#fcfcfb", pad=0.45, nodesep=0.45, ranksep=0.5, fontname="Segoe UI", label=<<FONT POINT-SIZE="21"><B>Diagrama de estados · Perfil Administración</B></FONT><BR/><FONT POINT-SIZE="11" COLOR="#52514e">Diagnóstico territorial y simulación de políticas de reequilibrio · los resultados son escenarios según el modelo, no predicciones</FONT><BR/> >, labelloc=t];
+  node [shape=box, style="rounded,filled", fontname="Segoe UI", fontsize=12, margin="0.16,0.08", penwidth=1.2];
+  edge [fontname="Segoe UI", fontsize=9.5, color="#52514e", fontcolor="#3a3936", arrowsize=0.75, penwidth=1.1];
+  inicio [shape=circle, label="", width=0.22, style=filled, fillcolor="#0b0b0b", color="#0b0b0b"];
+  fin [shape=doublecircle, label="", width=0.16, style=filled, fillcolor="#0b0b0b", color="#0b0b0b"];
+  perfil [label=<<B>Selección de perfil</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">Administración · Empresa / Emprendedor</FONT>>, fillcolor="#ffffff", color="#52514e"];
+  objetivo [label=<<B>Eligiendo objetivo de análisis</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">diagnóstico · simular política · comparar municipios</FONT>>, fillcolor="#ffffff", color="#52514e"];
+  subgraph cluster_diag { label=<<B>1 · DIAGNÓSTICO TERRITORIAL</B>>; fontname="Segoe UI"; fontsize=12; style="rounded"; color="#256abf"; margin=12;
+    ambito [label=<<B>Definiendo ámbito</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">toda la CAM · comarca · tramo de población<BR/>(p. ej. municipios elegibles a reequilibrio)</FONT>>, fillcolor="#ffffff", color="#52514e"];
+    base [label=<<B>Mapa de viabilidad base</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">puntuación GA²M sin preferencias · P(Alta) de la red ·<BR/>capas: dinamismo, ayudas, transporte, coste</FONT>>, fillcolor="#e6effb", color="#256abf"];
+    municipio [label=<<B>Ficha diagnóstica de municipio</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">estados de los 8 nodos · qué factor limita ·<BR/>tablas y conteos de la auditoría</FONT>>, fillcolor="#e6effb", color="#256abf"];
+  }
+  subgraph cluster_sim { label=<<B>2 · SIMULADOR DE POLÍTICAS</B>>; fontname="Segoe UI"; fontsize=12; style="rounded"; color="#b8312f"; margin=12;
+    politica [label=<<B>Eligiendo política</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">catálogo: ayuda al alquiler / IBI · vivero de empresas ·<BR/>nueva estación · …</FONT><BR/><FONT POINT-SIZE="8.5" COLOR="#b8312f">#17</FONT>>, fillcolor="#ffffff", color="#898781", style="rounded,dashed,filled"];
+    hipotesis [label=<<B>Revisando hipótesis de traducción</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">política → palanca del modelo ·<BR/>p. ej. ayuda al alquiler = Coste baja un nivel (editable)</FONT><BR/><FONT POINT-SIZE="8.5" COLOR="#b8312f">#17</FONT>>, fillcolor="#ffffff", color="#898781", style="rounded,dashed,filled"];
+    supuesto [label=<<B>Supuesto experto marcado</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">palanca sin efecto aprendido en los datos<BR/>(p. ej. tren): se usa un prior declarado</FONT>>, fillcolor="#ffffff", color="#52514e"];
+    interviene [label=<<B>Intervención do()</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">fija la palanca, re-predice sus descendientes,<BR/>mantiene lo demás</FONT><BR/><FONT POINT-SIZE="8.5" COLOR="#b8312f">#16 · requiere #3 monotonía</FONT>>, fillcolor="#ffffff", color="#898781", style="rounded,dashed,filled"];
+    incierto [label=<<B>Calculando incertidumbre</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">bootstrap de los 179 municipios</FONT><BR/><FONT POINT-SIZE="8.5" COLOR="#b8312f">#6</FONT>>, fillcolor="#ffffff", color="#898781", style="rounded,dashed,filled"];
+    escenario [label=<<B>Escenario calculado</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">Δ puntuación con intervalo · municipios que cambian de nivel ·<BR/>efecto sobre el reequilibrio</FONT>>, fillcolor="#ffffff", color="#52514e"];
+  }
+  subgraph cluster_out { label=<<B>3 · COMPARACIÓN E INFORME</B>>; fontname="Segoe UI"; fontsize=12; style="rounded"; color="#52514e"; margin=12;
+    comparar [label=<<B>Comparando escenarios</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">lado a lado · base frente a políticas</FONT>>, fillcolor="#ffffff", color="#52514e"];
+    informe [label=<<B>Informe exportado</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">supuestos, intervalos y fuentes ·<BR/>advertencia: escenario, no predicción</FONT>>, fillcolor="#ffffff", color="#52514e"];
+  }
+  inicio -> perfil [label=< abrir aplicación >];
+  perfil -> objetivo [label=< elige Administración >];
+  objetivo -> ambito [label=< diagnóstico >];
+  objetivo -> politica [label=< simular política >];
+  objetivo -> comparar [label=< comparar municipios / selección múltiple en el mapa >];
+  ambito -> base [label=< aplicar ámbito / puntuación sin preferencias >];
+  base -> municipio [label=< clic en municipio >];
+  municipio -> base [label=< cerrar >];
+  municipio -> politica [label=< simular sobre este municipio >];
+  base -> politica [label=< simular sobre el ámbito >];
+  politica -> hipotesis [label=< seleccionar >];
+  hipotesis -> politica [label=< cambiar política >, style=dashed];
+  hipotesis -> interviene [label=< [palanca con efecto aprendido] aceptar >];
+  hipotesis -> supuesto [label=< [palanca sin efecto en los datos] >];
+  supuesto -> interviene [label=< aceptar supuesto / se registra en el informe >];
+  interviene -> incierto [label=< / P(Viab | do(palanca), resto) >];
+  incierto -> escenario [label=< / media e intervalo del 90 % >];
+  escenario -> hipotesis [label=< ajustar intensidad >, style=dashed];
+  escenario -> comparar [label=< guardar escenario >];
+  comparar -> politica [label=< añadir otra política >, style=dashed];
+  comparar -> informe [label=< exportar >];
+  escenario -> base [label=< volver al mapa >, style=dashed];
+  informe -> fin [label=< salir >];
+  {rank=sink; leyenda}
+  leyenda [shape=plaintext, style="", label=<<TABLE BORDER="0" CELLSPACING="4"><TR><TD BGCOLOR="#e6effb" BORDER="1" COLOR="#256abf" WIDTH="22"> </TD><TD ALIGN="LEFT"><FONT POINT-SIZE="10">Lógica ya implementada (scripts del proyecto)</FONT></TD></TR><TR><TD BGCOLOR="#ffffff" BORDER="1" COLOR="#52514e"> </TD><TD ALIGN="LEFT"><FONT POINT-SIZE="10">Pantalla o interacción (aplicación por construir, #32)</FONT></TD></TR><TR><TD BGCOLOR="#ffffff" BORDER="1" STYLE="dashed" COLOR="#898781"> </TD><TD ALIGN="LEFT"><FONT POINT-SIZE="10">Lógica pendiente · <FONT COLOR="#b8312f">#N</FONT> = tarea en PENDIENTES.md</FONT></TD></TR><TR><TD COLSPAN="2" ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#52514e">Transiciones: evento [condición] / acción</FONT></TD></TR></TABLE>>];
+}

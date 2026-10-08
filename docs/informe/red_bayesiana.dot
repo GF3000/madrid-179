@@ -1,0 +1,58 @@
+digraph BN {
+  graph [rankdir=TB, compound=true, newrank=true, bgcolor="#fcfcfb", pad=0.45, nodesep=0.5, ranksep=0.6, fontname="Segoe UI", label=<<FONT POINT-SIZE="21"><B>Flujo de puntuación · Viabilidad empresarial municipal (CAM)</B></FONT><BR/><FONT POINT-SIZE="11" COLOR="#52514e">1 · filtros duros (descartan)   →   2 · red bayesiana (explica, consultas parciales, simulación)   →   3 · GA²M y preferencias (puntúan)   ·   trazo discontinuo = previsto, aún no implementado</FONT><BR/> >, labelloc=t];
+  node [shape=box, style="rounded,filled", fillcolor="#ffffff", color="#c3c2b7", penwidth=1.2, fontname="Segoe UI", margin="0.16,0.09"];
+  edge [color="#52514e", penwidth=1.3, arrowsize=0.8, fontname="Consolas", fontsize=9.5, fontcolor="#52514e"];
+  subgraph cluster_filtros { label=<<B>1 · FILTROS DUROS</B>  <FONT COLOR="#52514e">preprocesado con pandas, antes de la inferencia</FONT>>; fontname="Segoe UI"; fontsize=12.5; style="rounded,filled"; fillcolor="#f4f3ef"; color="#898781"; margin=14;
+    entrada [label=<<B>179 municipios</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">dataset_bn_municipios.csv</FONT>>, shape=box, style="rounded,filled", fillcolor="#ffffff"];
+    f1 [label=<<B>Excluir Madrid capital<BR/><FONT POINT-SIZE='9.5' COLOR='#52514e'>objetivo de reequilibrio</FONT></B>>, shape=box, style="rounded,filled", fillcolor="#ffffff", color="#52514e"];
+    entrada -> f1 [label=" 179"];
+    descarte1 [label=<−1<BR/><FONT POINT-SIZE="9">puntuación nula,<BR/>aplanado en el mapa</FONT>>, shape=plaintext, style="", fontcolor="#b8312f"];
+    f1 -> descarte1 [style=dashed, color="#b8312f", arrowsize=0.6, constraint=false];
+    f2 [label=<<B>Al menos 1 inmueble de oficinas<BR/><FONT POINT-SIZE='9.5' COLOR='#52514e'>Catastro, uu_oficinas ≥ 1</FONT></B>>, shape=box, style="rounded,filled", fillcolor="#ffffff", color="#52514e"];
+    f1 -> f2 [label=" 178"];
+    descarte2 [label=<−39<BR/><FONT POINT-SIZE="9">puntuación nula,<BR/>aplanado en el mapa</FONT>>, shape=plaintext, style="", fontcolor="#b8312f"];
+    f2 -> descarte2 [style=dashed, color="#b8312f", arrowsize=0.6, constraint=false];
+    fopc [label=<<B>Opcional · necesito ayudas</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">menos de 20.000 hab.: quedarían 103</FONT>>, style="rounded,dashed,filled", fillcolor="#ffffff", color="#898781", fontcolor="#52514e"];
+    f2 -> fopc [style=dashed, label=" 139"];
+    candidatos [label=<<B>139 municipios candidatos</B>>, shape=box, style="rounded,filled", fillcolor="#e6effb", color="#256abf", penwidth=1.6];
+    fopc -> candidatos [style=dashed];
+  }
+  subgraph cluster_bn { label=<<B>2 · RED BAYESIANA</B>  <FONT COLOR="#52514e">8 nodos · máx. 2 padres · CPT BDeu (ESS = 10) · explica cada candidato y sostiene el simulador do()</FONT>>; fontname="Segoe UI"; fontsize=12.5; style="rounded"; color="#256abf"; penwidth=1.4; margin=16;
+    Distancia_Madrid [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Distancia Madrid</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">dist_sol_km</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Cerca ≤ 31,78 &lt; Media ≤ 45,18 &lt; Lejos</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>, fillcolor="#e6effb", color="#256abf"];
+    Talento [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Talento</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">pct_estudios_superiores</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Bajo ≤ 30,64 &lt; Medio ≤ 39,49 &lt; Alto</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>, fillcolor="#e6effb", color="#256abf"];
+    Acceso_Ferroviario [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Acceso Ferroviario</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">paradas_ferro</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">No = 0 · Sí &gt; 0</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 145 / 34</FONT></TD></TR></TABLE>>];
+    Coste_Inmobiliario [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Coste Inmobiliario</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">vc_residencial_por_uu</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Bajo ≤ 69,78 &lt; Medio ≤ 95,65 &lt; Alto</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
+    Renta [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Renta</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">rdb_per_capita</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Baja ≤ 17.065 &lt; Media ≤ 19.992 &lt; Alta</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
+    Especializacion_Servicios [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Especialización Servicios</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">pct_up_servicios_prof</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Baja ≤ 12,74 &lt; Media ≤ 18,25 &lt; Alta</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
+    Dinamismo_Demografico [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Dinamismo Demográfico</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">crec_pob_5a</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Bajo ≤ 6,757 % &lt; Medio ≤ 12,91 % &lt; Alto</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
+    Viabilidad_Empresarial [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Viabilidad Empresarial</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">tasa_neta_emp</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Baja ≤ 0,5958 % &lt; Media ≤ 0,9765 % &lt; Alta</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>, fillcolor="#fde8e7", color="#b8312f", penwidth=2.4];
+    {rank=same; Distancia_Madrid Talento}
+    Distancia_Madrid -> Acceso_Ferroviario [label=" ρ −0.51"];
+    Distancia_Madrid -> Coste_Inmobiliario [label=" ρ −0.69"];
+    Talento -> Coste_Inmobiliario [label=" ρ +0.53"];
+    Talento -> Renta [label=" ρ +0.87"];
+    Talento -> Especializacion_Servicios [label=" ρ +0.66"];
+    Distancia_Madrid -> Especializacion_Servicios [label=" ρ −0.44"];
+    Distancia_Madrid -> Dinamismo_Demografico [label=" ρ +0.41"];
+    Coste_Inmobiliario -> Dinamismo_Demografico [label=" ρ −0.28"];
+    Dinamismo_Demografico -> Viabilidad_Empresarial [label=" ρ +0.30"];
+    Especializacion_Servicios -> Viabilidad_Empresarial [label=" ρ +0.25"];
+  }
+  candidatos -> Talento [lhead=cluster_bn, label="  atributos reales de cada municipio = evidencia", fontname="Segoe UI", fontsize=10];
+  prefs [label=<<B>Preferencias blandas del usuario</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">chatbot y preguntas inteligentes<BR/>→ pesos en la puntuación · evidencia parcial en la red</FONT>>, shape=note, style="filled", fillcolor="#fdf1d8", color="#c98a12"];
+  prefs -> Distancia_Madrid [style=dotted, color="#c98a12", arrowsize=0.6];
+  prefs -> Talento [style=dotted, color="#c98a12", arrowsize=0.6];
+  prefs -> Acceso_Ferroviario [style=dotted, color="#c98a12", arrowsize=0.6];
+  prefs -> Coste_Inmobiliario [style=dotted, color="#c98a12", arrowsize=0.6];
+  {rank=same; prefs; candidatos}
+  subgraph cluster_out { label=<<B>3 · PUNTUACIÓN Y RANKING</B>>; fontname="Segoe UI"; fontsize=12.5; style="rounded"; color="#b8312f"; margin=14;
+    ga2m [label=<<B>GA²M (EBM)</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">mismas 7 variables, sin discretizar ·<BR/>predice la tasa neta empresarial</FONT>>, fillcolor="#e6effb", color="#256abf"];
+    score [label=<<B>Puntuación = percentil del GA²M entre candidatos (0-100)</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">altura y color del municipio en el mapa 3D · bn_ranking_municipios.csv</FONT>>, fillcolor="#fde8e7", color="#b8312f", penwidth=1.6];
+    pesos [label=<<B>Preferencias ponderadas</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">transporte · ayudas · coste (previsto)<BR/>(S + Σ a·u) / (1 + Σ a) · preferencias.py</FONT>>, fillcolor="#fdf1d8", color="#c98a12"];
+    ga2m -> score [penwidth=2, color="#b8312f", label=" S"];
+    pesos -> score [color="#c98a12", label=" + a·u"];
+  }
+  candidatos -> ga2m [lhead=cluster_out, label="  variables continuas", fontname="Segoe UI", fontsize=10];
+  Viabilidad_Empresarial -> score [style=dashed, color="#256abf", label=<  <FONT FACE="Segoe UI">explicación: P(Alta) y causas;<BR/>  aviso si red y GA²M discrepan</FONT>>];
+  prefs -> pesos [style=dotted, color="#c98a12", arrowsize=0.6];
+}

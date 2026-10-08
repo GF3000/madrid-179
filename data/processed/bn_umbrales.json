@@ -1,0 +1,143 @@
+{
+ "Distancia_Madrid": {
+  "columna": "dist_sol_km",
+  "metodo": "terciles",
+  "estados": [
+   "Cerca",
+   "Media",
+   "Lejos"
+  ],
+  "cortes": [
+   31.778632934734354,
+   45.17512130024823
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
+ "Talento": {
+  "columna": "pct_estudios_superiores",
+  "metodo": "terciles",
+  "estados": [
+   "Bajo",
+   "Medio",
+   "Alto"
+  ],
+  "cortes": [
+   30.63571737755136,
+   39.48923017482855
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
+ "Acceso_Ferroviario": {
+  "columna": "paradas_ferro",
+  "metodo": "binario>0",
+  "estados": [
+   "No",
+   "Si"
+  ],
+  "cortes": [
+   0.0
+  ],
+  "conteo": [
+   145,
+   34
+  ]
+ },
+ "Coste_Inmobiliario": {
+  "columna": "vc_residencial_por_uu",
+  "metodo": "terciles",
+  "estados": [
+   "Bajo",
+   "Medio",
+   "Alto"
+  ],
+  "cortes": [
+   69.78,
+   95.65333333333331
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
+ "Renta": {
+  "columna": "rdb_per_capita",
+  "metodo": "terciles",
+  "estados": [
+   "Baja",
+   "Media",
+   "Alta"
+  ],
+  "cortes": [
+   17065.0,
+   19992.333333333332
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
+ "Especializacion_Servicios": {
+  "columna": "pct_up_servicios_prof",
+  "metodo": "terciles",
+  "estados": [
+   "Baja",
+   "Media",
+   "Alta"
+  ],
+  "cortes": [
+   12.739112739112738,
+   18.251148815835982
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
+ "Dinamismo_Demografico": {
+  "columna": "crec_pob_5a",
+  "metodo": "terciles",
+  "estados": [
+   "Bajo",
+   "Medio",
+   "Alto"
+  ],
+  "cortes": [
+   0.0675667105290584,
+   0.1291059907834102
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
+ "Viabilidad_Empresarial": {
+  "columna": "tasa_neta_emp",
+  "metodo": "terciles",
+  "estados": [
+   "Baja",
+   "Media",
+   "Alta"
+  ],
+  "cortes": [
+   0.005957543747997433,
+   0.0097648453382144
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ }
+}

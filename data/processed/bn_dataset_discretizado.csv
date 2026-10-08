@@ -1,0 +1,180 @@
+﻿ine5;Distancia_Madrid;Talento;Acceso_Ferroviario;Coste_Inmobiliario;Renta;Especializacion_Servicios;Dinamismo_Demografico;Viabilidad_Empresarial;nombre_iecm
+28001;Lejos;Medio;No;Bajo;Media;Media;Bajo;Baja;Acebeda (La)
+28002;Cerca;Alto;No;Medio;Media;Media;Bajo;Baja;Ajalvir
+28003;Lejos;Alto;No;Medio;Alta;Alta;Alto;Media;Alameda del Valle
+28004;Cerca;Bajo;No;Bajo;Baja;Baja;Medio;Alta;Álamo (El)
+28005;Cerca;Medio;Si;Medio;Media;Media;Bajo;Baja;Alcalá de Henares
+28006;Cerca;Alto;Si;Alto;Alta;Alta;Bajo;Media;Alcobendas
+28007;Cerca;Medio;Si;Alto;Media;Media;Bajo;Baja;Alcorcón
+28008;Lejos;Bajo;No;Medio;Baja;Baja;Alto;Alta;Aldea del Fresno
+28009;Cerca;Alto;No;Alto;Alta;Alta;Bajo;Baja;Algete
+28010;Media;Alto;Si;Alto;Alta;Alta;Bajo;Alta;Alpedrete
+28011;Lejos;Bajo;No;Bajo;Baja;Baja;Alto;Alta;Ambite
+28012;Media;Bajo;No;Bajo;Baja;Baja;Medio;Media;Anchuelo
+28013;Lejos;Medio;Si;Medio;Media;Media;Bajo;Baja;Aranjuez
+28014;Cerca;Bajo;Si;Alto;Baja;Media;Bajo;Media;Arganda del Rey
+28015;Cerca;Alto;No;Alto;Alta;Alta;Alto;Alta;Arroyomolinos
+28016;Lejos;Medio;No;Bajo;Baja;Media;Alto;Baja;Atazar (El)
+28017;Cerca;Alto;No;Alto;Alta;Alta;Alto;Alta;Batres
+28018;Media;Alto;No;Alto;Alta;Alta;Alto;Alta;Becerril de la Sierra
+28019;Media;Bajo;No;Bajo;Baja;Baja;Alto;Baja;Belmonte de Tajo
+28020;Lejos;Medio;No;Bajo;Alta;Baja;Medio;Media;Berzosa del Lozoya
+28021;Lejos;Medio;No;Bajo;Media;Media;Bajo;Media;Berrueco (El)
+28022;Cerca;Alto;Si;Alto;Alta;Alta;Alto;Alta;Boadilla del Monte
+28023;Media;Alto;No;Alto;Alta;Alta;Alto;Alta;Boalo (El)
+28024;Lejos;Medio;No;Bajo;Alta;Media;Alto;Baja;Braojos
+28025;Lejos;Bajo;No;Bajo;Baja;Baja;Alto;Baja;Brea de Tajo
+28026;Cerca;Alto;No;Alto;Media;Alta;Bajo;Media;Brunete
+28027;Lejos;Medio;No;Medio;Media;Media;Bajo;Baja;Buitrago del Lozoya
+28028;Lejos;Alto;No;Medio;Media;Alta;Alto;Alta;Bustarviejo
+28029;Lejos;Alto;No;Alto;Alta;Media;Alto;Media;Cabanillas de la Sierra
+28030;Lejos;Medio;No;Medio;Media;Baja;Bajo;Alta;Cabrera (La)
+28031;Lejos;Bajo;No;Bajo;Baja;Baja;Medio;Alta;Cadalso de los Vidrios
+28032;Media;Medio;No;Medio;Media;Media;Medio;Alta;Camarma de Esteruelas
+28033;Cerca;Bajo;No;Bajo;Baja;Media;Medio;Alta;Campo Real
+28034;Lejos;Medio;No;Bajo;Media;Baja;Bajo;Baja;Canencia
+28035;Media;Bajo;No;Bajo;Baja;Baja;Alto;Alta;Carabaña
+28036;Cerca;Bajo;No;Medio;Baja;Baja;Medio;Alta;Casarrubuelos
+28037;Lejos;Bajo;No;Bajo;Baja;Baja;Bajo;Baja;Cenicientos
+28038;Lejos;Alto;Si;Alto;Media;Media;Medio;Alta;Cercedilla
+28039;Lejos;Bajo;No;Bajo;Alta;Media;Bajo;Baja;Cervera de Buitrago
+28040;Cerca;Bajo;Si;Medio;Baja;Media;Bajo;Media;Ciempozuelos
+28041;Cerca;Alto;No;Alto;Alta;Alta;Bajo;Media;Cobeña
+28042;Media;Medio;No;Bajo;Media;Alta;Alto;Baja;Colmenar del Arroyo
+28043;Media;Bajo;No;Bajo;Baja;Baja;Medio;Media;Colmenar de Oreja
+28044;Cerca;Alto;No;Alto;Alta;Alta;Bajo;Alta;Colmenarejo
+28045;Cerca;Alto;Si;Alto;Alta;Alta;Alto;Alta;Colmenar Viejo
+28046;Media;Alto;Si;Alto;Alta;Alta;Medio;Alta;Collado Mediano
+28047;Media;Alto;Si;Medio;Media;Alta;Bajo;Media;Collado Villalba
+28048;Media;Bajo;No;Medio;Baja;Alta;Alto;Baja;Corpa
+28049;Cerca;Bajo;Si;Alto;Media;Media;Bajo;Baja;Coslada
+28050;Cerca;Medio;No;Alto;Media;Media;Medio;Alta;Cubas de la Sagra
+28051;Media;Medio;No;Medio;Baja;Media;Medio;Alta;Chapinería
+28052;Media;Bajo;No;Bajo;Baja;Baja;Medio;Baja;Chinchón
+28053;Cerca;Alto;No;Alto;Alta;Alta;Bajo;Media;Daganzo de Arriba
+28054;Media;Alto;No;Medio;Alta;Alta;Bajo;Alta;Escorial (El)
+28055;Lejos;Bajo;No;Bajo;Baja;Baja;Medio;Media;Estremera
+28056;Media;Medio;No;Medio;Baja;Media;Alto;Media;Fresnedillas de la Oliva
+28057;Media;Medio;No;Alto;Media;Media;Medio;Baja;Fresno de Torote
+28058;Cerca;Bajo;Si;Medio;Baja;Baja;Bajo;Baja;Fuenlabrada
+28059;Cerca;Medio;No;Alto;Media;Media;Medio;Media;Fuente el Saz de Jarama
+28060;Lejos;Bajo;No;Medio;Baja;Baja;Medio;Media;Fuentidueña de Tajo
+28061;Cerca;Alto;Si;Alto;Alta;Alta;Bajo;Media;Galapagar
+28062;Lejos;Alto;No;Bajo;Alta;Alta;Alto;Baja;Garganta de los Montes
+28063;Lejos;Medio;No;Bajo;Alta;Baja;Alto;Media;Gargantilla del Lozoya y Pinilla de Buitrago
+28064;Lejos;Medio;No;Bajo;Alta;Baja;Alto;Alta;Gascones
+28065;Cerca;Medio;Si;Alto;Media;Media;Bajo;Alta;Getafe
+28066;Cerca;Medio;No;Alto;Alta;Media;Bajo;Media;Griñón
+28067;Media;Medio;No;Medio;Media;Media;Medio;Alta;Guadalix de la Sierra
+28068;Media;Medio;No;Alto;Alta;Media;Bajo;Alta;Guadarrama
+28069;Lejos;Alto;No;Bajo;Media;Baja;Alto;Alta;Hiruela (La)
+28070;Lejos;Alto;No;Bajo;Alta;Baja;Alto;Baja;Horcajo de la Sierra-Aoslos
+28071;Lejos;Medio;No;Bajo;Media;Baja;Alto;Media;Horcajuelo de la Sierra
+28072;Cerca;Alto;No;Alto;Alta;Alta;Medio;Media;Hoyo de Manzanares
+28073;Cerca;Bajo;Si;Medio;Baja;Baja;Bajo;Baja;Humanes de Madrid
+28074;Cerca;Bajo;Si;Bajo;Media;Media;Bajo;Baja;Leganés
+28075;Cerca;Bajo;No;Medio;Media;Baja;Bajo;Baja;Loeches
+28076;Lejos;Medio;No;Medio;Alta;Baja;Bajo;Media;Lozoya
+28078;Lejos;Alto;No;Bajo;Media;Baja;Alto;Media;Madarcos
+28079;Cerca;Alto;Si;Alto;Alta;Alta;Bajo;Media;Madrid
+28080;Cerca;Alto;Si;Alto;Alta;Alta;Bajo;Media;Majadahonda
+28082;Media;Alto;No;Medio;Alta;Alta;Medio;Alta;Manzanares el Real
+28083;Media;Medio;Si;Alto;Media;Media;Medio;Alta;Meco
+28084;Cerca;Bajo;No;Medio;Baja;Baja;Bajo;Baja;Mejorada del Campo
+28085;Media;Alto;No;Alto;Alta;Media;Alto;Alta;Miraflores de la Sierra
+28086;Media;Medio;No;Medio;Baja;Media;Medio;Media;Molar (El)
+28087;Lejos;Medio;Si;Alto;Alta;Alta;Medio;Alta;Molinos (Los)
+28088;Lejos;Medio;No;Bajo;Media;Baja;Medio;Baja;Montejo de la Sierra
+28089;Cerca;Medio;No;Alto;Media;Baja;Medio;Baja;Moraleja de Enmedio
+28090;Media;Alto;No;Alto;Alta;Alta;Medio;Alta;Moralzarzal
+28091;Cerca;Bajo;No;Medio;Baja;Baja;Medio;Media;Morata de Tajuña
+28092;Cerca;Bajo;Si;Medio;Baja;Media;Bajo;Baja;Móstoles
+28093;Media;Alto;No;Alto;Alta;Alta;Medio;Media;Navacerrada
+28094;Media;Medio;No;Medio;Media;Alta;Medio;Media;Navalafuente
+28095;Media;Bajo;No;Medio;Baja;Alta;Alto;Baja;Navalagamella
+28096;Cerca;Medio;No;Medio;Media;Media;Medio;Alta;Navalcarnero
+28097;Lejos;Alto;No;Bajo;Alta;Media;Alto;Baja;Navarredonda y San Mamés
+28099;Lejos;Bajo;No;Bajo;Baja;Baja;Alto;Alta;Navas del Rey
+28100;Media;Medio;No;Alto;Media;Alta;Alto;Alta;Nuevo Baztán
+28101;Media;Alto;No;Medio;Alta;Baja;Alto;Baja;Olmeda de las Fuentes
+28102;Media;Bajo;No;Bajo;Baja;Alta;Alto;Alta;Orusco de Tajuña
+28104;Cerca;Alto;No;Alto;Alta;Alta;Bajo;Media;Paracuellos de Jarama
+28106;Cerca;Bajo;Si;Medio;Baja;Media;Bajo;Alta;Parla
+28107;Lejos;Bajo;No;Bajo;Media;Baja;Alto;Media;Patones
+28108;Media;Alto;No;Alto;Alta;Alta;Medio;Baja;Pedrezuela
+28109;Lejos;Bajo;No;Bajo;Baja;Alta;Alto;Alta;Pelayos de la Presa
+28110;Media;Bajo;No;Bajo;Baja;Media;Medio;Media;Perales de Tajuña
+28111;Media;Bajo;No;Medio;Baja;Baja;Alto;Media;Pezuela de las Torres
+28112;Lejos;Alto;No;Bajo;Alta;Baja;Bajo;Media;Pinilla del Valle
+28113;Cerca;Medio;Si;Bajo;Media;Media;Bajo;Media;Pinto
+28114;Lejos;Medio;No;Bajo;Media;Baja;Bajo;Baja;Piñuécar-Gandullas
+28115;Cerca;Alto;Si;Alto;Alta;Alta;Bajo;Media;Pozuelo de Alarcón
+28116;Media;Bajo;No;Bajo;Baja;Media;Medio;Media;Pozuelo del Rey
+28117;Lejos;Alto;No;Bajo;Alta;Baja;Alto;Alta;Prádena del Rincón
+28118;Lejos;Alto;No;Bajo;Media;Alta;Alto;Media;Puebla de la Sierra
+28119;Cerca;Medio;No;Alto;Media;Media;Alto;Baja;Quijorna
+28120;Lejos;Medio;No;Alto;Media;Baja;Bajo;Baja;Rascafría
+28121;Lejos;Medio;No;Medio;Media;Media;Bajo;Baja;Redueña
+28122;Media;Medio;No;Medio;Media;Media;Alto;Media;Ribatejada
+28123;Cerca;Alto;Si;Alto;Alta;Alta;Alto;Alta;Rivas-Vaciamadrid
+28124;Lejos;Alto;No;Bajo;Media;Baja;Alto;Media;Robledillo de la Jara
+28125;Lejos;Medio;No;Medio;Media;Alta;Medio;Alta;Robledo de Chavela
+28126;Lejos;Bajo;No;Bajo;Media;Baja;Alto;Media;Robregordo
+28127;Cerca;Alto;Si;Alto;Alta;Alta;Bajo;Media;Rozas de Madrid (Las)
+28128;Lejos;Bajo;No;Bajo;Baja;Baja;Bajo;Media;Rozas de Puerto Real
+28129;Cerca;Alto;No;Alto;Alta;Alta;Bajo;Media;San Agustín del Guadalix
+28130;Cerca;Bajo;Si;Medio;Media;Media;Bajo;Baja;San Fernando de Henares
+28131;Media;Alto;No;Alto;Alta;Alta;Bajo;Media;San Lorenzo de El Escorial
+28132;Cerca;Bajo;No;Medio;Baja;Media;Medio;Media;San Martín de la Vega
+28133;Lejos;Bajo;No;Bajo;Baja;Media;Medio;Alta;San Martín de Valdeiglesias
+28134;Cerca;Alto;Si;Alto;Alta;Alta;Bajo;Baja;San Sebastián de los Reyes
+28135;Lejos;Medio;No;Bajo;Baja;Baja;Alto;Media;Santa María de la Alameda
+28136;Media;Bajo;No;Medio;Baja;Baja;Medio;Alta;Santorcaz
+28137;Media;Medio;No;Medio;Baja;Baja;Bajo;Baja;Santos de la Humosa (Los)
+28138;Lejos;Bajo;No;Bajo;Baja;Baja;Alto;Baja;Serna del Monte (La)
+28140;Cerca;Bajo;No;Alto;Media;Media;Medio;Alta;Serranillos del Valle
+28141;Cerca;Medio;No;Alto;Media;Alta;Bajo;Baja;Sevilla la Nueva
+28143;Lejos;Medio;No;Bajo;Media;Media;Medio;Baja;Somosierra
+28144;Media;Alto;No;Alto;Alta;Alta;Bajo;Baja;Soto del Real
+28145;Media;Medio;No;Medio;Media;Alta;Alto;Baja;Talamanca de Jarama
+28146;Media;Bajo;No;Bajo;Baja;Baja;Medio;Media;Tielmes
+28147;Media;Bajo;No;Bajo;Baja;Baja;Bajo;Baja;Titulcia
+28148;Cerca;Bajo;Si;Bajo;Media;Media;Medio;Media;Torrejón de Ardoz
+28149;Cerca;Medio;No;Alto;Media;Media;Alto;Alta;Torrejón de la Calzada
+28150;Cerca;Bajo;No;Medio;Media;Baja;Medio;Alta;Torrejón de Velasco
+28151;Lejos;Bajo;No;Bajo;Media;Media;Bajo;Alta;Torrelaguna
+28152;Cerca;Alto;Si;Alto;Alta;Alta;Bajo;Alta;Torrelodones
+28153;Lejos;Medio;No;Medio;Alta;Media;Medio;Baja;Torremocha de Jarama
+28154;Cerca;Medio;No;Alto;Baja;Baja;Bajo;Baja;Torres de la Alameda
+28155;Lejos;Bajo;No;Bajo;Baja;Baja;Medio;Baja;Valdaracete
+28156;Media;Bajo;No;Medio;Baja;Baja;Alto;Baja;Valdeavero
+28157;Media;Bajo;No;Bajo;Baja;Alta;Alto;Media;Valdelaguna
+28158;Lejos;Medio;No;Medio;Media;Media;Alto;Alta;Valdemanco
+28159;Lejos;Bajo;No;Bajo;Baja;Baja;Medio;Baja;Valdemaqueda
+28160;Media;Alto;No;Alto;Alta;Alta;Medio;Alta;Valdemorillo
+28161;Cerca;Medio;Si;Medio;Media;Media;Medio;Alta;Valdemoro
+28162;Media;Alto;No;Medio;Alta;Alta;Medio;Media;Valdeolmos-Alalpardo
+28163;Media;Medio;No;Medio;Baja;Media;Bajo;Media;Valdepiélagos
+28164;Media;Medio;No;Alto;Media;Alta;Alto;Alta;Valdetorres de Jarama
+28165;Media;Bajo;No;Medio;Baja;Baja;Medio;Alta;Valdilecha
+28166;Media;Bajo;No;Medio;Media;Baja;Alto;Media;Valverde de Alcalá
+28167;Cerca;Medio;No;Alto;Media;Media;Alto;Media;Velilla de San Antonio
+28168;Media;Medio;No;Bajo;Baja;Alta;Alto;Baja;Vellón (El)
+28169;Media;Alto;No;Alto;Alta;Alta;Alto;Alta;Venturada
+28170;Media;Bajo;No;Medio;Baja;Baja;Bajo;Baja;Villaconejos
+28171;Lejos;Bajo;No;Medio;Baja;Baja;Alto;Baja;Villa del Prado
+28172;Media;Alto;No;Alto;Alta;Alta;Alto;Alta;Villalbilla
+28173;Lejos;Bajo;No;Bajo;Baja;Baja;Alto;Baja;Villamanrique de Tajo
+28174;Media;Bajo;No;Medio;Baja;Media;Medio;Baja;Villamanta
+28175;Media;Alto;No;Medio;Media;Media;Medio;Media;Villamantilla
+28176;Cerca;Alto;No;Alto;Alta;Alta;Medio;Alta;Villanueva de la Cañada
+28177;Cerca;Alto;No;Medio;Alta;Alta;Bajo;Alta;Villanueva del Pardillo
+28178;Media;Medio;No;Medio;Baja;Media;Medio;Baja;Villanueva de Perales
+28179;Media;Medio;No;Medio;Alta;Alta;Medio;Alta;Villar del Olmo
+28180;Lejos;Bajo;No;Medio;Baja;Baja;Medio;Baja;Villarejo de Salvanés
+28181;Cerca;Alto;No;Alto;Alta;Alta;Medio;Media;Villaviciosa de Odón
+28182;Lejos;Alto;No;Bajo;Alta;Baja;Alto;Media;Villavieja del Lozoya
+28183;Media;Medio;No;Bajo;Baja;Media;Medio;Alta;Zarzalejo
+28901;Lejos;Medio;No;Medio;Baja;Media;Medio;Media;Lozoyuela-Navas-Sieteiglesias
+28902;Lejos;Alto;No;Bajo;Media;Media;Medio;Baja;Puentes Viejas
+28903;Cerca;Alto;Si;Alto;Alta;Alta;Alto;Baja;Tres Cantos

@@ -1,0 +1,13 @@
+﻿;importancia_media_abs
+crec_pob_5a;0.0018861062694380034
+vc_residencial_por_uu;0.0014410892600006061
+pct_estudios_superiores;0.0010941996160221995
+dist_sol_km;0.0008217263315962039
+rdb_per_capita;0.0006793268449940271
+pct_up_servicios_prof;0.0006104524703571804
+paradas_ferro;0.0002528004762868279
+vc_residencial_por_uu & crec_pob_5a;0.00018339662570724774
+dist_sol_km & pct_up_servicios_prof;0.0001715703386345749
+dist_sol_km & crec_pob_5a;0.00013980566108309057
+rdb_per_capita & crec_pob_5a;9.494745688202353e-05
+pct_estudios_superiores & crec_pob_5a;7.011786504963683e-05

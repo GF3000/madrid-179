@@ -1,0 +1,338 @@
+<title>Correlaciones Municipales CAM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: banda de controles + resumen; fila principal matriz | correlación con el target; fila explorador de dispersión | pares; malla de distribuciones */
+:root {
+  --bg: #f6f6f3; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --neg: #184f95; --pos: #b8312f; --mid: #f0efec; --dot: #2a78d6; --focus: #0b0b0b;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f0f0e; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+  --neg: #5598e7; --pos: #e66767; --mid: #383835; --dot: #5598e7; --focus: #ffffff; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f0f0e; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+  --neg: #5598e7; --pos: #e66767; --mid: #383835; --dot: #5598e7; --focus: #ffffff; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 48px; display: grid; gap: 22px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 760 clamp(26px, 3.6vw, 40px)/1.05 var(--display); font-stretch: 88%; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.lede { color: var(--ink-2); max-width: 70ch; margin: 0; }
+h2 { font: 700 15px/1.2 var(--display); font-stretch: 95%; margin: 0; }
+.sub { color: var(--muted); font-size: 12.5px; margin: 2px 0 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--axis); border-radius: 8px; overflow: hidden; }
+.seg button { font: 500 13px var(--body); background: transparent; color: var(--ink-2); border: 0; padding: 7px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button + button { border-left: 1px solid var(--axis); }
+label.chk { display: inline-flex; gap: 8px; align-items: center; color: var(--ink-2); cursor: pointer; }
+button:focus-visible, input:focus-visible, .cell:focus-visible, tr[tabindex]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px; min-width: 0; }
+.kpi .k { font-size: 12px; color: var(--muted); }
+.kpi .v { font: 600 24px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.kpi .d { font-size: 12.5px; color: var(--ink-2); overflow-wrap: anywhere; }
+.row { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 980px) { .row { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 16px 16px 12px; display: grid; gap: 10px; min-width: 0; }
+.scroll { overflow-x: auto; }
+svg text { fill: var(--ink-2); font-family: var(--body); }
+svg .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.cell { cursor: pointer; }
+.legend { display: flex; align-items: center; gap: 10px; font: 12px var(--mono); color: var(--muted); }
+.legend .bar { width: 180px; max-width: 40vw; height: 10px; border-radius: 3px; }
+.tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--bg); font-size: 12.5px; padding: 7px 9px; border-radius: 6px; max-width: 280px; line-height: 1.35; }
+.tip b { font-weight: 650; }
+.tip .num { font-family: var(--mono); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--axis); }
+td { padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+td.r { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.axissel { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 12.5px; color: var(--ink-2); }
+select { font: 13px var(--body); color: var(--ink); background: var(--surface); border: 1px solid var(--axis); border-radius: 6px; padding: 5px 6px; max-width: 100%; }
+.small { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.hist { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 10px 12px 6px; min-width: 0; }
+.hist h3 { font: 600 12.5px/1.25 var(--body); margin: 0; }
+.hist p { margin: 0; font-size: 11.5px; color: var(--muted); }
+.chip { display: inline-block; font: 500 10.5px/1 var(--mono); padding: 3px 6px; border-radius: 999px; border: 1px solid var(--axis); color: var(--ink-2); margin-left: 4px; vertical-align: 1px; }
+footer { color: var(--muted); font-size: 12px; max-width: 90ch; }
+@media (prefers-reduced-motion: no-preference) { .cell, .bar-r { transition: opacity .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Comunidad de Madrid · 179 municipios · código INE</span>
+    <h1>Correlaciones municipales</h1>
+    <p class="lede">Cómo se relacionan las variables del dataset de viabilidad empresarial. La tasa neta empresarial (nacimientos + entradas − muertes − salidas de unidades productivas, 2020-2024) es el target de la red bayesiana.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Opciones de cálculo">
+    <div class="seg" role="group" aria-label="Método de correlación">
+      <button id="m-spearman" aria-pressed="true">Spearman ρ</button>
+      <button id="m-pearson" aria-pressed="false">Pearson r</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="excl-mad"> Excluir Madrid capital</label>
+    <div class="legend" aria-hidden="true"><span>−1</span><span class="bar" id="legend-bar"></span><span>+1</span></div>
+  </div>
+
+  <section class="kpis" id="kpis" aria-label="Resumen"></section>
+
+  <div class="row">
+    <section class="panel">
+      <div><h2>Matriz de correlación</h2><p class="sub">Triángulo inferior, agrupado por bloque. Pasa el cursor para ver el valor; haz clic en una celda para abrir su dispersión.</p></div>
+      <div class="scroll"><svg id="heat" role="img" aria-label="Matriz de correlación entre variables municipales"></svg></div>
+    </section>
+    <section class="panel">
+      <div><h2>Correlación con la tasa neta empresarial</h2><p class="sub">Ordenadas de más negativa a más positiva. Con n≈179, |ρ| &lt; 0,15 no es distinguible de cero (p ≈ 0,05).</p></div>
+      <svg id="target" role="img" aria-label="Correlación de cada variable con la tasa neta empresarial"></svg>
+    </section>
+  </div>
+
+  <div class="row">
+    <section class="panel">
+      <div><h2 id="sc-title">Dispersión</h2><p class="sub" id="sc-sub"></p></div>
+      <div class="axissel">
+        <label>Eje X <select id="sel-x"></select></label>
+        <label>Eje Y <select id="sel-y"></select></label>
+        <label class="chk"><input type="checkbox" id="log-x"> X log</label>
+        <label class="chk"><input type="checkbox" id="log-y"> Y log</label>
+      </div>
+      <svg id="scatter" role="img" aria-label="Diagrama de dispersión de municipios"></svg>
+    </section>
+    <section class="panel">
+      <div><h2>Pares más correlacionados</h2><p class="sub">Los 14 pares con mayor |coeficiente|. Haz clic para verlos en la dispersión.</p></div>
+      <div class="scroll"><table><thead><tr><th>Variable A</th><th>Variable B</th><th style="text-align:right">Coef.</th></tr></thead><tbody id="pairs"></tbody></table></div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div><h2>Distribuciones</h2><p class="sub">Histograma de cada variable en los municipios incluidos. Las líneas discontinuas son los cortes de terciles (o el umbral binario) usados como estados en la red bayesiana.</p></div>
+    <div class="small" id="hists"></div>
+  </section>
+
+  <footer>Fuentes: Instituto de Estadística de la Comunidad de Madrid (padrón, censo anual, dinámica y colectivo empresarial, renta, afiliación, paro, Catastro), CRTM (GTFS), OpenStreetMap (amenidades, ODbL). Distancia: centroide municipal a la Puerta del Sol. Generado desde <span class="num">data/processed/dataset_bn_municipios.csv</span>.</footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const D = __DATA__;
+const V = D.vars, K = V.map(v => v.key), byKey = Object.fromEntries(V.map(v => [v.key, v]));
+const TARGET = "tasa_neta_emp";
+const S = { method: "spearman", excl: false, x: "pct_up_servicios_prof", y: TARGET, logx: false, logy: false };
+const NS = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (v, d = 2) => (v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+const fmtN = v => Math.abs(v) >= 1000 ? Math.round(v).toLocaleString("es-ES") : (Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2)).replace(".", ",");
+function el(tag, attrs = {}, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+// ---------- estadística ----------
+function rank(a) {
+  const idx = a.map((v, i) => [v, i]).sort((p, q) => p[0] - q[0]), r = new Array(a.length);
+  for (let i = 0; i < idx.length;) { let j = i; while (j + 1 < idx.length && idx[j + 1][0] === idx[i][0]) j++; const avg = (i + j) / 2 + 1; for (let k = i; k <= j; k++) r[idx[k][1]] = avg; i = j + 1; }
+  return r;
+}
+function pearson(a, b) {
+  const n = a.length; let ma = 0, mb = 0; for (let i = 0; i < n; i++) { ma += a[i]; mb += b[i]; } ma /= n; mb /= n;
+  let sab = 0, saa = 0, sbb = 0; for (let i = 0; i < n; i++) { const x = a[i] - ma, y = b[i] - mb; sab += x * y; saa += x * x; sbb += y * y; }
+  return saa && sbb ? sab / Math.sqrt(saa * sbb) : 0;
+}
+let ROWS, COLS, M;
+function compute() {
+  ROWS = D.rows.filter(r => !(S.excl && r.ine5 === "28079"));
+  COLS = {}; for (const k of K) { const c = ROWS.map(r => r[k]); COLS[k] = S.method === "spearman" ? rank(c) : c; }
+  M = K.map(a => K.map(b => pearson(COLS[a], COLS[b])));
+}
+const sym = () => S.method === "spearman" ? "ρ" : "r";
+
+// ---------- color divergente: gris neutro en 0, azul (−) / rojo (+) ----------
+function hex2rgb(h) { h = h.replace("#", ""); if (h.length === 3) h = h.split("").map(c => c + c).join(""); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); }
+function lin(c) { c /= 255; return c <= .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4; }
+function lum(rgb) { const [r, g, b] = rgb.map(lin); return .2126 * r + .7152 * g + .0722 * b; }
+let PAL;
+function readPal() { PAL = { neg: hex2rgb(css("--neg")), pos: hex2rgb(css("--pos")), mid: hex2rgb(css("--mid")) }; }
+function divColor(r) {
+  const t = Math.min(1, Math.abs(r)) ** 0.85, end = r < 0 ? PAL.neg : PAL.pos;
+  const c = PAL.mid.map((m, i) => Math.round(m + (end[i] - m) * t));
+  return { fill: `rgb(${c})`, ink: lum(c) < 0.28 ? "#ffffff" : "#0b0b0b" };
+}
+
+// ---------- tooltip ----------
+const tip = $("tip");
+function showTip(html, ev) { tip.innerHTML = html; tip.hidden = false; moveTip(ev); }
+function moveTip(ev) { const w = tip.offsetWidth, h = tip.offsetHeight; let x = ev.clientX + 14, y = ev.clientY + 14; if (x + w > innerWidth - 8) x = ev.clientX - w - 14; if (y + h > innerHeight - 8) y = ev.clientY - h - 14; tip.style.left = x + "px"; tip.style.top = y + "px"; }
+const hideTip = () => tip.hidden = true;
+
+// ---------- KPIs ----------
+function kpis() {
+  let best = { r: 0 }; for (let i = 0; i < K.length; i++) for (let j = 0; j < i; j++) if (Math.abs(M[i][j]) > Math.abs(best.r)) best = { r: M[i][j], a: K[i], b: K[j] };
+  const ti = K.indexOf(TARGET); let bt = { r: 0 }; K.forEach((k, j) => { if (j !== ti && Math.abs(M[ti][j]) > Math.abs(bt.r)) bt = { r: M[ti][j], k }; });
+  const weak = K.filter((k, j) => j !== ti && Math.abs(M[ti][j]) < 0.15).length;
+  $("kpis").innerHTML = `
+    <div class="kpi"><span class="k">Municipios incluidos</span><span class="v">${ROWS.length}</span><span class="d">${S.excl ? "Sin Madrid capital" : "Los 179 de la CAM"}</span></div>
+    <div class="kpi"><span class="k">Variables</span><span class="v">${K.length}</span><span class="d">${new Set(V.map(v => v.group)).size} bloques temáticos</span></div>
+    <div class="kpi"><span class="k">Par más fuerte · ${sym()}</span><span class="v">${fmt(best.r)}</span><span class="d">${byKey[best.a].label} × ${byKey[best.b].label}</span></div>
+    <div class="kpi"><span class="k">Mejor señal del target · ${sym()}</span><span class="v">${fmt(bt.r)}</span><span class="d">${byKey[bt.k].label}. ${weak} de ${K.length - 1} variables con |${sym()}| &lt; 0,15</span></div>`;
+}
+
+// ---------- matriz ----------
+function heat() {
+  const svg = $("heat"); svg.innerHTML = "";
+  const n = K.length, cs = 27, L = 214, T = 8, B = 150, W = L + n * cs + 8, H = T + n * cs + B;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  const g = el("g", {}, svg);
+  // bandas de grupo
+  let start = 0;
+  V.forEach((v, i) => {
+    const last = i === n - 1 || V[i + 1].group !== v.group;
+    if (last) {
+      if (i < n - 1) { el("line", { x1: L, x2: L + (i + 1) * cs, y1: T + (i + 1) * cs, y2: T + (i + 1) * cs, stroke: css("--axis"), "stroke-width": 1 }, g); el("line", { x1: L + (i + 1) * cs, x2: L + (i + 1) * cs, y1: T + (i + 1) * cs, y2: T + n * cs, stroke: css("--axis"), "stroke-width": 1 }, g); }
+      start = i + 1;
+    }
+  });
+  K.forEach((a, i) => {
+    const lab = el("text", { x: L - 8, y: T + i * cs + cs / 2 + 4, "text-anchor": "end", "font-size": 12, "font-weight": a === TARGET ? 700 : 400 }, g);
+    lab.textContent = byKey[a].label; if (a === TARGET) lab.style.fill = css("--ink");
+    const bl = el("text", { transform: `translate(${L + i * cs + cs / 2 + 4},${T + n * cs + 8}) rotate(-50)`, "text-anchor": "end", "font-size": 11.5, "font-weight": a === TARGET ? 700 : 400 }, g);
+    bl.textContent = byKey[a].label; if (a === TARGET) bl.style.fill = css("--ink");
+    for (let j = 0; j <= i; j++) {
+      const x = L + j * cs, y = T + i * cs;
+      if (i === j) { el("rect", { x: x + 1, y: y + 1, width: cs - 2, height: cs - 2, rx: 3, fill: "none", stroke: css("--grid") }, g); continue; }
+      const r = M[i][j], c = divColor(r), sel = (S.x === K[j] && S.y === a) || (S.x === a && S.y === K[j]);
+      const cell = el("g", { class: "cell", tabindex: 0, role: "button", "aria-label": `${byKey[a].label} y ${byKey[K[j]].label}: ${fmt(r)}` }, g);
+      el("rect", { x: x + 1, y: y + 1, width: cs - 2, height: cs - 2, rx: 3, fill: c.fill, stroke: sel ? css("--focus") : "none", "stroke-width": sel ? 2 : 0 }, cell);
+      if (Math.abs(r) >= 0.3) { const t = el("text", { x: x + cs / 2, y: y + cs / 2 + 3.5, "text-anchor": "middle", "font-size": 9.5, class: "num" }, cell); t.textContent = fmt(r).replace("0.", "."); t.style.fill = c.ink; }
+      const pick = () => { S.y = a; S.x = K[j]; S.logx = byKey[S.x].log; S.logy = byKey[S.y].log; renderPair(); };
+      cell.addEventListener("click", pick); cell.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+      cell.addEventListener("mouseenter", e => showTip(`<b>${byKey[a].label}</b> × <b>${byKey[K[j]].label}</b><br>${sym()} = <span class="num">${fmt(r)}</span> · n = ${ROWS.length}`, e));
+      cell.addEventListener("mousemove", moveTip); cell.addEventListener("mouseleave", hideTip);
+    }
+  });
+  // bloques: etiqueta vertical a la izquierda
+  start = 0;
+  V.forEach((v, i) => { if (i === n - 1 || V[i + 1].group !== v.group) { const y0 = T + start * cs, y1 = T + (i + 1) * cs; el("line", { x1: 4, x2: 4, y1: y0 + 3, y2: y1 - 3, stroke: css("--axis"), "stroke-width": 2, "stroke-linecap": "round" }, g); const t = el("text", { transform: `translate(14,${(y0 + y1) / 2}) rotate(-90)`, "text-anchor": "middle", "font-size": 10, class: "num" }, g); t.textContent = (i - start + 1) >= 2 ? v.group.toUpperCase() : ""; t.style.fill = css("--muted"); start = i + 1; } });
+}
+
+// ---------- barras: correlación con el target ----------
+function targetBars() {
+  const svg = $("target"); svg.innerHTML = "";
+  const ti = K.indexOf(TARGET), items = K.map((k, j) => ({ k, r: M[ti][j] })).filter(d => d.k !== TARGET).sort((a, b) => a.r - b.r);
+  const W = 460, L = 200, R = 46, rh = 22, T = 18, H = T + items.length * rh + 22, cx = L + (W - L - R) / 2, half = (W - L - R) / 2;
+  const mx = Math.max(0.4, ...items.map(d => Math.abs(d.r))), sc = v => cx + v / mx * half;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.style.width = "100%"; svg.style.height = "auto";
+  for (const v of [-0.15, 0.15]) el("rect", { x: Math.min(sc(v), cx), y: T - 4, width: Math.abs(sc(v) - cx), height: items.length * rh + 4, fill: css("--grid"), opacity: 0.6 }, svg);
+  const ticks = [-mx, -mx / 2, 0, mx / 2, mx].map(v => Math.round(v * 10) / 10).filter((v, i, a) => a.indexOf(v) === i);
+  for (const v of ticks) { el("line", { x1: sc(v), x2: sc(v), y1: T - 4, y2: T + items.length * rh, stroke: v === 0 ? css("--axis") : css("--grid") }, svg); const t = el("text", { x: sc(v), y: T + items.length * rh + 15, "text-anchor": "middle", "font-size": 10.5, class: "num" }, svg); t.textContent = fmt(v, 1); t.style.fill = css("--muted"); }
+  items.forEach((d, i) => {
+    const y = T + i * rh, g = el("g", { class: "cell", tabindex: 0, role: "button", "aria-label": `${byKey[d.k].label}: ${fmt(d.r)}` }, svg);
+    el("rect", { x: 0, y, width: W, height: rh, fill: "transparent" }, g);
+    const lab = el("text", { x: L - 8, y: y + rh / 2 + 4, "text-anchor": "end", "font-size": 12 }, g); lab.textContent = byKey[d.k].label;
+    const x0 = Math.min(cx, sc(d.r)), w = Math.max(1.5, Math.abs(sc(d.r) - cx));
+    el("rect", { x: x0, y: y + 5, width: w, height: rh - 10, rx: 3, fill: d.r < 0 ? css("--neg") : css("--pos"), opacity: Math.abs(d.r) < 0.15 ? 0.45 : 1 }, g);
+    const v = el("text", { x: d.r < 0 ? x0 - 5 : x0 + w + 5, y: y + rh / 2 + 4, "text-anchor": d.r < 0 ? "end" : "start", "font-size": 11, class: "num" }, g); v.textContent = fmt(d.r); v.style.fill = css("--ink");
+    const pick = () => { S.x = d.k; S.y = TARGET; S.logx = byKey[d.k].log; S.logy = false; renderPair(); };
+    g.addEventListener("click", pick); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+  });
+}
+
+// ---------- tabla de pares ----------
+function pairs() {
+  const list = []; for (let i = 0; i < K.length; i++) for (let j = 0; j < i; j++) list.push({ a: K[i], b: K[j], r: M[i][j] });
+  list.sort((p, q) => Math.abs(q.r) - Math.abs(p.r));
+  const tb = $("pairs"); tb.innerHTML = "";
+  for (const p of list.slice(0, 14)) {
+    const tr = document.createElement("tr"); tr.tabIndex = 0;
+    tr.innerHTML = `<td>${byKey[p.a].label}</td><td>${byKey[p.b].label}</td><td class="r">${fmt(p.r)}</td>`;
+    const pick = () => { S.x = p.b; S.y = p.a; S.logx = byKey[p.b].log; S.logy = byKey[p.a].log; renderPair(); $("scatter").scrollIntoView({ behavior: "smooth", block: "center" }); };
+    tr.addEventListener("click", pick); tr.addEventListener("keydown", e => { if (e.key === "Enter") pick(); });
+    tb.appendChild(tr);
+  }
+}
+
+// ---------- dispersión ----------
+function tf(v, log, shift) { return log ? Math.log10(v + shift) : v; }
+function niceTicks(lo, hi, n = 5) { const span = hi - lo || 1, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0)), step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag; const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(10)); return out; }
+function axis(key, log) {
+  const vals = ROWS.map(r => r[key]), shift = log && Math.min(...vals) <= 0 ? 1 : 0;
+  const t = vals.map(v => tf(v, log, shift)); let lo = Math.min(...t), hi = Math.max(...t); const pad = (hi - lo) * 0.05 || 1; lo -= pad; hi += pad;
+  let ticks;
+  if (log) { ticks = []; for (let e = Math.floor(lo); e <= Math.ceil(hi); e++) for (const m of [1, 3]) { const v = m * 10 ** e - shift; const tv = tf(v, true, shift); if (v >= 0 && tv >= lo && tv <= hi) ticks.push({ v, t: tv }); } }
+  else ticks = niceTicks(lo, hi).map(v => ({ v, t: v }));
+  return { lo, hi, shift, ticks };
+}
+function scatter() {
+  const svg = $("scatter"); svg.innerHTML = "";
+  const W = 640, H = 400, L = 62, R = 16, T = 12, Bm = 46;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.style.width = "100%"; svg.style.height = "auto";
+  const ax = axis(S.x, S.logx), ay = axis(S.y, S.logy);
+  const sx = v => L + (v - ax.lo) / (ax.hi - ax.lo) * (W - L - R), sy = v => H - Bm - (v - ay.lo) / (ay.hi - ay.lo) * (H - T - Bm);
+  for (const tk of ay.ticks) { el("line", { x1: L, x2: W - R, y1: sy(tk.t), y2: sy(tk.t), stroke: css("--grid") }, svg); const t = el("text", { x: L - 6, y: sy(tk.t) + 4, "text-anchor": "end", "font-size": 10.5, class: "num" }, svg); t.textContent = fmtN(tk.v); t.style.fill = css("--muted"); }
+  for (const tk of ax.ticks) { const t = el("text", { x: sx(tk.t), y: H - Bm + 16, "text-anchor": "middle", "font-size": 10.5, class: "num" }, svg); t.textContent = fmtN(tk.v); t.style.fill = css("--muted"); }
+  el("line", { x1: L, x2: W - R, y1: H - Bm, y2: H - Bm, stroke: css("--axis") }, svg);
+  const xl = el("text", { x: (L + W - R) / 2, y: H - 8, "text-anchor": "middle", "font-size": 12 }, svg); xl.textContent = byKey[S.x].label + (byKey[S.x].unit ? ` (${byKey[S.x].unit})` : "") + (S.logx ? " · log" : "");
+  const yl = el("text", { transform: `translate(14,${(T + H - Bm) / 2}) rotate(-90)`, "text-anchor": "middle", "font-size": 12 }, svg); yl.textContent = byKey[S.y].label + (byKey[S.y].unit ? ` (${byKey[S.y].unit})` : "") + (S.logy ? " · log" : "");
+  // recta OLS sobre las escalas mostradas
+  const px = ROWS.map(r => tf(r[S.x], S.logx, ax.shift)), py = ROWS.map(r => tf(r[S.y], S.logy, ay.shift));
+  const n = px.length, mx = px.reduce((a, b) => a + b) / n, my = py.reduce((a, b) => a + b) / n;
+  let sxy = 0, sxx = 0; for (let i = 0; i < n; i++) { sxy += (px[i] - mx) * (py[i] - my); sxx += (px[i] - mx) ** 2; }
+  const b = sxx ? sxy / sxx : 0, a0 = my - b * mx, xa = Math.min(...px), xb = Math.max(...px);
+  el("line", { x1: sx(xa), x2: sx(xb), y1: sy(a0 + b * xa), y2: sy(a0 + b * xb), stroke: css("--ink-2"), "stroke-width": 1.5, "stroke-dasharray": "5 4", opacity: 0.7 }, svg);
+  const surf = css("--surface");
+  ROWS.forEach((r, i) => {
+    const mad = r.ine5 === "28079";
+    const c = el("circle", { cx: sx(px[i]), cy: sy(py[i]), r: mad ? 6 : 4.5, fill: mad ? css("--ink") : css("--dot"), stroke: surf, "stroke-width": 1.5, "fill-opacity": mad ? 1 : 0.8 }, svg);
+    const hit = el("circle", { cx: sx(px[i]), cy: sy(py[i]), r: 9, fill: "transparent" }, svg);
+    hit.addEventListener("mouseenter", e => { c.setAttribute("r", 7); showTip(`<b>${r.name}</b> <span class="num">${r.ine5}</span><br>${byKey[S.x].label}: <span class="num">${fmtN(r[S.x])}</span><br>${byKey[S.y].label}: <span class="num">${fmtN(r[S.y])}</span>`, e); });
+    hit.addEventListener("mousemove", moveTip); hit.addEventListener("mouseleave", () => { c.setAttribute("r", mad ? 6 : 4.5); hideTip(); });
+    if (mad) { const t = el("text", { x: sx(px[i]) + 9, y: sy(py[i]) + 4, "font-size": 11 }, svg); t.textContent = "Madrid"; t.style.fill = css("--ink"); }
+  });
+  const ri = K.indexOf(S.y), ci = K.indexOf(S.x);
+  $("sc-title").textContent = `${byKey[S.y].label} frente a ${byKey[S.x].label}`;
+  $("sc-sub").innerHTML = `${sym()} = <span class="num">${fmt(M[ri][ci])}</span> · n = ${ROWS.length} · cada punto es un municipio; Madrid capital en tinta. La línea discontinua es el ajuste lineal en las escalas mostradas.`;
+  $("sel-x").value = S.x; $("sel-y").value = S.y; $("log-x").checked = S.logx; $("log-y").checked = S.logy;
+}
+
+// ---------- histogramas ----------
+function hists() {
+  const box = $("hists"); box.innerHTML = "";
+  for (const v of V) {
+    const vals = ROWS.map(r => r[v.key]), shift = v.log && Math.min(...vals) <= 0 ? 1 : 0, t = vals.map(x => tf(x, v.log, shift));
+    const lo = Math.min(...t), hi = Math.max(...t), nb = 22, w = (hi - lo) / nb || 1, bins = new Array(nb).fill(0);
+    t.forEach(x => bins[Math.min(nb - 1, Math.floor((x - lo) / w))]++);
+    const div = document.createElement("div"); div.className = "hist";
+    div.innerHTML = `<h3>${v.label}${v.node ? `<span class="chip">${v.node.replace(/_/g, " ")}</span>` : ""}</h3><p>${v.log ? "escala log · " : ""}mín ${fmtN(Math.min(...vals))} · mediana ${fmtN([...vals].sort((a, b) => a - b)[Math.floor(vals.length / 2)])} · máx ${fmtN(Math.max(...vals))}</p>`;
+    const W = 240, H = 74, svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `Distribución de ${v.label}` }); svg.style.width = "100%"; svg.style.height = "auto";
+    const mx = Math.max(...bins), bw = W / nb;
+    bins.forEach((c, i) => { if (c) el("rect", { x: i * bw + 1, y: H - 4 - c / mx * (H - 10), width: bw - 2, height: c / mx * (H - 10), rx: 1.5, fill: css("--dot"), opacity: 0.85 }, svg); });
+    el("line", { x1: 0, x2: W, y1: H - 4, y2: H - 4, stroke: css("--axis") }, svg);
+    for (const cut of v.cuts) { const x = (tf(cut, v.log, shift) - lo) / (hi - lo) * W; if (x >= 0 && x <= W) el("line", { x1: x, x2: x, y1: 2, y2: H - 4, stroke: css("--ink"), "stroke-width": 1.2, "stroke-dasharray": "3 3" }, svg); }
+    div.appendChild(svg); box.appendChild(div);
+  }
+}
+
+// ---------- orquestación ----------
+function renderPair() { heat(); scatter(); }
+function renderAll() { compute(); readPal(); kpis(); heat(); targetBars(); pairs(); scatter(); hists();
+  $("legend-bar").style.background = `linear-gradient(90deg, ${css("--neg")}, ${css("--mid")}, ${css("--pos")})`; }
+for (const id of ["sel-x", "sel-y"]) { const s = $(id); for (const v of V) { const o = document.createElement("option"); o.value = v.key; o.textContent = v.label; s.appendChild(o); } }
+$("sel-x").addEventListener("change", e => { S.x = e.target.value; S.logx = byKey[S.x].log; renderPair(); });
+$("sel-y").addEventListener("change", e => { S.y = e.target.value; S.logy = byKey[S.y].log; renderPair(); });
+$("log-x").addEventListener("change", e => { S.logx = e.target.checked; scatter(); });
+$("log-y").addEventListener("change", e => { S.logy = e.target.checked; scatter(); });
+for (const m of ["spearman", "pearson"]) $("m-" + m).addEventListener("click", () => { S.method = m; $("m-spearman").setAttribute("aria-pressed", m === "spearman"); $("m-pearson").setAttribute("aria-pressed", m === "pearson"); renderAll(); });
+$("excl-mad").addEventListener("change", e => { S.excl = e.target.checked; renderAll(); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+new MutationObserver(renderAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+renderAll();
+</script>

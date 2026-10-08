@@ -1,0 +1,58 @@
+digraph G {
+  graph [rankdir=TB, compound=true, newrank=true, bgcolor="#fcfcfb", pad=0.45, nodesep=0.45, ranksep=0.5, fontname="Segoe UI", label=<<FONT POINT-SIZE="21"><B>Diagrama de estados · Perfil Empresa / Emprendedor</B></FONT><BR/><FONT POINT-SIZE="11" COLOR="#52514e">Buscar dónde abrir o trasladar una oficina en la Comunidad de Madrid</FONT><BR/> >, labelloc=t];
+  node [shape=box, style="rounded,filled", fontname="Segoe UI", fontsize=12, margin="0.16,0.08", penwidth=1.2];
+  edge [fontname="Segoe UI", fontsize=9.5, color="#52514e", fontcolor="#3a3936", arrowsize=0.75, penwidth=1.1];
+  inicio [shape=circle, label="", width=0.22, style=filled, fillcolor="#0b0b0b", color="#0b0b0b"];
+  fin [shape=doublecircle, label="", width=0.16, style=filled, fillcolor="#0b0b0b", color="#0b0b0b"];
+  perfil [label=<<B>Selección de perfil</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">Administración · Empresa / Emprendedor</FONT>>, fillcolor="#ffffff", color="#52514e"];
+  subgraph cluster_onb { label=<<B>1 · ONBOARDING CONVERSACIONAL</B>>; fontname="Segoe UI"; fontsize=12; style="rounded"; color="#c98a12"; margin=12;
+    describe [label=<<B>Describiendo el negocio</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">texto libre: sector, plantilla, m²,<BR/>presupuesto, transporte, ayudas…</FONT>>, fillcolor="#ffffff", color="#52514e"];
+    clasifica [label=<<B>Clasificando intención (LLM)</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">salida estructurada: filtros duros ·<BR/>preferencias blandas · variables inciertas</FONT><BR/><FONT POINT-SIZE="8.5" COLOR="#b8312f">#29</FONT>>, fillcolor="#ffffff", color="#898781", style="rounded,dashed,filled"];
+    confirma [label=<<B>Confirmando lo entendido</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">resumen editable antes de calcular</FONT>>, fillcolor="#ffffff", color="#52514e"];
+  }
+  subgraph cluster_calc { label=<<B>2 · CÁLCULO</B>>; fontname="Segoe UI"; fontsize=12; style="rounded"; color="#256abf"; margin=12;
+    filtra [label=<<B>Aplicando filtros duros</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">Madrid capital · oficinas ≥ 1 ·<BR/>imprescindibles del usuario</FONT>>, fillcolor="#e6effb", color="#256abf"];
+    vacio [label=<<B>Sin candidatos</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">ningún municipio cumple todos los filtros</FONT>>, fillcolor="#ffffff", color="#52514e"];
+    infiere [label=<<B>Puntuando candidatos</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">GA²M: percentil 0-100 ·<BR/>red bayesiana: P(Alta) y causas para explicar</FONT>>, fillcolor="#e6effb", color="#256abf"];
+    pondera [label=<<B>Combinando preferencias</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">(S + Σ a·u) / (1 + Σ a) · transporte y ayudas<BR/>(preferencias.py)</FONT><BR/><FONT POINT-SIZE="8.5" COLOR="#b8312f">coste neto pendiente #36</FONT>>, fillcolor="#e6effb", color="#256abf"];
+  }
+  subgraph cluster_expl { label=<<B>3 · EXPLORACIÓN EN EL MAPA 3D</B>>; fontname="Segoe UI"; fontsize=12; style="rounded"; color="#52514e"; margin=12;
+    mapa [label=<<B>Mapa 3D actualizado</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">altura y color = puntuación ·<BR/>descartados aplanados · capas de ayudas y tren</FONT>>, fillcolor="#ffffff", color="#52514e"];
+    pregunta [label=<<B>Pregunta inteligente</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">la de mayor valor de la información ·<BR/>Me da igual · Poco · Muy · Imprescindible · No lo sé</FONT><BR/><FONT POINT-SIZE="8.5" COLOR="#b8312f">#30</FONT>>, fillcolor="#ffffff", color="#898781", style="rounded,dashed,filled"];
+    ficha [label=<<B>Ficha de municipio</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">puntuación desglosada · ayudas aplicables ·<BR/>estación más cercana · coste neto</FONT><BR/><FONT POINT-SIZE="8.5" COLOR="#b8312f">#13 · #31 · #36</FONT>>, fillcolor="#ffffff", color="#898781", style="rounded,dashed,filled"];
+  }
+  subgraph cluster_res { label=<<B>4 · RESULTADO</B>>; fontname="Segoe UI"; fontsize=12; style="rounded"; color="#b8312f"; margin=12;
+    propuestas [label=<<B>Mejores propuestas</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">vuelo de cámara al primero ·<BR/>top N con explicación de factores</FONT><BR/><FONT POINT-SIZE="8.5" COLOR="#b8312f">#5 empates · #31</FONT>>, fillcolor="#ffffff", color="#898781", style="rounded,dashed,filled"];
+    compara [label=<<B>Comparando municipios</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">2-3 candidatos lado a lado</FONT>>, fillcolor="#ffffff", color="#52514e"];
+    exporta [label=<<B>Informe exportado</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">PDF con puntuación, supuestos y fuentes</FONT>>, fillcolor="#ffffff", color="#52514e"];
+  }
+  inicio -> perfil [label=< abrir aplicación >];
+  perfil -> describe [label=< elige Empresa >];
+  describe -> clasifica [label=< enviar descripción >];
+  clasifica -> describe [label=< [descripción ambigua] / pedir aclaración >, style=dashed];
+  clasifica -> confirma [label=< / filtros, evidencias e inciertas >];
+  confirma -> describe [label=< corregir >, style=dashed];
+  confirma -> filtra [label=< confirmar >];
+  filtra -> vacio [label=< [0 candidatos] >];
+  vacio -> confirma [label=< relajar un filtro / sugerir el más restrictivo >, style=dashed];
+  filtra -> infiere [label=< [≥ 1 candidato] / atributos reales = evidencia >];
+  infiere -> pondera [label=< / S por municipio >];
+  pondera -> mapa [label=< / redibujar alturas con transición >];
+  mapa -> pregunta [label=< [quedan inciertas que desempatan] >];
+  pregunta -> filtra [label=< Imprescindible / añadir filtro duro >];
+  pregunta -> pondera [label=< Poco · Muy / peso a calibrado >];
+  pregunta -> mapa [label=< Me da igual · No lo sé / w = 0, reformular más tarde >, style=dashed];
+  mapa -> ficha [label=< clic en municipio >];
+  ficha -> mapa [label=< cerrar >];
+  mapa -> confirma [label=< editar preferencias >, style=dashed];
+  mapa -> propuestas [label=< Ver mejores propuestas >];
+  propuestas -> ficha [label=< abrir detalle >];
+  propuestas -> compara [label=< seleccionar 2-3 >];
+  compara -> propuestas [label=< volver >];
+  propuestas -> exporta [label=< exportar >];
+  compara -> exporta [label=< exportar >];
+  exporta -> fin [label=< salir >];
+  propuestas -> mapa [label=< seguir explorando >, style=dashed];
+  {rank=sink; leyenda}
+  leyenda [shape=plaintext, style="", label=<<TABLE BORDER="0" CELLSPACING="4"><TR><TD BGCOLOR="#e6effb" BORDER="1" COLOR="#256abf" WIDTH="22"> </TD><TD ALIGN="LEFT"><FONT POINT-SIZE="10">Lógica ya implementada (scripts del proyecto)</FONT></TD></TR><TR><TD BGCOLOR="#ffffff" BORDER="1" COLOR="#52514e"> </TD><TD ALIGN="LEFT"><FONT POINT-SIZE="10">Pantalla o interacción (aplicación por construir, #32)</FONT></TD></TR><TR><TD BGCOLOR="#ffffff" BORDER="1" STYLE="dashed" COLOR="#898781"> </TD><TD ALIGN="LEFT"><FONT POINT-SIZE="10">Lógica pendiente · <FONT COLOR="#b8312f">#N</FONT> = tarea en PENDIENTES.md</FONT></TD></TR><TR><TD COLSPAN="2" ALIGN="LEFT"><FONT POINT-SIZE="9.5" COLOR="#52514e">Transiciones: evento [condición] / acción</FONT></TD></TR></TABLE>>];
+}

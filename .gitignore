@@ -1,0 +1,32 @@
+# Entorno
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+node_modules/
+dist/
+build/
+
+# Editor / SO
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+~$*
+
+# Logs
+backend/logs/
+*.log
+
+# Datos: las descargas y las tablas intermedias no van a git (2,2 GB).
+# Se regeneran con backend/pipeline (ver data/README.md).
+data/raw/*
+!data/raw/.gitkeep
+data/processed/municipal/
+data/processed/osm_poi_con_seccion.csv
+data/processed/gtfs_paradas_con_seccion.csv
+
+# Material con licencia de terceros o de solo referencia
+docs/presentaciones/_plantilla/
+docs/presentaciones/_referencias/
