@@ -13,14 +13,17 @@ Sistema de apoyo a la decisión para elegir dónde abrir o trasladar oficinas en
 ```
 .
 ├── backend/
-│   ├── pipeline/        # descarga, normalización, dataset, red bayesiana, GA²M, auditoría, generadores de PDF
-│   ├── api/             # API FastAPI (en preparación)
+│   ├── madrid179/       # paquete del modelo: red bayesiana, GA²M, preferencias, ranking, servicio
+│   ├── api/             # API FastAPI (/api/v1)
+│   ├── pipeline/        # descarga, normalización, dataset, entrenamiento, auditoría, generadores de PDF
+│   ├── tests/
 │   └── requirements.txt
 ├── frontend/
+│   ├── prototipo/       # prototipo sin mapa para probar el modelo (HTML + JS, lo sirve la API)
 │   ├── dashboard/       # plantilla del dashboard de correlaciones
 │   └── app/             # aplicación web con mapa (en preparación)
 ├── infra/
-│   └── scripts/         # entorno y exportación de presentaciones
+│   └── scripts/         # dev.ps1 (arranque local), entorno y exportación de presentaciones
 ├── data/
 │   ├── raw/             # descargas (no versionadas)
 │   └── processed/       # tablas limpias; solo las salidas pequeñas del modelo están en git
@@ -32,17 +35,33 @@ Sistema de apoyo a la decisión para elegir dónde abrir o trasladar oficinas en
 └── .github/workflows/   # CI
 ```
 
-## Puesta en marcha
+## Probar en local
 
-Requisitos: Python 3.13 y Windows (los generadores de PDF usan fuentes del sistema). Graphviz solo para los diagramas.
+Requisitos: Windows con Python 3.13 (`py -3.13`). Desde la raíz del repositorio:
 
 ```powershell
-powershell -File infra/scripts/setup_venv.ps1          # crea .venv e instala backend/requirements.txt
-.venv/Scripts/python backend/pipeline/red_bayesiana_viabilidad.py
-.venv/Scripts/python backend/pipeline/auditoria_cpts.py
+powershell -ExecutionPolicy Bypass -File infra/scripts/dev.ps1
 ```
 
-Ejecuta siempre desde la raíz del repositorio: los scripts usan rutas relativas. El flujo completo de regeneración, desde las descargas hasta los anexos, está en [`CLAUDE.md`](CLAUDE.md) y en [`data/README.md`](data/README.md).
+La primera vez crea `.venv`, instala las dependencias y entrena el modelo (unos 2-3 minutos); después arranca en segundos. Se abre el navegador en:
+
+- **http://localhost:8000**: prototipo (ranking con preferencias y filtros, ficha explicada de cada municipio, consultas a la red);
+- **http://localhost:8000/docs**: la API, documentada y ejecutable desde el navegador.
+
+Opciones: `-Reentrenar` (tras cambiar el modelo o los datos), `-Puerto 8080`, `-SinNavegador`. `Ctrl+C` para parar.
+
+Sin el script, paso a paso:
+
+```powershell
+powershell -File infra/scripts/setup_venv.ps1                       # entorno (una vez)
+.venv/Scripts/python backend/pipeline/entrenar.py                   # modelo -> data/processed/modelo.joblib
+.venv/Scripts/python -m uvicorn api.main:app --app-dir backend      # API + prototipo
+.venv/Scripts/python -m pytest backend/tests                        # tests
+```
+
+## Regenerar datos e informes
+
+Los scripts de `backend/pipeline/` se ejecutan desde la raíz (usan rutas relativas). Los generadores de PDF usan fuentes de Windows y Graphviz para los diagramas. El flujo completo, desde las descargas hasta los anexos, está en [`CLAUDE.md`](CLAUDE.md) y en [`data/README.md`](data/README.md).
 
 ## Documentación
 

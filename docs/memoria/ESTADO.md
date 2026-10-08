@@ -10,8 +10,8 @@
 - `docs/informe/` informes, anexos PDF, diagramas y dashboard HTML generado
 - `docs/presentaciones/` entregables del datathon; `_plantilla/` y `_referencias/` quedan fuera de git (plantilla Slidesgo y `Interfaz.pdf`)
 - `backend/pipeline/` scripts reproducibles (recolección, procesado, modelo, generadores de PDF); los de descarga con `python -I`
-- `backend/api/` API FastAPI (pendiente #28) · `backend/logs/` logs de descargas (fuera de git)
-- `frontend/dashboard/` plantilla del dashboard · `frontend/app/` app React (pendiente #32)
+- `backend/madrid179/` paquete del modelo · `backend/api/` API FastAPI · `backend/tests/` · `backend/logs/` logs de descargas (fuera de git)
+- `frontend/prototipo/` prototipo HTML + JS servido por la API · `frontend/dashboard/` plantilla del dashboard · `frontend/app/` app React (pendiente #32)
 - `infra/` scripts de entorno y exportación (`pptx_a_pdf.ps1`), despliegue futuro; CI en `.github/workflows/`
 - `data/raw/` descargas sin modificar (fuera de git, 1,6 GB) · `data/processed/` tablas limpias (en git solo las salidas pequeñas del modelo)
 
@@ -77,3 +77,12 @@
 - OSM: 153.517 POIs; `osm_a_secciones.py` recalculado. Dashboard v2 publicado (misma URL).
 - `nivel_ayudas` por tramos de población en el dataset (informativo, fuera de la red).
 - GA²M: interpret-core 0.7.8, `ExplainableBoostingRegressor(interactions=5, max_bins=32, min_samples_leaf=10, outer_bags=8, learning_rate=0.02, max_rounds=3000)`; `eval_terms(X)` da contribuciones por término; `term_importances()` la importancia global. Las interacciones aportan poco (GAM 0,396 frente a GA²M 0,398).
+
+## Sesión 7 — Monorepo, backend v1 y prototipo (2026-10-08)
+- Repositorio público https://github.com/GF3000/madrid-179 (MIT). Backend v1 en la rama `feat/backend-v1`.
+- `madrid179` es la fuente única de NODOS/EDGES/FILTROS; `red_bayesiana_viabilidad.py` los reexporta. `experimento_transporte.py` cambia la estructura parcheando `madrid179.red` y `madrid179.discretizacion` (no `rb`).
+- El artefacto reproduce exactamente los CSV versionados (orden, puntuación, P(Alta), aportaciones; tolerancia 1e-9). Reejecutar `red_bayesiana_viabilidad.py` da CSV idénticos: el EBM es determinista con `random_state=0`.
+- La validación «0,459 ± 0,012 / 1,103 ± 0,015» usa la desviación poblacional (`np.std`, ddof = 0) de 5 repeticiones de CV-5 (semillas 0-4); `entrenar.py` la reproduce.
+- `auditoria_cpts.py` reescribe el xlsx y el PDF con marca de tiempo aunque no cambie nada: si solo cambia eso, restaurar con `git checkout`.
+- Windows PowerShell 5.1: no admite `;` dentro de `( )`; con `$ErrorActionPreference = "Stop"` la salida a stderr de programas nativos (pip, uvicorn) se convierte en excepción; lee los `.ps1` sin BOM como ANSI (tildes rotas).
+- Captura de pantalla sin navegador visible: `msedge --headless=new --window-size=1500,1000 --virtual-time-budget=8000 --screenshot=<png> <url>`.

@@ -1,6 +1,6 @@
 # Arquitectura del backend
 
-Estado: **propuesta** (2026-10-08). Cubre el punto #28 de [`PENDIENTES.md`](../memoria/PENDIENTES.md) y prepara #31 (explicación por municipio) y #16 (simulador `do()`).
+Estado: **pasos 1-5 implementados** en la rama `feat/backend-v1` (2026-10-08); falta el 6 (`/simulacion`). Cubre el punto #28 de [`PENDIENTES.md`](../memoria/PENDIENTES.md) y prepara #31 (explicación por municipio) y #16 (simulador `do()`).
 
 ## 1. Objetivo y orden de trabajo
 
@@ -33,7 +33,7 @@ flowchart LR
         C --> S[Servicios:<br/>ranking · ficha · consulta]
         S --> R[Rutas FastAPI]
     end
-    R -- HTTP/JSON --> P[Prototipo Streamlit<br/>frontend/prototipo]
+    R -- HTTP/JSON --> P[Prototipo HTML + JS<br/>frontend/prototipo]
     R -- HTTP/JSON --> F[App React<br/>frontend/app]
 ```
 
@@ -41,34 +41,33 @@ flowchart LR
 
 ```
 backend/
-├── madrid179/                 # paquete con la lógica del modelo (importable, sin E/S)
-│   ├── __init__.py
-│   ├── config.py              # NODOS, EDGES, FILTROS, ESS, EBM_KW (hoy en red_bayesiana_viabilidad.py)
+├── pyproject.toml             # paquete madrid179 (pip install -e backend) y configuración de pytest
+├── madrid179/                 # lógica del modelo (importable, sin E/S salvo artefactos.py)
+│   ├── config.py              # NODOS, EDGES, FILTROS, ESS, EBM_KW, rutas, aviso de señal débil
 │   ├── discretizacion.py      # discretizar(): terciles sobre los 179 municipios
-│   ├── red.py                 # construir_modelo(), consultas con evidencia parcial
+│   ├── red.py                 # construir_modelo(), validar(), distribucion()
 │   ├── ga2m.py                # ajuste del EBM, predicción y aportaciones por término
-│   ├── preferencias.py        # utilidades, pesos calibrados, puntuar() (hoy en pipeline/)
+│   ├── preferencias.py        # utilidades, pesos calibrados, puntuar()
 │   ├── ranking.py             # filtros → percentil → preferencias → orden
-│   └── artefactos.py          # guardar/cargar modelo.joblib con versión y huella del dataset
-├── pipeline/                  # scripts finos que llaman a madrid179
-│   ├── entrenar.py            # nuevo: entrena y guarda el artefacto (sustituye a main() de red_bayesiana_viabilidad.py)
-│   └── …                      # descarga, procesado, auditoría y generadores de PDF, sin cambios de función
+│   ├── artefactos.py          # entrenar / guardar / cargar modelo.joblib
+│   └── servicio.py            # meta, municipios, ranking, ficha, consulta (sin FastAPI)
+├── pipeline/
+│   ├── entrenar.py            # entrena y guarda el artefacto
+│   ├── red_bayesiana_viabilidad.py  # importa de madrid179 y escribe las salidas CSV versionadas
+│   └── …                      # descarga, procesado, auditoría y generadores de PDF
 ├── api/
-│   ├── main.py                # app FastAPI, carga del artefacto en el arranque (lifespan)
-│   ├── esquemas.py            # modelos Pydantic de entrada y salida (el contrato)
-│   ├── rutas/
-│   │   ├── municipios.py
-│   │   ├── ranking.py
-│   │   └── consulta.py
-│   └── dependencias.py        # acceso al modelo cargado
+│   ├── main.py                # app FastAPI: rutas /api/v1, carga del artefacto (lifespan), CORS, sirve el prototipo
+│   └── esquemas.py            # modelos Pydantic de entrada y salida (el contrato)
 ├── tests/
-│   ├── test_equivalencia.py   # el paquete reproduce los CSV actuales
+│   ├── test_equivalencia.py   # el artefacto reproduce los CSV versionados
 │   ├── test_preferencias.py
 │   └── test_api.py            # TestClient sobre los endpoints
-└── requirements.txt           # + fastapi, uvicorn, joblib, httpx (tests)
+└── requirements.txt
 ```
 
-`red_bayesiana_viabilidad.py` y `preferencias.py` del pipeline pasan a importar desde `madrid179`, de modo que `auditoria_cpts.py`, `diagrama_red_bayesiana.py` y los experimentos siguen funcionando.
+Cambio respecto a la propuesta inicial: las rutas caben en `main.py` y la lógica de cada endpoint vive en `madrid179/servicio.py`, que no depende de FastAPI. Así la API queda fina y la lógica se prueba sin servidor.
+
+`red_bayesiana_viabilidad.py` y `pipeline/preferencias.py` importan desde `madrid179` y reexportan los nombres que usan `auditoria_cpts.py`, `diagrama_red_bayesiana.py` y los experimentos.
 
 ## 5. El artefacto del modelo
 
@@ -182,7 +181,7 @@ Con 179 municipios todo cabe en memoria. El ranking es aritmética vectorizada s
 
 | Prueba | Qué garantiza |
 |---|---|
-| `test_equivalencia.py` | Tras la refactorización, el paquete reproduce `bn_umbrales.json`, `bn_cpts.txt` y `bn_ranking_municipios.csv` actuales (tolerancia 1e-9). Es la red de seguridad del paso 1. |
+| `test_equivalencia.py` | El artefacto reproduce `bn_umbrales.json`, el orden, la puntuación y P(Alta) de `bn_ranking_municipios.csv` y las aportaciones de `ga2m_contribuciones.csv` (tolerancia 1e-9); la predicción es la suma de las aportaciones. Las CPT las sigue verificando `auditoria_cpts.py`. |
 | `auditoria_cpts.py` | Sigue fallando si el cálculo manual y pgmpy difieren. |
 | `test_preferencias.py` | Con importancia «Me da igual», S' = S; los pesos reproducen los de `PENDIENTES.md` (transporte w = 0,267 / 0,421). |
 | `test_api.py` | Esquemas, códigos 422 con nodos o estados inválidos, filtros que vacían el conjunto, y que el desglose suma la puntuación. |
@@ -191,33 +190,32 @@ La CI (`.github/workflows/ci.yml`) añade: `entrenar.py` → `pytest backend/tes
 
 ## 10. Ejecución y despliegue
 
-- **Local:** `.venv/Scripts/python -m uvicorn backend.api.main:app --reload` desde la raíz. Documentación interactiva en `http://localhost:8000/docs` (Swagger, gratis con FastAPI): sirve para probar la API antes de tener frontend.
+- **Local:** `powershell -ExecutionPolicy Bypass -File infra/scripts/dev.ps1` desde la raíz (prepara el entorno y el artefacto si faltan). A mano: `.venv/Scripts/python -m uvicorn api.main:app --app-dir backend --reload`. Documentación interactiva en `http://localhost:8000/docs` (Swagger, gratis con FastAPI): sirve para probar la API antes de tener frontend.
 - **CORS:** abierto a `localhost` en desarrollo, para el prototipo y la app.
 - **Más adelante (#32):** imagen Docker en `infra/` con el artefacto copiado dentro; el frontend se despliega como estático. Si la app se empaqueta con Tauri, la API puede ir como proceso local.
 
 ## 11. Prototipo de prueba
 
-`frontend/prototipo/app.py` con Streamlit (~100 líneas), que **llama a la API por HTTP** con `httpx` y no importa `madrid179`:
+`frontend/prototipo/` (`index.html`, `app.js`, `estilos.css`): HTML y JavaScript sin dependencias ni compilación, servido por la propia API en `/`. Se cambió Streamlit por esta opción para que probar en local sea **un solo proceso y un solo comando** (`infra/scripts/dev.ps1`), sin dependencias pesadas. Sigue la regla de diseño: **solo llama a la API por HTTP**.
 
-1. barra lateral con las preferencias y los filtros;
-2. tabla del ranking con la puntuación desglosada;
-3. al elegir un municipio, su ficha: barras de aportaciones del GA²M y P(Baja/Media/Alta) de la red;
-4. pestaña de consulta con evidencia parcial;
+1. barra lateral con las preferencias y los filtros «imprescindible»;
+2. tabla del ranking con la puntuación desglosada (modelo, transporte, ayudas);
+3. al elegir un municipio, su ficha: aportaciones del GA²M (positivas y negativas), P(Baja/Media/Alta) de la red, padres de la viabilidad en negrita y aviso de discrepancia; enlace directo `#ine5`;
+4. pestaña de consulta con evidencia parcial, comparada con la probabilidad a priori;
 5. el aviso de `/meta` fijo en la cabecera.
 
 ## 12. Plan por pasos
 
 | Paso | Entregable | Hecho cuando |
 |---|---|---|
-| 1 | Paquete `madrid179` + `entrenar.py` + artefacto | `test_equivalencia.py` y la auditoría pasan; los CSV salen idénticos |
-| 2 | API v1: `/meta`, `/municipios`, `/ranking` | `test_api.py` pasa; `/docs` responde |
-| 3 | API v1: `/municipios/{ine5}`, `/consulta` | ficha con aportaciones que suman la predicción |
-| 4 | Prototipo Streamlit | se puede recorrer el flujo emprendedor de `docs/informe/estados_emprendedor.png` |
-| 5 | Filtros pendientes: «imprescindible» de transporte (#38) y «necesito ayudas» (#12) | filtros en `/ranking` con su test |
+| 1 | Paquete `madrid179` + `entrenar.py` + artefacto | ✅ `test_equivalencia.py` y la auditoría pasan; los CSV salen idénticos |
+| 2 | API v1: `/meta`, `/municipios`, `/ranking` | ✅ `test_api.py` pasa; `/docs` responde |
+| 3 | API v1: `/municipios/{ine5}`, `/consulta` | ✅ ficha con aportaciones que suman la predicción |
+| 4 | Prototipo | ✅ HTML + JS servido por la API; arranque con `dev.ps1` |
+| 5 | Filtros «imprescindible» de transporte (#38) y «necesito ayudas» (#12) | ✅ filtros en `/ranking` con su test |
 | 6 | `/simulacion` | tras #3 y #6 |
 
 ## 13. Decisiones abiertas
 
-- **Nombre del paquete:** `madrid179` (propuesto).
 - **Formato del artefacto:** `joblib` (simple, mismo Python) frente a Parquet + JSON + modelo pgmpy serializado por separado (más portable y legible). Propuesta: `joblib` en v1; reconsiderar si la API se separa del pipeline.
 - **Idioma de la API:** nombres de campos en español, coherentes con el código y los documentos.

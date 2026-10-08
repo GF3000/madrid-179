@@ -30,3 +30,8 @@ data/processed/gtfs_paradas_con_seccion.csv
 # Material con licencia de terceros o de solo referencia
 docs/presentaciones/_plantilla/
 docs/presentaciones/_referencias/
+
+# Artefacto del modelo (binario, se regenera con backend/pipeline/entrenar.py)
+data/processed/modelo.joblib
+*.egg-info/
+.pytest_cache/
