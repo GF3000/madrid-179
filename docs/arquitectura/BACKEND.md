@@ -144,14 +144,14 @@ Salida (una fila por municipio, ordenadas):
   "candidatos": 139,
   "pesos": {"transporte": 0.73, "ayudas": 0.41},
   "resultados": [
-    {"posicion": 2, "ine5": "28022", "municipio": "Boadilla del Monte",
+    {"posicion": 5, "ine5": "28022", "municipio": "Boadilla del Monte",
      "puntuacion": 80.8, "desglose": {"modelo": 46.8, "transporte": 34.0, "ayudas": 0.0},
      "p_alta_red": 0.572}
   ]
 }
 ```
 
-Las cifras del ejemplo salen del modelo actual; la API devolverá las que calcule en cada caso.
+Las cifras del ejemplo salen del modelo actual con esas preferencias (se muestra solo la fila de Boadilla del Monte, 5.ª de 139); la API devolverá las que calcule en cada caso.
 
 ### `GET /municipios/{ine5}`
 La ficha del municipio:
