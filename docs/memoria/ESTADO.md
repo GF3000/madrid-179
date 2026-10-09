@@ -86,3 +86,6 @@
 - `auditoria_cpts.py` reescribe el xlsx y el PDF con marca de tiempo aunque no cambie nada: si solo cambia eso, restaurar con `git checkout`.
 - Windows PowerShell 5.1: no admite `;` dentro de `( )`; con `$ErrorActionPreference = "Stop"` la salida a stderr de programas nativos (pip, uvicorn) se convierte en excepción; lee los `.ps1` sin BOM como ANSI (tildes rotas).
 - Captura de pantalla sin navegador visible: `msedge --headless=new --window-size=1500,1000 --virtual-time-budget=8000 --screenshot=<png> <url>`.
+- Experimento de variables (#44): el EBM de producción tarda ~16 s por ajuste (24 s con `n_jobs=1`); un GAM sin interacciones con 4 bolsas y `n_jobs=1` tarda 1,4 s y sirve para cribar. El GAM ligero da Spearman 0,391 frente al 0,398 de producción.
+- Variables por población con OSM (sanidad, deporte, amenidades) son mayores en pueblos pequeños (pocos habitantes): casi todo lo municipal va con el tamaño; controlar siempre por población y distancia (Spearman parcial sobre rangos).
+- El equipo tiene ~15 GB de RAM y a menudo < 3 GB libres: Claude Code corta los procesos en segundo plano con poca memoria. Para trabajos largos, `n_jobs` bajo y guardar resultados parciales.
