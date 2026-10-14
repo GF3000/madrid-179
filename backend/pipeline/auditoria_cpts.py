@@ -223,7 +223,11 @@ def pie(c, doc):
 
 
 ej = audit["Viabilidad_Empresarial"][0]
-ej = ej[(ej.Dinamismo_Demografico == "Alto") & (ej.Especializacion_Servicios == "Alta")].iloc[0]
+PADRES_V = [a for a, b in rb.EDGES if b == "Viabilidad_Empresarial"]
+NOMBRE = lambda n: n.replace("_", " ").replace("Demografico", "Demográfico").replace("Especializacion", "Especialización")
+# Ejemplo: la combinación con todos los padres en su estado más alto
+ej = ej[np.logical_and.reduce([ej[p] == rb.NODOS[p][1][-1] for p in PADRES_V])].iloc[0]
+q_v = int(np.prod([len(rb.NODOS[p][1]) for p in PADRES_V]))
 a_v = audit["Viabilidad_Empresarial"][5]
 cv = inferencias.iloc[3]
 story = [
@@ -235,7 +239,7 @@ story = [
     P("1. Procedimiento", "h2"),
     *[Paragraph(t, st["bullet"], bulletText=f"{i}.") for i, t in enumerate([
         "<b>Discretizar.</b> Cada variable continua se divide en tres estados por sus terciles (unos 60 municipios por estado); el "
-        "acceso ferroviario es Sí o No. Cada municipio queda descrito por ocho etiquetas.",
+        f"acceso ferroviario es Sí o No. Cada municipio queda descrito por {len(rb.NODOS)} etiquetas.",
         "<b>Contar.</b> Para cada nodo se cuentan los municipios en cada estado, separados por cada combinación de estados de sus padres.",
         "<b>Suavizar (prior BDeu).</b> Se suma a cada casilla un pseudo-conteo igual, para que ninguna probabilidad sea 0 por falta de "
         f"datos. Equivale a añadir {ESS} municipios imaginarios repartidos de forma uniforme en cada tabla.",
@@ -246,9 +250,10 @@ story = [
     caja(P(f"pseudo-conteo α = ESS / (combinaciones de padres × estados) <br/>"
            f"P(estado | padres) = (conteo + α) / (municipios con esos padres + estados × α)", "formula")),
     P("2. Ejemplo resuelto", "h2"),
-    P(f"Nodo objetivo <b>Viabilidad Empresarial</b>, con padres Dinamismo Demográfico y Especialización en Servicios: "
-      f"9 combinaciones × 3 estados, así que α = {ESS} / 27 = {f3(a_v)}. Entre los {ej.n_municipios} municipios con Dinamismo Alto y "
-      f"Especialización Alta, {ej.conteo_Alta} tienen viabilidad Alta, {ej.conteo_Media} Media y {ej.conteo_Baja} Baja.", "body"),
+    P(f"Nodo objetivo <b>Viabilidad Empresarial</b>, con padres {' y '.join(NOMBRE(p) for p in PADRES_V)}: "
+      f"{q_v} combinaciones × 3 estados, así que α = {ESS} / {q_v * 3} = {f3(a_v)}. Entre los {ej.n_municipios} municipios con "
+      f"{' y '.join(f'{NOMBRE(p)} {rb.NODOS[p][1][-1]}' for p in PADRES_V)}, {ej.conteo_Alta} tienen viabilidad Alta, "
+      f"{ej.conteo_Media} Media y {ej.conteo_Baja} Baja.", "body"),
     caja(P(f"P(Alta)  = ({ej.conteo_Alta} + {f3(a_v)}) / ({ej.n_municipios} + 3 × {f3(a_v)}) = <b>{f3(ej.P_manual_Alta)}</b><br/>"
            f"P(Media) = ({ej.conteo_Media} + {f3(a_v)}) / ({ej.n_municipios} + 3 × {f3(a_v)}) = {f3(ej.P_manual_Media)}<br/>"
            f"P(Baja)  = ({ej.conteo_Baja} + {f3(a_v)}) / ({ej.n_municipios} + 3 × {f3(a_v)}) = {f3(ej.P_manual_Baja)}", "formula")),
@@ -256,7 +261,7 @@ story = [
       "combinación, el suavizado pesa menos.", "note"),
     P("3. Verificación independiente", "h2"),
     P("Las tablas se recalcularon con pandas, sin pgmpy, y se compararon celda a celda con las que estima pgmpy "
-      "(<i>BayesianEstimator</i>, prior BDeu, ESS = 10). Las inferencias se reprodujeron sumando la distribución conjunta completa, "
+      f"(<i>BayesianEstimator</i>, prior BDeu, ESS = {ESS}). Las inferencias se reprodujeron sumando la distribución conjunta completa, "
       "combinación por combinación, y se compararon con el algoritmo de eliminación de variables de pgmpy.", "body"),
 ]
 rs = [[P(h, "head") for h in ["Nodo", "Padres", "Celdas", "α", "Diferencia máxima", "Resultado"]]]

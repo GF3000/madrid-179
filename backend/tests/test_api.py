@@ -6,7 +6,7 @@ API = "/api/v1"
 def test_meta(cliente):
     m = cliente.get(f"{API}/meta").json()
     assert m["municipios"] == 179 and m["candidatos_por_defecto"] == 139
-    assert "débil" in m["aviso"]
+    assert "causales" in m["aviso"]  # el aviso siempre recuerda que son asociaciones
     assert m["objetivo"] == "Viabilidad_Empresarial"
 
 
@@ -15,10 +15,10 @@ def test_municipios(cliente):
     assert len(ms) == 179 and all(len(m["ine5"]) == 5 for m in ms)
 
 
-def test_ranking_por_defecto(cliente):
+def test_ranking_por_defecto(cliente, servicio):
     r = cliente.post(f"{API}/ranking", json={}).json()
     assert r["candidatos"] == 139 and len(r["resultados"]) == 139
-    assert r["resultados"][0]["municipio"] == "Boadilla del Monte"
+    assert [f["ine5"] for f in r["resultados"]] == list(servicio.base.index)
     assert r["resultados"][0]["puntuacion"] == 100
 
 
@@ -44,12 +44,21 @@ def test_ranking_entrada_invalida(cliente, cuerpo):
 
 
 def test_ficha(cliente):
-    f = cliente.get(f"{API}/municipios/28149").json()  # Torrejón de la Calzada: GA²M y red discrepan
-    assert f["candidato"] and f["posicion"] == 8
+    octavo = cliente.post(f"{API}/ranking", json={"limite": 8}).json()["resultados"][-1]
+    f = cliente.get(f"{API}/municipios/{octavo['ine5']}").json()
+    assert f["candidato"] and f["posicion"] == 8 and f["puntuacion"] == octavo["puntuacion"]
     assert sum(f["red"]["probabilidades"].values()) == pytest.approx(1, abs=1e-3)
     suma = f["ga2m"]["intercepto_pct"] + sum(a["aportacion_pp"] for a in f["ga2m"]["aportaciones"])
     assert suma == pytest.approx(f["ga2m"]["prediccion_pct"], abs=1e-3)
-    assert f["discrepancia"]
+
+
+def test_discrepancia(servicio):
+    """El aviso aparece exactamente cuando los percentiles de la red y del GA²M distan ≥ 50 puntos."""
+    from madrid179.servicio import UMBRAL_DISCREPANCIA
+    b = servicio.base
+    for ine5 in b.index[::7]:
+        esperado = abs(b.loc[ine5, "percentil_ga2m"] - b.loc[ine5, "percentil_bn"]) >= UMBRAL_DISCREPANCIA
+        assert bool(servicio.ficha(ine5)["discrepancia"]) == esperado
 
 
 def test_ficha_no_candidato(cliente):

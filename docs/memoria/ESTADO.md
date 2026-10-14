@@ -89,3 +89,11 @@
 - Experimento de variables (#44): el EBM de producción tarda ~16 s por ajuste (24 s con `n_jobs=1`); un GAM sin interacciones con 4 bolsas y `n_jobs=1` tarda 1,4 s y sirve para cribar. El GAM ligero da Spearman 0,391 frente al 0,398 de producción.
 - Variables por población con OSM (sanidad, deporte, amenidades) son mayores en pueblos pequeños (pocos habitantes): casi todo lo municipal va con el tamaño; controlar siempre por población y distancia (Spearman parcial sobre rangos).
 - El equipo tiene ~15 GB de RAM y a menudo < 3 GB libres: Claude Code corta los procesos en segundo plano con poca memoria. Para trabajos largos, `n_jobs` bajo y guardar resultados parciales.
+
+## Sesión 8 — Modelo v2 y secretos (2026-10-14)
+- Criterio del equipo: en fase de diseño, ante la duda una variable entra (el jurado valora más parámetros); las de fuga nunca. No regenerar PDF ni presentaciones al cambiar el modelo.
+- Red v2: 12 nodos (Densidad, Juventud, Sanidad y Paro nuevos), padres de la viabilidad Dinamismo + Densidad, ESS = 50. Padres de los nodos nuevos por `BDeu(...).local_score(nodo, padres)` (pgmpy) entre candidatos plausibles, máx. 2.
+- Con evidencia completa el ESS no cambia el estado más probable (el acierto es idéntico para todo ESS); solo calibra. Las estructuras con 3 padres aciertan más (0,520) pero rompen la monotonía (15-17 violaciones).
+- GA²M v2: 14 variables y 10 interacciones; el EBM sigue tardando ~30 s en entrenar. `experimento_ga2m_ampliado.py` reutiliza los resultados por repetición de `ga2m_cv.csv` como base (mismas particiones y semillas) y guarda cada configuración al terminar.
+- La auditoría de las CPT sigue verificando la inferencia por enumeración de la conjunta completa: con 12 nodos son 59.049 combinaciones por consulta y sigue siendo rápida.
+- Secretos: `.env` en la raíz (python-dotenv, `override=False`); `.dot` también ignorado. `.gitignore` tenía `.env.*`, que ignoraba la plantilla: añadida la excepción `!.env.example`.

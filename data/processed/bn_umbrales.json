@@ -122,6 +122,78 @@
    60
   ]
  },
+ "Densidad": {
+  "columna": "densidad_hab_km2",
+  "metodo": "terciles",
+  "estados": [
+   "Baja",
+   "Media",
+   "Alta"
+  ],
+  "cortes": [
+   61.4524624606903,
+   249.0263253257394
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
+ "Juventud": {
+  "columna": "pct_menores_45",
+  "metodo": "terciles",
+  "estados": [
+   "Baja",
+   "Media",
+   "Alta"
+  ],
+  "cortes": [
+   47.67666666666666,
+   51.88666666666666
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
+ "Sanidad": {
+  "columna": "sanidad_por_1000hab",
+  "metodo": "terciles",
+  "estados": [
+   "Baja",
+   "Media",
+   "Alta"
+  ],
+  "cortes": [
+   0.2828747985508095,
+   0.6137146529534996
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
+ "Paro": {
+  "columna": "paro_por_100hab",
+  "metodo": "terciles",
+  "estados": [
+   "Bajo",
+   "Medio",
+   "Alto"
+  ],
+  "cortes": [
+   4.053333333333333,
+   5.213333333333333
+  ],
+  "conteo": [
+   60,
+   59,
+   60
+  ]
+ },
  "Viabilidad_Empresarial": {
   "columna": "tasa_neta_emp",
   "metodo": "terciles",

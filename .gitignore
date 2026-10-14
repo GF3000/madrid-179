@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 .env
 .env.*
+!.env.example
 node_modules/
 dist/
 build/
@@ -35,3 +36,4 @@ docs/presentaciones/_referencias/
 data/processed/modelo.joblib
 *.egg-info/
 .pytest_cache/
+.dot

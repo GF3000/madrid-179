@@ -3,10 +3,10 @@
 Sistema de apoyo a la decisión para elegir dónde abrir o trasladar oficinas en los **179 municipios de la Comunidad de Madrid**, equilibrando la viabilidad empresarial y el reequilibrio territorial. Proyecto del Datathon de la Comunidad de Madrid.
 
 - **Puntuación:** un GA²M (EBM de InterpretML) ordena los municipios candidatos, ajustado por las preferencias del usuario (transporte, ayudas).
-- **Explicación:** una red bayesiana de 8 nodos (pgmpy) da P(viabilidad alta), las causas y las consultas con evidencia parcial, y sostiene un simulador de escenarios `do()`.
+- **Explicación:** una red bayesiana de 12 nodos (pgmpy) da P(viabilidad alta), las causas y las consultas con evidencia parcial, y sostiene un simulador de escenarios `do()`.
 - **Transparencia:** cada probabilidad de la red puede rehacerse a mano; `backend/pipeline/auditoria_cpts.py` falla si el cálculo manual y pgmpy no coinciden.
 
-> **Limitación conocida.** La señal es débil: en validación cruzada (CV-5 × 5) la red acierta el 45,9 % ± 1,2 % de las veces (azar: 33 %), pero su log-loss (1,103) no mejora a la distribución uniforme (1,099). Los resultados son asociaciones, no efectos causales, y las simulaciones son escenarios según el modelo.
+> **Limitación conocida.** La señal es moderada. En validación cruzada (CV-5 × 5), el GA²M ordena con Spearman 0,53 frente a la tasa neta real y el 64 % de su tercio superior lo es de verdad (azar: 33 %); la red bayesiana mejora a la distribución uniforme (log-loss 1,008 frente a 1,099) pero sus probabilidades siguen siendo aproximadas. Los resultados son asociaciones, no efectos causales, y las simulaciones son escenarios según el modelo.
 
 ## Estructura del monorepo
 

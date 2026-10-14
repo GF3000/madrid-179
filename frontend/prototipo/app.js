@@ -6,7 +6,8 @@ const fmt = (x, d = 1) => Number(x).toLocaleString("es-ES", { minimumFractionDig
 const NOMBRES = {
   Distancia_Madrid: "Distancia a Madrid", Talento: "Talento", Acceso_Ferroviario: "Acceso ferroviario",
   Coste_Inmobiliario: "Coste inmobiliario", Renta: "Renta", Especializacion_Servicios: "Especialización en servicios",
-  Dinamismo_Demografico: "Dinamismo demográfico", Viabilidad_Empresarial: "Viabilidad empresarial",
+  Dinamismo_Demografico: "Dinamismo demográfico", Densidad: "Densidad de población", Juventud: "Población joven",
+  Sanidad: "Sanidad por habitante", Paro: "Paro", Viabilidad_Empresarial: "Viabilidad empresarial",
 };
 const FILTROS = { excluir_madrid_capital: "la capital no es candidata (reequilibrio territorial)", min_uu_oficinas: "no tiene oficinas en el Catastro" };
 

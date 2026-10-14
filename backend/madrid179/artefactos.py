@@ -12,7 +12,7 @@ import pandas as pd
 from pgmpy.inference import VariableElimination
 
 from . import ga2m
-from .config import ARTEFACTO, DATASET, EVIDENCIAS, NODOS, RAIZ
+from .config import ARTEFACTO, DATASET, EVIDENCIAS, FEATURES_GA2M, NODOS, RAIZ
 from .discretizacion import discretizar
 from .red import construir_modelo, distribucion, validar
 
@@ -45,8 +45,8 @@ def entrenar(d=None, repeticiones_cv=5, modo="A"):
                          index=disc.index).add_prefix("P_")
     ebm = ga2m.ajustar(d)
     pred, contrib, imp = ga2m.evaluar(ebm, d)
-    columnas = [NODOS[n][0] for n in NODOS]
-    tabla = d[COLUMNAS_INFO + columnas].join(disc).join(probs).assign(ga2m_pred=pred)
+    columnas = list(dict.fromkeys(COLUMNAS_INFO + [NODOS[n][0] for n in NODOS] + FEATURES_GA2M))
+    tabla = d[columnas].join(disc).join(probs).assign(ga2m_pred=pred)
 
     validacion = None
     if repeticiones_cv:

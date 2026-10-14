@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, "backend/pipeline")
-from red_bayesiana_viabilidad import EDGES, FILTROS, NODOS  # noqa: E402
+from red_bayesiana_viabilidad import EDGES, ESS, FILTROS, NODOS
+from madrid179.config import FEATURES_GA2M  # noqa: E402
 
 d = pd.read_csv("data/processed/dataset_bn_municipios.csv", sep=";", dtype={"ine5": str}, encoding="utf-8-sig").set_index("ine5")
 um = json.load(open("data/processed/bn_umbrales.json", encoding="utf-8"))
@@ -99,7 +100,7 @@ L.append("  }")
 
 # ---- 2. Red bayesiana ----
 raices = {n for n in NODOS if all(h != n for _, h in EDGES)}
-L.append(f'  subgraph cluster_bn {{ label=<<B>2 · RED BAYESIANA</B>  <FONT COLOR="#52514e">8 nodos · máx. 2 padres · CPT BDeu (ESS = 10) · explica cada candidato y sostiene el simulador do()</FONT>>; '
+L.append(f'  subgraph cluster_bn {{ label=<<B>2 · RED BAYESIANA</B>  <FONT COLOR="#52514e">{len(NODOS)} nodos · máx. 2 padres · CPT BDeu (ESS = {ESS}) · explica cada candidato y sostiene el simulador do()</FONT>>; '
          f'fontname="{FONT}"; fontsize=12.5; style="rounded"; color="#256abf"; penwidth=1.4; margin=16;')
 for n in NODOS:
     attrs = ""
@@ -124,7 +125,7 @@ L.append("  {rank=same; prefs; candidatos}")
 
 # ---- 3. Puntuación (decisión #40 b: el GA²M puntúa, la red explica) ----
 L.append(f'  subgraph cluster_out {{ label=<<B>3 · PUNTUACIÓN Y RANKING</B>>; fontname="{FONT}"; fontsize=12.5; style="rounded"; color="#b8312f"; margin=14;')
-L.append(f'    ga2m [label=<<B>GA²M (EBM)</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">mismas 7 variables, sin discretizar ·<BR/>predice la tasa neta empresarial</FONT>>, fillcolor="#e6effb", color="#256abf"];')
+L.append(f'    ga2m [label=<<B>GA²M (EBM)</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">{len(FEATURES_GA2M)} variables continuas ·<BR/>predice la tasa neta empresarial</FONT>>, fillcolor="#e6effb", color="#256abf"];')
 L.append(f'    score [label=<<B>Puntuación = percentil del GA²M entre candidatos (0-100)</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">'
          f'altura y color del municipio en el mapa 3D · bn_ranking_municipios.csv</FONT>>, fillcolor="#fde8e7", color="#b8312f", penwidth=1.6];')
 L.append(f'    pesos [label=<<B>Preferencias ponderadas</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">transporte · ayudas · coste (previsto)<BR/>'

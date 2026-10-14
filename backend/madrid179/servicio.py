@@ -6,20 +6,11 @@ import numpy as np
 import pandas as pd
 from pgmpy.inference import VariableElimination
 
-from .config import AVISO_SENAL, EVIDENCIAS, FILTROS, NODOS, OBJETIVO, PADRES_OBJETIVO
+from .config import AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, NODOS, OBJETIVO, PADRES_OBJETIVO
 from .preferencias import IMPORTANCIA, PREFERENCIAS
 from .ranking import rankear, utilidades
 from .red import distribucion
 
-ETIQUETAS = {
-    "dist_sol_km": "Distancia a Madrid (km a Sol)",
-    "pct_estudios_superiores": "Talento (% con estudios superiores)",
-    "paradas_ferro": "Paradas ferroviarias",
-    "vc_residencial_por_uu": "Coste inmobiliario (valor catastral residencial)",
-    "rdb_per_capita": "Renta disponible per cápita",
-    "pct_up_servicios_prof": "Especialización en servicios profesionales",
-    "crec_pob_5a": "Crecimiento de población (5 años)",
-}
 UMBRAL_DISCREPANCIA = 50  # puntos de percentil entre la red y el GA²M
 
 
