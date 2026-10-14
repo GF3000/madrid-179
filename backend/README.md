@@ -8,9 +8,9 @@ Lógica pura, importable desde el pipeline, la API y los tests (instalado en mod
 
 | Módulo | Qué hace |
 |---|---|
-| `config.py` | Nodos, DAG, filtros duros, hiperparámetros, rutas, aviso de señal débil |
+| `config.py` | Nodos, DAG, filtros duros, hiperparámetros, rutas, aviso de señal, carga de claves de API desde `.env` |
 | `discretizacion.py` | Terciles sobre los 179 municipios |
-| `red.py` | Red bayesiana (BDeu, ESS = 10), validación cruzada, inferencia |
+| `red.py` | Red bayesiana (BDeu, ESS de `config.py`), validación cruzada, inferencia |
 | `ga2m.py` | EBM de InterpretML: predicción y aportaciones por término |
 | `preferencias.py` | Utilidades de transporte y ayudas, pesos calibrados por dispersión |
 | `ranking.py` | Filtros → percentil del GA²M entre candidatos → preferencias → orden |

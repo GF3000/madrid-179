@@ -16,7 +16,7 @@ Para que la fase 2 no obligue a rehacer la fase 1, la regla de diseño es una so
 - **Entrenar y servir son pasos distintos.** El pipeline entrena y guarda un artefacto; la API solo lo carga y consulta. La API nunca reentrena.
 - **Un único modelo auditado.** La API sirve exactamente el artefacto que ha pasado `auditoria_cpts.py`, y cada respuesta lleva su versión.
 - **Cada número se puede rehacer.** Las respuestas devuelven la puntuación desglosada (modelo + preferencias) y las aportaciones de cada término, no solo el total.
-- **Honestidad con la incertidumbre.** La señal es débil (log-loss 1,103 frente a 1,099 de la uniforme). La API devuelve ese aviso en sus metadatos para que cualquier interfaz lo muestre.
+- **Honestidad con la incertidumbre.** La señal es moderada (modelo v2: Spearman del GA²M 0,529; log-loss de la red 1,008 frente a 1,099 de la uniforme). La API devuelve un aviso en sus metadatos para que cualquier interfaz lo muestre.
 - **Lógica sin E/S.** El paquete del modelo no lee ni escribe ficheros salvo en el módulo de artefactos; esto permite probarlo sin datos en disco.
 
 ## 3. Vista general
@@ -43,7 +43,7 @@ flowchart LR
 backend/
 ├── pyproject.toml             # paquete madrid179 (pip install -e backend) y configuración de pytest
 ├── madrid179/                 # lógica del modelo (importable, sin E/S salvo artefactos.py)
-│   ├── config.py              # NODOS, EDGES, FILTROS, ESS, EBM_KW, rutas, aviso de señal débil
+│   ├── config.py              # NODOS, EDGES, FILTROS, ESS, EBM_KW, rutas, aviso de señal, claves de API (.env)
 │   ├── discretizacion.py      # discretizar(): terciles sobre los 179 municipios
 │   ├── red.py                 # construir_modelo(), validar(), distribucion()
 │   ├── ga2m.py                # ajuste del EBM, predicción y aportaciones por término
@@ -78,7 +78,7 @@ Cambio respecto a la propuesta inicial: las rutas caben en `main.py` y la lógic
 | `version` | fecha + hash corto del commit |
 | `huella_dataset` | SHA-256 de `dataset_bn_municipios.csv` |
 | `umbrales` | cortes de cada nodo (lo mismo que `bn_umbrales.json`) |
-| `red` | `DiscreteBayesianNetwork` ajustada (BDeu, ESS = 10) |
+| `red` | `DiscreteBayesianNetwork` ajustada (BDeu, ESS de `config.py`: 50 en el modelo v2) |
 | `ebm` | `ExplainableBoostingRegressor` ajustado |
 | `municipios` | tabla de los 179: atributos continuos, estados discretos, predicción del GA²M, aportaciones por término, utilidades de preferencias, columnas de filtros |
 | `validacion` | acierto y log-loss de CV-5 × 5 (media ± desviación), para devolverlos en los metadatos |
@@ -110,13 +110,13 @@ Detalle importante: **el percentil y los pesos se recalculan sobre los candidato
 Prefijo `/api/v1`. JSON en UTF-8. Los municipios se identifican siempre por `ine5` (texto de 5 dígitos).
 
 ### `GET /meta`
-Versión del modelo, huella del dataset, métricas de validación y aviso de señal débil.
+Versión del modelo, huella del dataset, métricas de validación y aviso sobre la fuerza de la señal.
 
 ```json
 {
-  "version_modelo": "2026-10-08+49f3e53",
-  "validacion": {"acierto": [0.459, 0.012], "log_loss": [1.103, 0.015], "log_loss_uniforme": 1.099},
-  "aviso": "Señal débil: el orden es orientativo y las probabilidades no están calibradas."
+  "version_modelo": "2026-10-14+257d9bd",
+  "validacion": {"acierto": [0.447, 0.031], "log_loss": [1.008, 0.015], "log_loss_uniforme": 1.099},
+  "aviso": "Señal moderada: el modelo ordena claramente mejor que el azar […] Son asociaciones, no efectos causales."
 }
 ```
 
@@ -145,19 +145,19 @@ Salida (una fila por municipio, ordenadas):
   "resultados": [
     {"posicion": 5, "ine5": "28022", "municipio": "Boadilla del Monte",
      "puntuacion": 80.8, "desglose": {"modelo": 46.8, "transporte": 34.0, "ayudas": 0.0},
-     "p_alta_red": 0.572}
+     "p_alta_red": 0.656}
   ]
 }
 ```
 
-Las cifras del ejemplo salen del modelo actual con esas preferencias (se muestra solo la fila de Boadilla del Monte, 5.ª de 139); la API devolverá las que calcule en cada caso.
+Las cifras del ejemplo salen del modelo v2 (2026-10-14) con esas preferencias (se muestra solo la fila de Boadilla del Monte, 5.ª de 139); la API devolverá las que calcule en cada caso.
 
 ### `GET /municipios/{ine5}`
 La ficha del municipio:
 
 - puntuación base y percentil entre los candidatos;
-- **aportaciones del GA²M** por término (intercepto + 7 efectos principales + 5 interacciones), que suman la predicción;
-- **red bayesiana:** estados de los 7 nodos, P(Baja/Media/Alta) y los padres directos que la explican (Dinamismo Demográfico y Especialización en Servicios);
+- **aportaciones del GA²M** por término (intercepto + 14 efectos principales + 10 interacciones en el modelo v2), que suman la predicción;
+- **red bayesiana:** estados de los nodos, P(Baja/Media/Alta) y los padres directos que la explican (en el modelo v2, Dinamismo Demográfico y Densidad);
 - **aviso de discrepancia** si el GA²M y la red no coinciden (p. ej. puntuación en el tercio superior con P(Alta) < 0,33);
 - utilidades de transporte y nivel de ayudas.
 
@@ -175,7 +175,7 @@ El simulador `do()` (#16) **no se expone todavía**. Depende de #3: hoy la CPT d
 
 ## 8. Rendimiento
 
-Con 179 municipios todo cabe en memoria. El ranking es aritmética vectorizada sobre una tabla de ≤ 179 filas (milisegundos). Las consultas a la red usan `VariableElimination` sobre 8 nodos; si alguna combinación de evidencia se repite mucho, se cachea con `functools.lru_cache` sobre la evidencia ordenada. No hace falta base de datos.
+Con 179 municipios todo cabe en memoria. El ranking es aritmética vectorizada sobre una tabla de ≤ 179 filas (milisegundos). Las consultas a la red usan `VariableElimination` sobre 12 nodos; si alguna combinación de evidencia se repite mucho, se cachea con `functools.lru_cache` sobre la evidencia ordenada. No hace falta base de datos.
 
 ## 9. Pruebas
 

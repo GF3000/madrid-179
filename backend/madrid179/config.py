@@ -88,9 +88,10 @@ EDGES = [
 ]
 PADRES_OBJETIVO = [p for p, h in EDGES if h == OBJETIVO]
 
-# Ranking final (PENDIENTES #5). Con evidencia completa la red solo da 9 niveles; un GA²M (EBM) sobre las
-# mismas 7 variables continuas desempata y ordena mejor (ga2m_desempate.py, CV-5 x 5, Spearman con la tasa
-# neta: BN 0,284 · GA²M 0,398 · media de rangos 0,369 · lexicográfico 0,291).
+# Ranking final (PENDIENTES #5). Con evidencia completa la red solo da 9 niveles; un GA²M (EBM) sobre
+# variables continuas desempata y ordena mejor. Con las 7 variables originales (ga2m_desempate.py, CV-5 x 5,
+# Spearman con la tasa neta): BN 0,284 · GA²M 0,398 · media de rangos 0,369 · lexicográfico 0,291.
+# Modelo v2 (2026-10-14, #44): GA²M 0,529 · red 0,398.
 # Decisión 2026-10-07 (PENDIENTES #40, opción b): el GA²M da la puntuación; la red bayesiana explica,
 # atiende consultas con evidencia parcial y sostiene el simulador do() de la Administración.
 #   "ga2m"           -> puntuación = percentil del GA²M entre los candidatos, 0-100 (por defecto)
