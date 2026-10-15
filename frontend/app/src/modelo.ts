@@ -1,6 +1,6 @@
 // Traducción del modelo a lenguaje claro: clases en lugar de cifras, frases en lugar de coeficientes.
 // Las puntuaciones del modelo son orientativas, así que la interfaz enseña grupos y razones, no decimales.
-import type { Aportacion, Filtros, Municipio, Ranking } from "./api";
+import type { Aportacion, Ficha, Filtros, Meta, Municipio, Peticion, Ranking } from "./api";
 
 export type Rgb = [number, number, number];
 
@@ -236,4 +236,43 @@ export function describirFiltro(k: keyof Filtros, v: number | boolean | null): s
 export function filtrosActivos(f: Filtros): [keyof Filtros, number | boolean][] {
   return (Object.entries(f) as [keyof Filtros, number | boolean | null][])
     .filter((e): e is [keyof Filtros, number | boolean] => e[1] !== null && e[1] !== false);
+}
+
+// ------------------------------------------------------------ recorrido
+// Factores que suman en el modelo pero que, leídos como «lo mejor» sin más contexto, confunden: paro o vivienda altos
+// (son señal de tamaño y demanda, no ventajas para quien se instala) o una estación lejana
+function raroComoVentaja(columna: string, ficha: Ficha): boolean {
+  const e = ficha.red.estados;
+  if (columna === "paro_por_100hab") return e.Paro === "Alto";
+  if (columna === "vc_residencial_por_uu") return e.Coste_Inmobiliario === "Alto";
+  if (columna === "dist_ferro_km") return e.Acceso_Ferroviario !== "Si";
+  return false;
+}
+
+export interface PuntoFuerte {
+  titulo: string;
+  detalle: string;
+  tuyo: boolean; // viene de una preferencia del usuario (no del modelo)
+}
+
+/** Lo mejor de un municipio en 1-3 frases cortas, para el recorrido del Top. Primero lo que el usuario ha pedido y el
+ *  municipio cumple de sobra (utilidad ≥ 0,66); después los factores del GA²M que más le suman. Se dejan fuera los
+ *  factores con «lectura» (su signo puede confundir y en tres segundos no da tiempo a explicarlo). */
+export function puntosFuertes(ficha: Ficha, pesos: Record<string, number>, peticion: Peticion, meta: Meta, n = 3): PuntoFuerte[] {
+  const salida: PuntoFuerte[] = [];
+  const prefs = meta.catalogo.filter((c) => (pesos[c.clave] ?? 0) > 0).sort((a, b) => pesos[b.clave] - pesos[a.clave]);
+  for (const c of prefs) {
+    const f = ficha.preferencias[c.clave];
+    const u = f?.utilidad[peticion.preferencias[c.clave]?.sentido ?? ""] ?? f?.utilidad[""] ?? 0;
+    if (f && u >= 0.66) salida.push({ titulo: c.nombre, detalle: f.dato, tuyo: true });
+    if (salida.length === 2) break;
+  }
+  const vistos = new Set(salida.map((p) => p.titulo.toLowerCase()));
+  for (const f of factores(ficha.ga2m.aportaciones, ficha.red.estados)) {
+    if (salida.length >= n) break;
+    if (f.signo < 0 || f.combinado || f.lectura || vistos.has(f.titulo.toLowerCase())) continue;
+    if (raroComoVentaja(f.columnas[0], ficha)) continue;
+    salida.push({ titulo: f.titulo, detalle: f.detalle, tuyo: false });
+  }
+  return salida;
 }

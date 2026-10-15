@@ -8,11 +8,13 @@ import PanelDecidir, { type Cambio } from "./componentes/PanelDecidir";
 import PanelPerfiles from "./componentes/PanelPerfiles";
 import Intro from "./componentes/Intro";
 import Viaje, { DURACION_VIAJE, origenesTarjeta, type Trayecto } from "./componentes/Viaje";
+import Recorrido, { type Parada } from "./componentes/Recorrido";
 import { Buscador, ComoFunciona, ControlesMapa, Etiqueta, Leyenda, Marca, Pie } from "./componentes/Contorno";
 
 const PETICION_INICIAL: Peticion = { preferencias: {}, filtros: FILTROS_VACIOS };
 const ANCHO_PANEL = 392;
 const ANCHO_FICHA = 432;
+const TOP_RECORRIDO = 5; // municipios que visita el recorrido tras el asistente
 
 interface Datos {
   meta: Meta;
@@ -39,6 +41,8 @@ export default function App() {
   const [ayuda, setAyuda] = useState(false);
   const [intro, setIntro] = useState<"carga" | "revelando" | "fin">("carga");
   const [viajes, setViajes] = useState<Trayecto[] | null>(null);
+  const [recorrido, setRecorrido] = useState<{ id: number; paradas: Parada[] } | null>(null);
+  const [destacado, setDestacado] = useState<string | null>(null); // parada actual del recorrido
   const desdeAsistente = useRef(false); // el próximo ranking viene del asistente: estrellas de la tarjeta al mapa
   const mandoRef = useRef(mando);
   mandoRef.current = mando;
@@ -66,6 +70,7 @@ export default function App() {
   const cambiarPeticion = useCallback((p: Peticion, porque?: string) => {
     motivo.current = porque ?? (datos ? describirCambio(peticion, p, datos.meta) : "");
     previa.current = situaciones;
+    setRecorrido(null); // un cambio nuevo interrumpe el recorrido en curso
     setPeticion(p);
   }, [peticion, situaciones, datos]);
 
@@ -104,9 +109,16 @@ export default function App() {
             if (a && a.clase.id !== s.clase.id) lista.push({ ine5: i, antes: a.clase, despues: s.clase });
           }
         }
+        // Con el asistente, al aplicar arranca el recorrido por los mejores
+        const paradas = desdeAsistente.current && mandoRef.current && !movimientoReducido()
+          ? paradasRecorrido(nuevas, datos) : [];
         const aplicar = () => {
           if (antes) setCambios({ lista, motivo: motivo.current });
           setRanking(r);
+          if (paradas.length > 0) {
+            setSeleccionado(null);
+            setRecorrido({ id: Date.now(), paradas });
+          }
         };
         // Con el asistente, las columnas se mueven cuando llegan las estrellas
         const trayectos = desdeAsistente.current
@@ -168,20 +180,24 @@ export default function App() {
   }), []);
 
   const resaltados = useMemo(() => {
+    // recorrido: en cada parada solo queda en pie ese municipio (se levanta al llegar la cámara); al empezar y al
+    // terminar, los cinco
+    if (recorrido) return new Set(destacado ? [destacado] : recorrido.paradas.map((p) => p.ine5));
     if (pestana === "perfiles" && consulta && Object.keys(evidencia).length > 0)
       return new Set(consulta.municipios.map((m) => m.ine5));
     if (clasesVisibles.size > 0)
       return new Set([...situaciones].filter(([, s]) => clasesVisibles.has(s.clase.id)).map(([i]) => i));
     return null;
-  }, [pestana, consulta, evidencia, clasesVisibles, situaciones]);
+  }, [pestana, consulta, evidencia, clasesVisibles, situaciones, recorrido, destacado]);
 
   const etiquetas = useMemo(() => {
+    if (recorrido) return recorrido.paradas.map((p) => p.ine5);
     // los cinco mejores de lo que se ve: de todos, o solo de los grupos resaltados o fijados
     const top = pestana === "decidir"
       ? [...situaciones].filter(([, s]) => s.posicion !== null && (clasesVisibles.size === 0 || clasesVisibles.has(s.clase.id)))
         .sort((a, b) => a[1].posicion! - b[1].posicion!).slice(0, 5).map(([i]) => i) : [];
     return seleccionado ? [...top.filter((i) => i !== seleccionado), seleccionado] : top;
-  }, [situaciones, seleccionado, pestana, clasesVisibles]);
+  }, [situaciones, seleccionado, pestana, clasesVisibles, recorrido]);
 
   const porIne = useMemo(() => new Map(datos?.municipios.map((m) => [m.ine5, m])), [datos]);
 
@@ -192,8 +208,8 @@ export default function App() {
   if (!datos || !ranking || intro === "carga") return pantallaIntro;
 
   return (<>
-    <div className={`app${seleccionado ? " con-ficha" : ""}${intro !== "fin" ? " intro-activa" : ""}`}>
-      <Mapa geometria={datos.geometria} situaciones={situaciones} seleccionado={seleccionado}
+    <div className={`app${seleccionado ? " con-ficha" : ""}${intro !== "fin" ? " intro-activa" : ""}${recorrido ? " recorriendo" : ""}`}>
+      <Mapa geometria={datos.geometria} situaciones={situaciones} seleccionado={seleccionado} destacado={destacado}
         resaltados={resaltados} etiquetas={etiquetas} onSeleccionar={setSeleccionado} onPasar={setPasando}
         onCamara={setCamara} onMando={setMando} entrar={intro === "fin"}
         margenes={{ izquierda: ANCHO_PANEL + 32, derecha: seleccionado ? ANCHO_FICHA + 32 : 0 }} />
@@ -232,6 +248,10 @@ export default function App() {
       {error && <div className="brindis" role="status" onClick={() => setError(null)}>{error}</div>}
       {ayuda && <ComoFunciona meta={datos.meta} onCerrar={() => setAyuda(false)} />}
       {viajes && <Viaje trayectos={viajes} onFin={() => setViajes(null)} />}
+      {recorrido && mando && (
+        <Recorrido key={recorrido.id} paradas={recorrido.paradas} mando={mando} meta={datos.meta} pesos={ranking.pesos}
+          peticion={peticion} onDestacar={setDestacado} onAbrir={setSeleccionado} onFin={() => setRecorrido(null)} />
+      )}
     </div>
     {pantallaIntro}
   </>);
@@ -241,7 +261,7 @@ export default function App() {
 // primeros del ranking), siempre que se vean en pantalla y no queden tapados por el panel o la ficha
 function trayectosAsistente(lista: Cambio[], nuevas: Map<string, Situacion>, geometria: Geometria,
   mando: MandoMapa | null, conFicha: boolean): Trayecto[] {
-  if (!mando || matchMedia("(prefers-reduced-motion: reduce)").matches) return [];
+  if (!mando || movimientoReducido()) return [];
   const origenes = origenesTarjeta();
   if (origenes.length === 0) return [];
   const suben = lista.filter((c) => c.despues.orden < c.antes.orden)
@@ -257,6 +277,16 @@ function trayectosAsistente(lista: Cambio[], nuevas: Map<string, Situacion>, geo
     .slice(0, origenes.length);
   if (destinos.length === 0) return [];
   return origenes.map((o, k) => ({ x0: o.x, y0: o.y, x1: destinos[k % destinos.length][0], y1: destinos[k % destinos.length][1] }));
+}
+
+const movimientoReducido = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Paradas del recorrido: los primeros del ranking nuevo (Madrid capital nunca compite, así que no aparece)
+function paradasRecorrido(nuevas: Map<string, Situacion>, datos: Datos): Parada[] {
+  const rasgos = new Map(datos.geometria.features.map((f) => [f.properties.ine5, f.properties]));
+  return [...nuevas].filter(([i, s]) => s.posicion !== null && rasgos.has(i))
+    .sort((a, b) => a[1].posicion! - b[1].posicion!).slice(0, TOP_RECORRIDO)
+    .map(([i, s]) => ({ ine5: i, municipio: rasgos.get(i)!.municipio, clase: s.clase, centro: rasgos.get(i)!.centro }));
 }
 
 function enlaceFicha(): string | null {
