@@ -206,12 +206,25 @@ class RespuestaEjemplo(BaseModel):
     sector: str | None
 
 
+class NegocioUsuario(BaseModel):
+    sector: str | None = Field(None, max_length=80, examples=["ciberseguridad"])
+    resumen: str | None = Field(None, max_length=600, description="Lo que entendió /interpretar del negocio")
+
+
 class PeticionExplicacion(BaseModel):
     clase: str | None = Field(None, max_length=60, description="Grupo que muestra la app (depende de las preferencias)")
     preferencias: dict[str, Importancia | PreferenciaUsuario] = Field(default_factory=dict)
+    negocio: NegocioUsuario | None = Field(None, description="Si el usuario describió su negocio, la explicación se adapta a él")
+
+
+class ComprobacionExplicacion(BaseModel):
+    corregida: bool = Field(description="Se pidió al LLM corregir frases que incumplían las reglas")
+    descartadas: int = Field(description="Frases descartadas por seguir incumpliéndolas")
 
 
 class RespuestaExplicacion(BaseModel):
     titular: str
     mejor: list[str]
     peor: list[str]
+    apoyos: dict[str, list[list[str]]] = Field(description="Hechos de la ficha en que se apoya cada frase")
+    comprobacion: ComprobacionExplicacion

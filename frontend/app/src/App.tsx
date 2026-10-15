@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api, type Consulta, type Ficha as TFicha, type Geometria, type Interpretacion, type Meta, type Municipio,
+import { api, type Consulta, type Ficha as TFicha, type Geometria, type Interpretacion, type Meta, type Municipio, type Negocio,
   type Peticion, type Ranking } from "./api";
 import { clasificar, describirFiltro, FILTROS_VACIOS, palabraImportancia, type Situacion } from "./modelo";
 import Mapa, { type Camara, type MandoMapa } from "./componentes/Mapa";
@@ -70,18 +70,21 @@ export default function App() {
   }, [peticion, situaciones, datos]);
 
   // Lo que entiende el asistente se aplica al momento y sustituye a lo marcado a mano; se puede deshacer
-  const antesDelAsistente = useRef<Peticion | null>(null);
+  const antesDelAsistente = useRef<{ peticion: Peticion; negocio: Negocio | null } | null>(null);
+  const [negocio, setNegocio] = useState<Negocio | null>(null); // lo que contó de su negocio: adapta las explicaciones
   const aplicarAsistente = useCallback((i: Interpretacion) => {
-    antesDelAsistente.current = peticion;
+    antesDelAsistente.current = { peticion, negocio };
+    setNegocio(i.sector || i.resumen ? { sector: i.sector, resumen: i.resumen } : null);
     desdeAsistente.current = true;
     const preferencias = Object.fromEntries(Object.entries(i.preferencias)
       .map(([k, v]) => [k, { importancia: v.importancia, sentido: v.sentido }]));
     cambiarPeticion({ preferencias, filtros: { ...FILTROS_VACIOS, ...i.filtros } },
       "Hemos aplicado lo que describiste: el mapa combina ahora las condiciones de cada municipio con tus preferencias.");
-  }, [cambiarPeticion, peticion]);
+  }, [cambiarPeticion, peticion, negocio]);
   const deshacerAsistente = useCallback(() => {
     if (!antesDelAsistente.current) return;
-    cambiarPeticion(antesDelAsistente.current, "Has deshecho lo que aplicó el asistente: vuelves a lo que tenías marcado.");
+    setNegocio(antesDelAsistente.current.negocio);
+    cambiarPeticion(antesDelAsistente.current.peticion, "Has deshecho lo que aplicó el asistente: vuelves a lo que tenías marcado.");
     antesDelAsistente.current = null;
   }, [cambiarPeticion]);
 
@@ -218,7 +221,7 @@ export default function App() {
       {seleccionado && (
         <Ficha ficha={ficha?.ine5 === seleccionado ? ficha : null} cargando={false}
           situacion={situaciones.get(seleccionado)} meta={datos.meta} pesos={ranking.pesos} peticion={peticion}
-          onCerrar={() => setSeleccionado(null)} />
+          negocio={negocio} onCerrar={() => setSeleccionado(null)} />
       )}
 
       <Leyenda resaltada={claseResaltada} fijadas={clasesFijadas} onResaltar={setClaseResaltada} onFijar={alternarClase}

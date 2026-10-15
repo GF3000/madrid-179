@@ -10,7 +10,8 @@ import pandas as pd
 from pgmpy.inference import VariableElimination
 
 from . import asistente
-from .config import AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, LECTURAS, NODOS, OBJETIVO, PADRES_OBJETIVO, RAIZ
+from .config import (AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, LECTURAS, NODOS, OBJETIVO, PADRES_OBJETIVO,
+                     PARA_QUIEN_SE_INSTALA, RAIZ, SENAL_DUDOSA)
 from .preferencias import (CATALOGO, IMPORTANCIA, POR_CLAVE, PREFERENCIAS, TOPE_PREFERENCIAS, catalogo_publico,
                            normalizar)
 from .ranking import rankear
@@ -41,6 +42,19 @@ class Servicio:
         self.inferencia = VariableElimination(art["red"])
         self.base, _ = rankear(self.tabla)  # ranking por defecto (sin preferencias ni filtros del usuario)
         self.wikipedia = json.loads(WIKIPEDIA.read_text(encoding="utf-8")) if WIKIPEDIA.exists() else {}
+        self.tercios = {c: self.tabla[c].quantile([1 / 3, 2 / 3]).tolist() for c in PARA_QUIEN_SE_INSTALA}
+
+    def para_quien_se_instala(self, termino, r):
+        """'ventaja' / 'inconveniente' de un valor para quien se instala (tercio superior o inferior), o None."""
+        alto = PARA_QUIEN_SE_INSTALA.get(termino)
+        if alto is None:
+            return None
+        bajo_q, alto_q = self.tercios[termino]
+        if r[termino] >= alto_q:
+            return alto
+        if r[termino] <= bajo_q:
+            return "ventaja" if alto == "inconveniente" else "inconveniente"
+        return None
 
     # ------------------------------------------------------------------ meta
     def meta(self):
@@ -97,7 +111,9 @@ class Servicio:
             aport.append({"termino": termino, "etiqueta": " × ".join(ETIQUETAS.get(c, c) for c in cols),
                           "aportacion_pp": round(float(v) * 100, 4),
                           "valores": {c: round(float(r[c]), 4) for c in cols},
-                          "lectura": " ".join(LECTURAS[c] for c in cols if c in LECTURAS) or None})
+                          "lectura": " ".join(LECTURAS[c] for c in cols if c in LECTURAS) or None,
+                          "senal_dudosa": any(c in SENAL_DUDOSA for c in cols),
+                          "para_quien_se_instala": self.para_quien_se_instala(termino, r)})
         aport.sort(key=lambda x: abs(x["aportacion_pp"]), reverse=True)
 
         discrepancia = None
@@ -139,8 +155,9 @@ class Servicio:
                                "utilidad": {s or "": round(float(p.utilidad_en(grupo, s).loc[ine5]), 4) for s in sentidos}}
         return salida
 
-    def hechos(self, ine5, clase=None, preferencias=None):
-        """Lo que ya ha calculado la herramienta sobre un municipio, en palabras: la única materia prima del LLM."""
+    def hechos(self, ine5, clase=None, preferencias=None, negocio=None):
+        """Lo que ya ha calculado la herramienta sobre un municipio, en palabras: la única materia prima del LLM.
+        `negocio` ({sector, resumen}, de /interpretar) permite adaptar la redacción a quien pregunta."""
         f = self.ficha(ine5)
         est = f["red"]["estados"]
 
@@ -149,14 +166,18 @@ class Servicio:
             return est[nodo].lower() if nodo else None
 
         factores = {"a favor": [], "en contra": []}
+        n = 0
         for a in ([] if f["motivo_exclusion"] else f["ga2m"]["aportaciones"]):  # fuera del análisis: no se valora
             fuerza = next((w for u, w in FUERZA if abs(a["aportacion_pp"]) >= u), None)
             if not fuerza:
                 continue
             detalle = [nivel(c) or _redondo(v) for c, v in a["valores"].items()]
+            n += 1
             factores["a favor" if a["aportacion_pp"] > 0 else "en contra"].append(
-                {"factor": a["etiqueta"], "nivel": " · ".join(detalle), "fuerza": fuerza,
-                 **({"como_leerlo": a["lectura"]} if a["lectura"] else {})})
+                {"id": f"F{n}", "factor": a["etiqueta"], "nivel": " · ".join(detalle), "fuerza": fuerza,
+                 **({"senal": "dudosa"} if a["senal_dudosa"] else {}),
+                 **({"como_leerlo": a["lectura"]} if a["lectura"] else {}),
+                 **({"para_quien_se_instala": a["para_quien_se_instala"]} if a["para_quien_se_instala"] else {})})
 
         prefs = []
         for k, (imp, sentido) in normalizar(preferencias).items():
@@ -164,7 +185,7 @@ class Servicio:
                 continue
             util = f["preferencias"][k]["utilidad"]
             u = util.get(sentido or "", next(iter(util.values())))
-            prefs.append({"preferencia": POR_CLAVE[k].nombre + (f" ({sentido})" if sentido else ""),
+            prefs.append({"id": f"P{len(prefs) + 1}", "preferencia": POR_CLAVE[k].nombre + (f" ({sentido})" if sentido else ""),
                           "importancia": imp, "dato": f["preferencias"][k]["dato"],
                           "encaje": "alto" if u >= 0.66 else "medio" if u >= 0.33 else "bajo"})
         probs = f["red"]["probabilidades"]
@@ -178,6 +199,7 @@ class Servicio:
                               "discrepa_de_la_tabla_de_factores": bool(f["discrepancia"])},
             "preferencias_del_usuario": prefs or None,
             "resumen_wikipedia": (f.get("wikipedia") or {}).get("resumen"),
+            "negocio_del_usuario": {k: v for k, v in (negocio or {}).items() if v} or None,
         }
 
     def _motivo_exclusion(self, ine5):
