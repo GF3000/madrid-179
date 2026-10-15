@@ -832,12 +832,14 @@ b, strong { font-weight: 650; }
 .contexto-politica h4 { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--tinta); }
 .contexto-subtitulo { margin-top: -6px; font-size: 11px; letter-spacing: 0.02em; color: var(--tinta-3); }
 .contexto-politica h5 { margin: 4px 0 0; font-size: 12px; font-weight: 650; color: var(--tinta-2); }
-.contexto-dato, .contexto-aviso p { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--tinta-2); }
-.contexto-aviso {
-  display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 10px;
-  background: var(--rojo-suave); border-left: 3px solid var(--rojo);
+.contexto-dato { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--tinta-2); }
+.contexto-cifra { display: flex; align-items: center; gap: 12px; padding: 2px 0; }
+.contexto-cifra .cifra {
+  font: 500 40px/0.9 var(--serif); letter-spacing: -0.03em; color: var(--tinta);
+  font-variant-numeric: lining-nums tabular-nums; padding-bottom: 6px; border-bottom: 2px solid currentColor;
 }
-.contexto-aviso b { color: var(--rojo-hondo); }
+.contexto-cifra.nula .cifra { color: var(--rojo); }
+.contexto-cifra .cifra-pie { font-size: 12px; line-height: 1.35; color: var(--tinta-2); }
 .contexto-lista { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.45; color: var(--tinta-2); }
 .contexto-lista li { padding: 2px 0; }
 .contexto-lista b { color: var(--tinta); }

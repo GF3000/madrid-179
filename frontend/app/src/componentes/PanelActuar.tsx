@@ -269,18 +269,24 @@ function ContextoMunicipio({ c, cuadrante }: { c: ContextoPolitica; cuadrante: I
       <span className="contexto-subtitulo">Datos de contexto, no resultado del modelo</span>
 
       <h5>Oficinas</h5>
-      {o.locales === 0 ? (
-        <div className="contexto-aviso">
-          <p><b>No tiene ningún local de oficinas en el Catastro:</b> hoy una empresa no tendría dónde instalarse.</p>
-          {(cuadrante === "oportunidad" || cuadrante === "apoyo") && (
-            <p>Es una carencia que una política puede cubrir directamente (vivero, coworking o suelo para oficinas).</p>
-          )}
-        </div>
-      ) : (
+      {/* Cifra editorial: el dato manda, sin caja de alerta */}
+      <div className={`contexto-cifra${o.locales === 0 ? " nula" : ""}`}>
+        <span className="cifra">{n(o.locales)}</span>
+        <span className="cifra-pie">
+          {o.locales === 1 ? "local" : "locales"} de oficinas en el Catastro
+          {o.locales > 0 && <><br />{n(o.por_1000hab, 1)} por cada 1.000 hab.</>}
+        </span>
+      </div>
+      {o.locales === 0 && (
         <p className="contexto-dato">
-          {n(o.locales)} {o.locales === 1 ? "local" : "locales"} de oficinas en el Catastro
-          ({n(o.por_1000hab, 1)} por cada 1.000 hab.)
-          {o.coworking > 0 && <>; {n(o.coworking)} {o.coworking === 1 ? "espacio" : "espacios"} de coworking según OpenStreetMap</>}.
+          Hoy una empresa no tendría dónde instalarse.
+          {(cuadrante === "oportunidad" || cuadrante === "apoyo") &&
+            " Una política puede cubrirlo directamente: vivero, coworking o suelo para oficinas."}
+        </p>
+      )}
+      {o.coworking > 0 && (
+        <p className="contexto-dato">
+          {n(o.coworking)} {o.coworking === 1 ? "espacio" : "espacios"} de coworking según OpenStreetMap.
         </p>
       )}
 
