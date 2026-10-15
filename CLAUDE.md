@@ -41,6 +41,7 @@ osm_a_secciones.py, gtfs_paradas_por_municipio.py → conteos por municipio
 limites_municipales.py                   → data/processed/municipios.geojson (límites para el mapa, /api/v1/geometria)
 puntos_carga.py                          → frontend/app/src/puntos_carga.ts (centros de los 179 municipios para la pantalla de carga)
 descargar_wikipedia.py                   → data/processed/wikipedia_municipios.json (foto y resumen por código INE, en la ficha)
+imagen_social.py                         → frontend/app/public/og.png e iconos PNG (vista previa al compartir; usa Chrome o Edge sin interfaz)
 construir_dataset_bn.py                  → data/processed/dataset_bn_municipios.csv (179 filas)
 red_bayesiana_viabilidad.py [--modo A|B] → umbrales, CPT, GA²M, ranking, contribuciones, validación cruzada (CSV versionados)
 entrenar.py                              → data/processed/modelo.joblib (artefacto de la API, fuera de git)

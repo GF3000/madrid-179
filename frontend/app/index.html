@@ -4,11 +4,54 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f6f2ec" />
+    <title>Madrid 179 · Dónde abrir una oficina en la Comunidad de Madrid</title>
+    <meta name="description" content="Herramienta no oficial que recomienda dónde abrir o trasladar una oficina en los 179 municipios de la Comunidad de Madrid, con un modelo explicable y datos públicos." />
+    <link rel="canonical" href="https://madrid179.web.app/" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>Madrid 179</title>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Vista previa al compartir (imagen: backend/pipeline/imagen_social.py) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Madrid 179" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content="https://madrid179.web.app/" />
+    <meta property="og:title" content="Madrid 179 · Dónde abrir una oficina en la Comunidad de Madrid" />
+    <meta property="og:description" content="Compara los 179 municipios según lo que necesita tu negocio. Cada recomendación se explica con datos públicos." />
+    <meta property="og:image" content="https://madrid179.web.app/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Mapa de los 179 municipios de la Comunidad de Madrid junto al título Madrid 179" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Madrid 179",
+        "url": "https://madrid179.web.app/",
+        "description": "Herramienta no oficial que recomienda dónde abrir o trasladar una oficina en los 179 municipios de la Comunidad de Madrid, con un modelo explicable y datos públicos.",
+        "inLanguage": "es",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "isAccessibleForFree": true,
+        "image": "https://madrid179.web.app/og.png",
+        "license": "https://opensource.org/licenses/MIT",
+        "sameAs": ["https://github.com/GF3000/madrid-179"],
+        "spatialCoverage": { "@type": "Place", "name": "Comunidad de Madrid" }
+      }
+    </script>
   </head>
   <body>
-    <div id="raiz"></div>
+    <!-- Texto para buscadores y vistas sin JavaScript; React lo sustituye al arrancar -->
+    <div id="raiz">
+      <main style="max-width: 36rem; margin: 20vh auto 0; padding: 0 16px; font-family: system-ui, sans-serif; color: #261c20">
+        <h1 style="font-size: 2rem; margin: 0 0 0.5rem">Madrid 179</h1>
+        <p>Dónde abrir o trasladar una oficina en los 179 municipios de la Comunidad de Madrid. La herramienta ordena los municipios según lo que necesita cada negocio (transporte, coste, talento, ayudas, tamaño…) y explica cada recomendación con datos públicos y un modelo transparente.</p>
+        <p>Herramienta no oficial creada para el Datathon de la Comunidad de Madrid. Código abierto en <a href="https://github.com/GF3000/madrid-179">GitHub</a>.</p>
+        <noscript><p><b>Activa JavaScript para usar el mapa y el comparador.</b></p></noscript>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
