@@ -10,7 +10,8 @@ import pandas as pd
 from pgmpy.inference import VariableElimination
 
 from . import asistente
-from .config import (AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, LECTURAS, NODOS, OBJETIVO, PADRES_OBJETIVO,
+from . import diagnostico as diag
+from .config import (AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, FUERZA, LECTURAS, NODOS, OBJETIVO, PADRES_OBJETIVO,
                      PARA_QUIEN_SE_INSTALA, RAIZ, SENAL_DUDOSA)
 from .preferencias import (CATALOGO, IMPORTANCIA, POR_CLAVE, PREFERENCIAS, TOPE_PREFERENCIAS, catalogo_publico,
                            normalizar)
@@ -19,8 +20,6 @@ from .red import distribucion
 
 UMBRAL_DISCREPANCIA = 50  # puntos de percentil entre la red y el GA²M
 WIKIPEDIA = RAIZ / "data" / "processed" / "wikipedia_municipios.json"  # backend/pipeline/descargar_wikipedia.py
-# Fuerza de una aportación del GA²M en palabras (pp de tasa neta; p90 / p75 / p50 de |aportación|, igual que la app)
-FUERZA = [(0.13, "mucho"), (0.05, "bastante"), (0.02, "algo")]
 MOTIVOS = {"excluir_madrid_capital": "la capital queda fuera a propósito: el objetivo es llevar actividad al resto de la región",
            "min_uu_oficinas": "no tiene ningún local de oficinas en el Catastro"}
 NODOS_LEGIBLES = {
@@ -43,6 +42,7 @@ class Servicio:
         self.base, _ = rankear(self.tabla)  # ranking por defecto (sin preferencias ni filtros del usuario)
         self.wikipedia = json.loads(WIKIPEDIA.read_text(encoding="utf-8")) if WIKIPEDIA.exists() else {}
         self.tercios = {c: self.tabla[c].quantile([1 / 3, 2 / 3]).tolist() for c in PARA_QUIEN_SE_INSTALA}
+        self._diagnostico = None
 
     def para_quien_se_instala(self, termino, r):
         """'ventaja' / 'inconveniente' de un valor para quien se instala (tercio superior o inferior), o None."""
@@ -205,6 +205,13 @@ class Servicio:
     def _motivo_exclusion(self, ine5):
         fila = self.tabla.loc[[ine5]]
         return [nombre for nombre, f in FILTROS.items() if not bool(np.asarray(f(fila))[0])]
+
+    # ----------------------------------------------------------- diagnóstico
+    def diagnostico(self):
+        """Diagnóstico territorial de la Administración (madrid179/diagnostico.py); se calcula una vez."""
+        if self._diagnostico is None:
+            self._diagnostico = diag.diagnostico(self.tabla, self.art["aportaciones"], self.base.index)
+        return self._diagnostico
 
     # -------------------------------------------------------------- consulta
     def consulta(self, evidencia):

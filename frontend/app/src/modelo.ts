@@ -1,6 +1,6 @@
 // Traducción del modelo a lenguaje claro: clases en lugar de cifras, frases en lugar de coeficientes.
 // Las puntuaciones del modelo son orientativas, así que la interfaz enseña grupos y razones, no decimales.
-import type { Aportacion, Ficha, Filtros, Meta, Municipio, Peticion, Ranking } from "./api";
+import type { Aportacion, Diagnostico, Ficha, Filtros, IdCuadrante, Meta, Municipio, Peticion, Ranking } from "./api";
 
 export type Rgb = [number, number, number];
 
@@ -213,6 +213,12 @@ export function palabraImportancia(i: string): string {
   return i === "Muy importante" ? "Mucho" : i === "Poco importante" ? "Algo" : "Me da igual";
 }
 
+/** Lo mínimo que pesa el modelo frente a las preferencias, 1 / (1 + tope), dicho con palabras. */
+export function pesoMinimoModelo(tope: number): string {
+  return { 1: "la mitad", 2: "un tercio", 3: "una cuarta parte", 4: "una quinta parte" }[tope]
+    ?? `el ${Math.round(100 / (1 + tope))} %`;
+}
+
 export const FILTROS_VACIOS: Filtros = {
   estacion_max_km: null, madrid_max_km: null, madrid_min_km: null, poblacion_min: null, poblacion_max: null,
   solo_con_ayudas: false, con_coworking: false,
@@ -275,4 +281,44 @@ export function puntosFuertes(ficha: Ficha, pesos: Record<string, number>, petic
     salida.push({ titulo: f.titulo, detalle: f.detalle, tuyo: false });
   }
   return salida;
+}
+
+// ------------------------------------------------------- dónde actuar
+// Cuatro situaciones del diagnóstico territorial (Administración). Colores de la paleta de Okabe-Ito (distinguibles
+// con daltonismo) y fuera de la rampa carmesí de «Dónde abrir»: verde azulado, ámbar, azul y un lila apagado para la
+// situación sin urgencia. La altura de la columna no es del grupo sino de la necesidad del municipio (alturaNecesidad).
+export const CUADRANTES: Record<IdCuadrante, Clase> = {
+  oportunidad: { id: "oportunidad", orden: 0, nombre: "Necesita y puede atraer", color: [0, 158, 115], altura: 6000,
+    resumen: "Necesita actividad y el modelo lo sitúa en la mitad alta de viabilidad." },
+  apoyo: { id: "apoyo", orden: 1, nombre: "Necesita, le cuesta atraer", color: [230, 159, 0], altura: 6000,
+    resumen: "Necesita actividad, pero atraer empresas por sí solo probablemente no baste." },
+  autonomo: { id: "autonomo", orden: 2, nombre: "Va por su cuenta", color: [0, 114, 178], altura: 2500,
+    resumen: "Poca necesidad y viabilidad en la mitad alta." },
+  vigilar: { id: "vigilar", orden: 3, nombre: "Sin urgencia", color: [150, 138, 178], altura: 2500,
+    resumen: "Ni la necesidad ni la viabilidad destacan: conviene seguir su evolución." },
+};
+
+/** Altura de la columna según la necesidad (percentil 0-100): crece más que en línea recta para que destaquen. */
+export function alturaNecesidad(necesidad: number): number {
+  return Math.round(350 + Math.pow(Math.max(0, Math.min(100, necesidad)) / 100, 1.5) * 8650);
+}
+
+/** Situación de cada municipio en el mapa de «Dónde actuar»: color del cuadrante y altura de su necesidad. La
+ *  posición ordena por necesidad (para los rótulos); Madrid capital, fuera del análisis. */
+export function situacionesActuar(d: Diagnostico, municipios: Municipio[]): Map<string, Situacion> {
+  const filas = new Map(d.municipios.map((m) => [m.ine5, m]));
+  const orden = new Map([...d.municipios].sort((a, b) => b.necesidad - a.necesidad).map((m, k) => [m.ine5, k + 1]));
+  const salida = new Map<string, Situacion>();
+  for (const m of municipios) {
+    const f = filas.get(m.ine5);
+    salida.set(m.ine5, f
+      ? { clase: { ...CUADRANTES[f.cuadrante], altura: alturaNecesidad(f.necesidad) }, posicion: orden.get(m.ine5)!, desglose: null }
+      : { clase: FUERA, posicion: null, desglose: null });
+  }
+  return salida;
+}
+
+/** Percentil en palabras, para seguir a «más necesidad…»: «que el 63 % de los municipios». */
+export function enPalabras(p: number): string {
+  return `que el ${Math.round(Math.max(0, Math.min(100, p)))} % de los municipios`;
 }

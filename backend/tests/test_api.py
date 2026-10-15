@@ -94,7 +94,7 @@ def test_geometria(cliente, servicio):
 
 def test_meta_catalogo(cliente):
     m = cliente.get(f"{API}/meta").json()
-    assert len(m["catalogo"]) == 15 and m["tope_preferencias"] == 1
+    assert len(m["catalogo"]) == 15 and m["tope_preferencias"] == 3
     assert {"clave", "nombre", "grupo", "sentidos", "en_modelo"} <= set(m["catalogo"][0])
 
 

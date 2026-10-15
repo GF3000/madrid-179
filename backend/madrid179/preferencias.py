@@ -6,9 +6,10 @@ Cada preferencia k aporta una utilidad u_k ∈ [0, 1] del municipio y una import
     a_k = r_k · sd(S) / sd(u_k)                    (iguala la dispersión: r = 1 -> pesa tanto como el modelo)
     S'  = (S + Σ a_k · u_k) / (1 + Σ a_k)          con una sola preferencia, w = a / (1 + a)
 
-Tope (2026-10-15): si Σ a_k > 1, los a_k se escalan para que sumen 1. Así el modelo pesa siempre al menos la
-mitad de la puntuación, aunque el usuario marque muchas preferencias como «muy importantes»; entre ellas
-conservan sus proporciones.
+Tope: si Σ a_k > TOPE, los a_k se escalan para que sumen TOPE, conservando sus proporciones. El 2026-10-15 se
+subió de 1 a 3: con 1, cada preferencia nueva restaba peso a las demás y el Top 5 apenas cambiaba (en 300
+combinaciones de 2-5 preferencias solo 36 municipios llegaban al Top 5 y uno salía en el 56 %; con 3, 64 y 40 %).
+Ahora hasta tres preferencias «muy importantes» cuentan enteras y el modelo pesa siempre al menos una cuarta parte.
 
 "Imprescindible" no es un peso: es un filtro duro (ranking.candidatos). "No lo sé" = peso 0.
 
@@ -23,7 +24,7 @@ import numpy as np
 import pandas as pd
 
 IMPORTANCIA = {"Me da igual": 0.0, "No lo sé": 0.0, "Poco importante": 0.5, "Muy importante": 1.0}
-TOPE_PREFERENCIAS = 1.0  # Σ a_k máximo: el modelo pesa al menos 1 / (1 + TOPE) = 50 %
+TOPE_PREFERENCIAS = 3.0  # Σ a_k máximo: el modelo pesa al menos 1 / (1 + TOPE) = 25 %
 
 
 def utilidad_transporte(dist_ferro_km, bueno_km=2.0, malo_km=15.0):

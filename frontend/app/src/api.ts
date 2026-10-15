@@ -156,6 +156,39 @@ export interface Consulta {
   municipios: { ine5: string; municipio: string; candidato: boolean }[];
 }
 
+// Diagnóstico territorial («Dónde actuar», perfil Administración). Describe la situación; no simula políticas.
+export type IdCuadrante = "oportunidad" | "apoyo" | "autonomo" | "vigilar";
+
+export interface Freno {
+  termino: string;
+  etiqueta: string;
+  aportacion_pp: number;
+  tipo: "palanca" | "estructural";
+  lectura: string | null;
+}
+
+export interface MunicipioDiagnostico {
+  ine5: string;
+  municipio: string;
+  poblacion: number;
+  distancia: "Cerca" | "Media" | "Lejos";
+  candidato: boolean;
+  necesidad: number;   // percentil 0-100 entre los 178 (sin Madrid capital)
+  componentes: Record<string, { valor: number; percentil: number }>;
+  viabilidad: number;  // percentil 0-100 del GA²M entre los mismos
+  cuadrante: IdCuadrante;
+  frenos: Freno[];
+  freno_palanca: Freno | null;
+}
+
+export interface Diagnostico {
+  corte: number;
+  aviso: string;
+  necesidad: { componentes: { columna: string; etiqueta: string; sentido: "bajo" | "alto" }[]; nota: string };
+  cuadrantes: { id: IdCuadrante; nombre: string; lectura: string }[];
+  municipios: MunicipioDiagnostico[];
+}
+
 export interface PropsMunicipio {
   ine5: string;
   municipio: string;
@@ -189,4 +222,5 @@ export const api = {
   interpretar: (texto: string) => pedir<Interpretacion>("/interpretar", { texto }),
   ejemplo: () => pedir<{ texto: string; sector: string | null }>("/ejemplo", {}),
   consulta: (evidencia: Record<string, string>) => pedir<Consulta>("/consulta", { evidencia }),
+  diagnostico: () => pedir<Diagnostico>("/diagnostico"),
 };

@@ -160,6 +160,9 @@ PARA_QUIEN_SE_INSTALA = {
     "dist_ferro_km": "inconveniente",            # más lejos del tren
 }
 
+# Fuerza de una aportación del GA²M en palabras (pp de tasa neta; p90 / p75 / p50 de |aportación|, igual que la app)
+FUERZA = [(0.13, "mucho"), (0.05, "bastante"), (0.02, "algo")]
+
 # Variables que entraron en el GA²M por el criterio de «incluir ante la duda» (#44): en validación aportan ≈ +0,01,
 # dentro del ruido. La ficha y el asistente las marcan para no presentarlas como razones de peso.
 SENAL_DUDOSA = set(EXTRAS_GA2M)
@@ -171,3 +174,37 @@ TEMPERATURA_B = 0.25  # menor = CPT más determinista
 AVISO_SENAL = ("Señal moderada: el modelo ordena claramente mejor que el azar (el 64 % de su tercio superior lo es "
                "de verdad, frente al 33 % al azar) y sus probabilidades mejoran a la uniforme, pero siguen siendo "
                "aproximadas. Usa el orden como orientación, no como predicción. Son asociaciones, no efectos causales.")
+
+# ---------------------------------------------------------------------------
+# 4. Diagnóstico territorial (Administración, «Dónde actuar»; diagnostico.py)
+#    PROPUESTA PROVISIONAL, a decidir por el equipo: componentes, sentidos, pesos y corte.
+#    Describe la situación (2020-2024); no mide el efecto de ninguna política.
+# ---------------------------------------------------------------------------
+# Necesidad de reequilibrio: columna -> sentido que indica necesidad. Pesos iguales (media de percentiles).
+NECESIDAD = {
+    "crec_pob_5a": "bajo",        # pierde o no gana población
+    "pct_menores_45": "bajo",     # envejecimiento
+    "paro_por_100hab": "alto",
+    "poblacion": "bajo",          # riesgo de despoblación
+}
+CORTE_DIAGNOSTICO = 50  # percentil (0-100) que separa los cuadrantes en ambos ejes; >= corte = alto
+# Qué puede mover una política a medio plazo ("palanca") y qué no ("estructural"). El transporte va como
+# estructural: no tiene señal propia sobre el objetivo (experimento del 2026-10-07).
+TIPO_FACTOR = {
+    # En el GA²M el valor de la vivienda funciona como señal de demanda (LECTURAS): presentarlo como palanca
+    # sugeriría «subir el valor de la vivienda». La política de coste (#17) se evaluará en el simulador, no aquí.
+    "vc_residencial_por_uu": "estructural",
+    "pct_up_servicios_prof": "palanca",      # especialización
+    "sanidad_por_1000hab": "palanca",
+    "uu_oficinas_por_1000hab": "palanca",    # oferta de oficinas
+    "dist_sol_km": "estructural",
+    "densidad_hab_km2": "estructural",
+    "poblacion": "estructural",
+    "crec_pob_5a": "estructural",
+    "pct_menores_45": "estructural",
+    "pct_estudios_superiores": "estructural",
+    "rdb_per_capita": "estructural",
+    "paro_por_100hab": "estructural",
+    "paradas_ferro": "estructural",
+    "dist_ferro_km": "estructural",
+}

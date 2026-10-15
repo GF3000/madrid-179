@@ -53,7 +53,7 @@ def test_sentido_contrario_invierte(art, clave):
     np.testing.assert_allclose(a + b, 1)
 
 
-def test_tope_el_modelo_pesa_al_menos_la_mitad(art):
+def test_tope_el_modelo_pesa_al_menos_una_cuarta_parte(art):
     todas = {k: "Muy importante" for k in PREFERENCIAS}
     todas |= {p.clave: {"importancia": "Muy importante", "sentido": p.sentidos[0][0]} for p in CATALOGO if p.sentidos}
     c, a = rankear(art["tabla"], todas)

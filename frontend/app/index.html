@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#f6f2ec" />
+    <meta name="author" content="Gregorio García Velasco, Guillermo Franco Gimeno" />
     <title>Madrid 179 · Dónde abrir una oficina en la Comunidad de Madrid</title>
     <meta name="description" content="Descubre dónde abrir o trasladar tu oficina entre los 179 municipios de la Comunidad de Madrid. Recomendaciones según tu negocio, explicadas con datos públicos." />
     <link rel="canonical" href="https://madrid179.web.app/" />
@@ -11,9 +12,14 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
-    <!-- Con JavaScript, el texto de respaldo de #raiz no se pinta mientras carga la app (evita el destello antes de la intro) -->
+    <!-- Con JavaScript, el texto de respaldo (#respaldo) no se pinta durante los primeros 1,5 s de carga (evita el destello
+         antes de la intro). Si para entonces la app no ha arrancado (JS bloqueado, descarga cortada) vuelve a verse. -->
     <script>document.documentElement.classList.add("js")</script>
-    <style>html { background: #f6f2ec } .js #raiz > main { visibility: hidden }</style>
+    <style>
+      html { background: var(--papel, #f6f2ec) }
+      .js #respaldo { animation: respaldo-ver 0s 1.5s backwards }
+      @keyframes respaldo-ver { from { visibility: hidden } }
+    </style>
 
     <!-- Vista previa al compartir (imagen: backend/pipeline/imagen_social.py) -->
     <meta property="og:type" content="website" />
@@ -49,7 +55,7 @@
   <body>
     <!-- Texto para buscadores y vistas sin JavaScript; React lo sustituye al arrancar -->
     <div id="raiz">
-      <main style="max-width: 36rem; margin: 20vh auto 0; padding: 0 16px; font-family: system-ui, sans-serif; color: #261c20">
+      <main id="respaldo" style="max-width: 36rem; margin: 20vh auto 0; padding: 0 16px; font-family: system-ui, sans-serif; color: #261c20">
         <h1 style="font-size: 2rem; margin: 0 0 0.5rem">Madrid 179</h1>
         <p>Dónde abrir o trasladar una oficina en los 179 municipios de la Comunidad de Madrid. La herramienta ordena los municipios según lo que necesita cada negocio (transporte, coste, talento, ayudas, tamaño…) y explica cada recomendación con datos públicos y un modelo transparente.</p>
         <p>Herramienta independiente, no vinculada a la Comunidad de Madrid. Código abierto en <a href="https://github.com/GF3000/madrid-179">GitHub</a>.</p>

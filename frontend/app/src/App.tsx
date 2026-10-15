@@ -1,23 +1,30 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { api, type Consulta, type Ficha as TFicha, type Geometria, type Interpretacion, type Meta, type Municipio, type Negocio,
-  type Peticion, type Ranking } from "./api";
-import { clasificar, describirFiltro, FILTROS_VACIOS, palabraImportancia, type Situacion } from "./modelo";
+import { api, type Consulta, type Diagnostico, type Ficha as TFicha, type Geometria, type IdCuadrante, type Interpretacion,
+  type Meta, type Municipio, type Negocio, type Peticion, type Ranking } from "./api";
+import { clasificar, describirFiltro, FILTROS_VACIOS, palabraImportancia, situacionesActuar, type Situacion } from "./modelo";
 import Mapa, { type Camara, type MandoMapa } from "./componentes/Mapa";
 import Ficha from "./componentes/Ficha";
 import PanelDecidir, { type Cambio } from "./componentes/PanelDecidir";
 import PanelPerfiles from "./componentes/PanelPerfiles";
+import PanelActuar, { AMBITO_TODO, enAmbito, type Ambito } from "./componentes/PanelActuar";
 import Intro from "./componentes/Intro";
 import Viaje, { DURACION_VIAJE, origenesTarjeta, type Trayecto } from "./componentes/Viaje";
 import Recorrido, { huecoTarjetaMovil, type Parada } from "./componentes/Recorrido";
-import { Buscador, ComoFunciona, ControlesMapa, Etiqueta, Leyenda, Marca, Pie } from "./componentes/Contorno";
+import Navegacion, { BotonesInfo, ModosMovil, type Dialogo, type Modo } from "./componentes/Navegacion";
+import { AcercaDe, AvisoMapa, Buscador, ComoFunciona, ControlesMapa, Etiqueta, Leyenda, Marca, VentanaVideo } from "./componentes/Contorno";
 import Asa from "./componentes/Asa";
 import { esMovil, useEsMovil } from "./movil";
 
 const PETICION_INICIAL: Peticion = { preferencias: {}, filtros: FILTROS_VACIOS };
+const ANCHO_NAV = 68; // barra de navegación vertical
 const ANCHO_PANEL = 392;
 const ANCHO_FICHA = 432;
+// Borde izquierdo de lo que se ve del mapa: barra (16 + 68), hueco de 8, panel y 16 de aire; sin panel, barra y aire
+const IZQ_PANEL = 16 + ANCHO_NAV + 8 + ANCHO_PANEL + 16;
+const IZQ_SIN_PANEL = 16 + ANCHO_NAV + 16;
 const TOP_RECORRIDO = 5; // municipios que visita el recorrido tras el asistente
-// Móvil: el panel es una hoja inferior plegada (marca, buscador y pestañas), media o casi completa; la ficha, otra hoja
+const TITULOS: Record<Modo, string> = { decidir: "Dónde abrir", actuar: "Dónde actuar", perfiles: "Explorar perfiles" };
+// Móvil: el panel es una hoja inferior plegada (marca, buscador y modos), media o casi completa; la ficha, otra hoja
 // encima. Fracciones del alto de la ventana
 const HOJA_MEDIA = 0.55;
 const HOJA_COMPLETA = 0.92;
@@ -35,7 +42,8 @@ export default function App() {
   const [ranking, setRanking] = useState<Ranking | null>(null);
   const [peticion, setPeticion] = useState<Peticion>(PETICION_INICIAL);
   const [cambios, setCambios] = useState<{ lista: Cambio[]; motivo: string } | null>(null);
-  const [pestana, setPestana] = useState<"decidir" | "perfiles">("decidir");
+  const [pestana, setPestana] = useState<Modo>("decidir");
+  const [panelAbierto, setPanelAbierto] = useState(true); // pulsar el modo activo en la barra pliega el panel
   const [seleccionado, setSeleccionado] = useState<string | null>(enlaceFicha); // enlace directo: /#28149
   const [ficha, setFicha] = useState<TFicha | null>(null);
   const [evidencia, setEvidencia] = useState<Record<string, string>>({});
@@ -45,11 +53,16 @@ export default function App() {
   const [clasesFijadas, setClasesFijadas] = useState<Set<string>>(new Set()); // fijadas con un clic en la leyenda
   const [camara, setCamara] = useState<Camara>({ rumbo: 0, inclinacion: 0 });
   const [mando, setMando] = useState<MandoMapa | null>(null);
-  const [ayuda, setAyuda] = useState(false);
+  const [dialogo, setDialogo] = useState<Dialogo | null>(() => (enlaceEquipo() ? "acerca" : null)); // /#equipo
   const [intro, setIntro] = useState<"carga" | "revelando" | "fin">("carga");
   const [viajes, setViajes] = useState<Trayecto[] | null>(null);
   const [recorrido, setRecorrido] = useState<{ id: number; paradas: Parada[] } | null>(null);
   const [destacado, setDestacado] = useState<string | null>(null); // parada actual del recorrido
+  // «Dónde actuar»: diagnóstico (se pide al entrar en el modo), ámbito y municipio diagnosticado en el panel
+  const [diagnostico, setDiagnostico] = useState<Diagnostico | null>(null);
+  const [errorDiagnostico, setErrorDiagnostico] = useState(false);
+  const [ambito, setAmbito] = useState<Ambito>(AMBITO_TODO);
+  const [diagnosticado, setDiagnosticado] = useState<string | null>(null);
   const desdeAsistente = useRef(false); // el próximo ranking viene del asistente: estrellas de la tarjeta al mapa
   const mandoRef = useRef(mando);
   mandoRef.current = mando;
@@ -191,6 +204,7 @@ export default function App() {
     const enlace = () => {
       const i = enlaceFicha();
       if (i) setSeleccionado(i);
+      if (enlaceEquipo()) setDialogo("acerca");
     };
     window.addEventListener("hashchange", enlace);
     return () => window.removeEventListener("hashchange", enlace);
@@ -199,11 +213,57 @@ export default function App() {
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (ayuda) setAyuda(false); else setSeleccionado(null);
+      if (dialogo) setDialogo(null); else if (seleccionado) setSeleccionado(null); else setDiagnosticado(null);
     };
     window.addEventListener("keydown", tecla);
     return () => window.removeEventListener("keydown", tecla);
-  }, [ayuda]);
+  }, [dialogo, seleccionado]);
+
+  const cambiarModo = useCallback((m: Modo) => {
+    setPestana(m);
+    setPanelAbierto(true);
+    setClasesFijadas(new Set()); // grupos y situaciones no se comparten entre modos
+    setClaseResaltada(null);
+  }, []);
+  const elegirModo = useCallback((m: Modo) => {
+    if (m === pestana) return setPanelAbierto((a) => !a);
+    cambiarModo(m);
+  }, [pestana, cambiarModo]);
+
+  // ---------------------------------------------------------- dónde actuar
+  useEffect(() => {
+    if (!datos || pestana !== "actuar" || diagnostico) return;
+    let vigente = true;
+    setErrorDiagnostico(false);
+    api.diagnostico().then((d) => vigente && setDiagnostico(d)).catch(() => vigente && setErrorDiagnostico(true));
+    return () => { vigente = false; };
+  }, [datos, pestana, diagnostico]);
+
+  const situacionesMapa = useMemo(
+    () => (pestana === "actuar" && diagnostico && datos ? situacionesActuar(diagnostico, datos.municipios) : situaciones),
+    [pestana, diagnostico, datos, situaciones]);
+
+  // En «Dónde actuar», elegir un municipio (mapa, buscador, lista) abre su diagnóstico en el panel; la ficha completa,
+  // si ya está abierta, le sigue. Madrid capital no tiene diagnóstico (es la referencia): abre su ficha.
+  const diagnosticar = useCallback((i: string | null) => {
+    if (i && diagnostico && !diagnostico.municipios.some((m) => m.ine5 === i)) return setSeleccionado(i);
+    setDiagnosticado(i);
+    if (i) setPanelAbierto(true);
+    if (i && esMovil()) setHoja((h) => Math.max(h, 1)); // en móvil, la hoja sube para que se lea el diagnóstico
+    if (i && seleccionado) setSeleccionado(i);
+  }, [diagnostico, seleccionado]);
+  const seleccionar = pestana === "actuar" ? diagnosticar : setSeleccionado;
+
+  const elegirCuadrante = useCallback((id: IdCuadrante) => setClasesFijadas((s) =>
+    (s.size === 1 && s.has(id) ? new Set<string>() : new Set<string>([id]))), []);
+
+  // «Ver su perfil en la red»: explorar perfiles con los estados de los padres del objetivo de ese municipio
+  const verPerfil = useCallback((ine5: string) => {
+    if (!datos) return;
+    const estados = datos.municipios.find((m) => m.ine5 === ine5)?.estados ?? {};
+    setEvidencia(Object.fromEntries(datos.meta.padres_objetivo.filter((n) => estados[n]).map((n) => [n, estados[n]])));
+    cambiarModo("perfiles");
+  }, [datos, cambiarModo]);
 
   // ------------------------------------------------------------- perfiles
   useEffect(() => {
@@ -229,25 +289,34 @@ export default function App() {
     // recorrido: en cada parada solo queda en pie ese municipio (se levanta al llegar la cámara); al empezar y al
     // terminar, los cinco
     if (recorrido) return new Set(destacado ? [destacado] : recorrido.paradas.map((p) => p.ine5));
+    // actuar: lo que cae fuera del ámbito o de las situaciones elegidas se atenúa
+    if (pestana === "actuar") {
+      if (!diagnostico || (ambito === AMBITO_TODO && clasesVisibles.size === 0)) return null;
+      return new Set(diagnostico.municipios.filter((m) => enAmbito(m, ambito)
+        && (clasesVisibles.size === 0 || clasesVisibles.has(m.cuadrante))).map((m) => m.ine5));
+    }
     if (pestana === "perfiles" && consulta && Object.keys(evidencia).length > 0)
       return new Set(consulta.municipios.map((m) => m.ine5));
     if (clasesVisibles.size > 0)
       return new Set([...situaciones].filter(([, s]) => clasesVisibles.has(s.clase.id)).map(([i]) => i));
     return null;
-  }, [pestana, consulta, evidencia, clasesVisibles, situaciones, recorrido, destacado]);
+  }, [pestana, consulta, evidencia, clasesVisibles, situaciones, recorrido, destacado, diagnostico, ambito]);
 
   const etiquetas = useMemo(() => {
     if (recorrido) return recorrido.paradas.map((p) => p.ine5);
     // los cinco mejores de lo que se ve: de todos, o solo de los grupos resaltados o fijados
-    const top = pestana === "decidir"
-      ? [...situaciones].filter(([, s]) => s.posicion !== null && (clasesVisibles.size === 0 || clasesVisibles.has(s.clase.id)))
+    // en actuar, los cinco con más necesidad de lo que se ve (la posición ordena por necesidad)
+    const top = pestana === "decidir" || pestana === "actuar"
+      ? [...situacionesMapa].filter(([i, s]) => s.posicion !== null && (pestana === "actuar"
+        ? !resaltados || resaltados.has(i) : clasesVisibles.size === 0 || clasesVisibles.has(s.clase.id)))
         .sort((a, b) => a[1].posicion! - b[1].posicion!).slice(0, 5).map(([i]) => i) : [];
-    return seleccionado ? [...top.filter((i) => i !== seleccionado), seleccionado] : top;
-  }, [situaciones, seleccionado, pestana, clasesVisibles, recorrido]);
+    const elegido = seleccionado ?? (pestana === "actuar" ? diagnosticado : null);
+    return elegido ? [...top.filter((i) => i !== elegido), elegido] : top;
+  }, [situacionesMapa, seleccionado, diagnosticado, pestana, clasesVisibles, recorrido, resaltados]);
 
   const porIne = useMemo(() => new Map(datos?.municipios.map((m) => [m.ine5, m])), [datos]);
 
-  // Altura plegada: justo hasta el pie de las pestañas (más el margen seguro de abajo)
+  // Altura plegada: justo hasta el pie de los modos (más el margen seguro de abajo)
   const montada = !!datos && !!ranking && intro !== "carga";
   useLayoutEffect(() => {
     const panel = panelRef.current;
@@ -256,53 +325,62 @@ export default function App() {
     setPlegada(Math.round(nav.offsetTop + nav.offsetHeight + parseFloat(getComputedStyle(panel).paddingBottom || "0") + 4));
   }, [movil, montada, alto]);
 
-  if (error && !datos) return <div className="pantalla-aviso"><Marca onAyuda={() => undefined} /><p>{error}</p></div>;
+  if (error && !datos) return <div className="pantalla-aviso"><Marca /><p>{error}</p></div>;
   // La intro tapa la carga; cuando entra el carmesí de la bandera se monta la app por debajo
   const pantallaIntro = intro !== "fin" && (
     <Intro listo={!!datos && !!ranking} mapa={mando} contorno={datos?.geometria.contorno ?? null} onRevelar={() => setIntro("revelando")} onFin={() => setIntro("fin")} />);
   if (!datos || !ranking || intro === "carga") return pantallaIntro;
+  const izquierda = panelAbierto ? IZQ_PANEL : IZQ_SIN_PANEL;
 
   const fichaEl = seleccionado && (
     <Ficha ficha={ficha?.ine5 === seleccionado ? ficha : null} cargando={false}
       situacion={situaciones.get(seleccionado)} meta={datos.meta} pesos={ranking.pesos} peticion={peticion}
       negocio={negocio} onCerrar={() => setSeleccionado(null)} />);
-  // En móvil, cambiar de pestaña con la hoja plegada la abre para ver el contenido
-  const elegirPestana = (p: "decidir" | "perfiles") => {
-    setPestana(p);
-    if (movil) setHoja((h) => Math.max(h, 1));
+  // En móvil, cambiar de modo con la hoja plegada la abre para ver el contenido
+  const elegirModoMovil = (m: Modo) => {
+    if (m !== pestana) cambiarModo(m);
+    setHoja((h) => Math.max(h, 1));
   };
 
   return (<>
-    <div ref={appRef} className={`app${seleccionado ? " con-ficha" : ""}${intro !== "fin" ? " intro-activa" : ""}${recorrido ? " recorriendo" : ""}${movil ? ` hoja-${NOMBRES_HOJA[hoja]}` : ""}`}>
-      <Mapa geometria={datos.geometria} situaciones={situaciones} seleccionado={seleccionado} destacado={destacado}
-        resaltados={resaltados} etiquetas={etiquetas} onSeleccionar={setSeleccionado} onPasar={setPasando}
+    <div ref={appRef} className={`app${seleccionado ? " con-ficha" : ""}${intro !== "fin" ? " intro-activa" : ""}${recorrido ? " recorriendo" : ""}${movil ? ` hoja-${NOMBRES_HOJA[hoja]}` : ""}`}
+      style={movil ? undefined : { ["--izq" as string]: `${izquierda}px` }}>
+      <Mapa geometria={datos.geometria} situaciones={situacionesMapa}
+        seleccionado={seleccionado ?? (pestana === "actuar" ? diagnosticado : null)} destacado={destacado}
+        resaltados={resaltados} etiquetas={etiquetas} onSeleccionar={seleccionar} onPasar={setPasando}
         onCamara={setCamara} onMando={setMando} entrar={intro === "fin"}
         margenes={movil ? { izquierda: 0, derecha: 0, abajo }
-          : { izquierda: ANCHO_PANEL + 32, derecha: seleccionado ? ANCHO_FICHA + 32 : 0 }} />
+          : { izquierda: izquierda, derecha: seleccionado ? ANCHO_FICHA + 32 : 0 }} />
 
-      <aside className="panel" ref={panelRef} style={movil ? undefined : { width: ANCHO_PANEL }}
+      {/* en móvil no cabe la barra lateral: los modos van en la hoja y la información, junto a la marca */}
+      {!movil && <Navegacion modo={pestana} abierto={panelAbierto} onModo={elegirModo} onDialogo={setDialogo} />}
+      <aside className={`panel${panelAbierto || movil ? "" : " plegado"}`} ref={panelRef}
+        style={movil ? undefined : { width: ANCHO_PANEL, left: 16 + ANCHO_NAV + 8 }}
         onFocus={movil ? (e) => { if ((e.target as HTMLElement).matches("input, textarea")) setHoja(2); } : undefined}>
         {movil && <Asa hoja={panelRef} alturas={alturasPanel} indice={hoja} onIndice={setHoja} onMover={moverAbajo}
           etiqueta={hoja < 2 ? "Ampliar el panel" : "Plegar el panel"} />}
-        <Marca onAyuda={() => setAyuda(true)} />
-        <Buscador municipios={datos.municipios} onSeleccionar={setSeleccionado} />
-        <nav className="pestanas" style={{ ["--i" as string]: pestana === "decidir" ? 0 : 1 }}>
-          <span className="pestanas-cursor" aria-hidden />
-          <button className={pestana === "decidir" ? "activa" : ""} onClick={() => elegirPestana("decidir")}>Dónde abrir</button>
-          <button className={pestana === "perfiles" ? "activa" : ""} onClick={() => elegirPestana("perfiles")}>Explorar perfiles</button>
-        </nav>
+        <Marca>{movil && <BotonesInfo onDialogo={setDialogo} />}</Marca>
+        <Buscador municipios={datos.municipios} onSeleccionar={seleccionar} />
+        {movil
+          ? <ModosMovil modo={pestana} onModo={elegirModoMovil} />
+          : <h2 className="panel-titulo">{TITULOS[pestana]}</h2>}
         <div className="panel-desplazable" key={pestana}>
           {pestana === "decidir"
             ? <PanelDecidir meta={datos.meta} peticion={peticion} onPeticion={cambiarPeticion}
                 onAsistente={aplicarAsistente} onDeshacerAsistente={deshacerAsistente} pesos={ranking.pesos} municipios={datos.municipios}
                 situaciones={situaciones} cambios={cambios} onCerrarCambios={() => setCambios(null)}
                 onSeleccionar={setSeleccionado} onResaltarClase={setClaseResaltada} seleccionado={seleccionado} />
+            : pestana === "actuar"
+            ? <PanelActuar diagnostico={diagnostico} error={errorDiagnostico} ambito={ambito} onAmbito={setAmbito}
+                fijados={clasesFijadas} onElegirCuadrante={elegirCuadrante} onResaltarCuadrante={setClaseResaltada}
+                diagnosticado={diagnosticado} onDiagnosticar={diagnosticar} onPerfil={verPerfil} onFicha={setSeleccionado} />
             : <PanelPerfiles meta={datos.meta} evidencia={evidencia} onEvidencia={setEvidencia} consulta={consulta}
                 onSeleccionar={setSeleccionado} />}
-          {movil && <Pie />}
+          {/* en móvil el aviso «no oficial» va al final del panel: sobre el mapa quedaría bajo la hoja */}
+          {movil && <AvisoMapa onAcerca={() => setDialogo("acerca")} />}
         </div>
-        {!movil && <Pie />}
       </aside>
+      {!movil && <AvisoMapa onAcerca={() => setDialogo("acerca")} />}
 
       {seleccionado && (movil
         ? <div className="hoja-ficha" ref={fichaRef}>
@@ -316,9 +394,12 @@ export default function App() {
         onLimpiar={() => setClasesFijadas(new Set())} modo={pestana} />
       <ControlesMapa camara={camara} mando={mando} />
       {pasando && <Etiqueta x={pasando.x} y={pasando.y} municipio={porIne.get(pasando.ine5)}
-        situacion={situaciones.get(pasando.ine5)} abajo={abajo} />}
+        situacion={situacionesMapa.get(pasando.ine5)} abajo={abajo}
+        pista={pestana === "actuar" ? { raton: "Pulsa para ver su diagnóstico", tacto: "Toca de nuevo para ver su diagnóstico" } : undefined} />}
       {error && <div className="brindis" role="status" onClick={() => setError(null)}>{error}</div>}
-      {ayuda && <ComoFunciona meta={datos.meta} onCerrar={() => setAyuda(false)} />}
+      {dialogo === "como" && <ComoFunciona meta={datos.meta} onCerrar={() => setDialogo(null)} />}
+      {dialogo === "acerca" && <AcercaDe meta={datos.meta} onCerrar={() => setDialogo(null)} onComo={() => setDialogo("como")} />}
+      {dialogo === "video" && <VentanaVideo onCerrar={() => setDialogo(null)} />}
       {viajes && <Viaje trayectos={viajes} onFin={() => setViajes(null)} />}
       {recorrido && mando && (
         <Recorrido key={recorrido.id} paradas={recorrido.paradas} mando={mando} meta={datos.meta} pesos={ranking.pesos}
@@ -337,7 +418,7 @@ interface Zona { izq: number; der: number; arriba: number; abajo: number }
 function zonaVisible(conFicha: boolean, tapadoAbajo: number): Zona {
   return esMovil()
     ? { izq: 12, der: innerWidth - 12, arriba: 64, abajo: innerHeight - tapadoAbajo - 64 }
-    : { izq: ANCHO_PANEL + 56, der: innerWidth - (conFicha ? ANCHO_FICHA + 48 : 48), arriba: 48, abajo: innerHeight - 110 };
+    : { izq: IZQ_PANEL + 24, der: innerWidth - (conFicha ? ANCHO_FICHA + 48 : 48), arriba: 48, abajo: innerHeight - 110 };
 }
 
 // Una estrella por cada cosa entendida, hacia los municipios que suben de grupo (y si no sube ninguno, hacia los
@@ -378,6 +459,9 @@ function paradasRecorrido(nuevas: Map<string, Situacion>, datos: Datos): Parada[
 function enlaceFicha(): string | null {
   return location.hash.match(/^#(\d{5})$/)?.[1] ?? null;
 }
+
+// Enlace para compartir (portfolio, tarjeta): abre «Acerca de» con el equipo
+const enlaceEquipo = () => location.hash === "#equipo";
 
 function describirCambio(a: Peticion, b: Peticion, meta: Meta): string {
   for (const c of meta.catalogo) {

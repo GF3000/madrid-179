@@ -41,19 +41,49 @@
   .marca { padding: 0 16px 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .marca h1 { font-size: 25px; }
   .marca p { display: none; }
-  .boton-ayuda { position: static; flex: none; min-height: 44px; padding: 0 14px; font-size: 13.5px; }
+  /* la información de la barra lateral (que en móvil no se monta): iconos de 44 px junto a la marca */
+  .botones-info { display: flex; gap: 2px; margin-right: -8px; }
+  .botones-info button {
+    display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px;
+    background: none; color: var(--tinta-2);
+  }
+  .botones-info button:active { background: var(--rojo-suave); color: var(--rojo-hondo); }
+  .botones-info .relleno { fill: currentColor; fill-opacity: 0.25; }
 
   .buscador { margin: 0 16px 6px; }
   .buscador input { min-height: 44px; font-size: 16px; } /* 16 px: iOS no acerca la página al enfocar */
   .lupa { top: 14px; }
   .sugerencias button { min-height: 44px; font-size: 15px; }
-  .pestanas { margin: 0 16px; }
-  .pestanas button { min-height: 44px; font-size: 14.5px; }
+  /* los tres modos (ModosMovil): pestañas con icono, visibles aun con la hoja plegada */
+  .pestanas {
+    position: relative; display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 16px;
+    border-bottom: 1px solid var(--linea);
+  }
+  .pestanas button {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-height: 52px; padding: 5px 2px 7px; border: 0; background: none;
+    font-size: 13px; font-weight: 600; line-height: 1.15; color: var(--tinta-3); transition: color 200ms;
+  }
+  .pestanas button svg { width: 20px; height: 20px; }
+  .pestanas button .relleno { fill: currentColor; fill-opacity: 0.25; }
+  .pestanas button.activa { color: var(--tinta); }
+  .pestanas button.activa svg { color: var(--rojo); }
+  .pestanas-cursor {
+    position: absolute; bottom: -1px; left: 0; width: calc(100% / 3); height: 2px; background: var(--rojo);
+    transform: translateX(calc(var(--i) * 100%)); transition: transform 350ms var(--entrar);
+  }
 
   .panel-desplazable { padding: 4px 16px 20px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-  /* el pie va al final del contenido desplazable (App): no resta alto a la hoja */
-  .panel-desplazable .pie { margin: 16px -16px -20px; padding: 12px 16px 16px; font-size: 13px; }
-  .pie .sin-partir { white-space: normal; }
+  /* el aviso «no oficial» va al final del contenido desplazable (App): sobre el mapa quedaría bajo la hoja */
+  .panel-desplazable .aviso-mapa {
+    position: static; max-width: none; white-space: normal; overflow: visible; animation: none;
+    margin: 16px -16px -20px; padding: 12px 16px 16px; border-top: 1px solid var(--linea); border-radius: 0;
+    background: none; font-size: 13px;
+  }
+  .panel-desplazable .aviso-mapa .enlace { min-height: 0; }
+
+  /* dónde actuar: sin sangría en la lectura de cada situación (falta ancho) */
+  .cuadrante-lectura { padding-left: 0; }
 
   /* textos de 11-12,5 px a 13-14 px */
   .nota, .enlace, .vacio, .grupo-cuenta, .reparto-etiqueta, .lista-cambios button, .grupo-lista button, .nube button,

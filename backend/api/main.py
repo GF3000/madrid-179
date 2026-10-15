@@ -19,8 +19,8 @@ from madrid179.config import ARTEFACTO, RAIZ
 from madrid179.servicio import ErrorEvidencia, Servicio
 
 from .esquemas import (Ficha, Meta, Municipio, PeticionConsulta, PeticionExplicacion, PeticionInterpretar,
-                       PeticionRanking, RespuestaConsulta, RespuestaEjemplo, RespuestaExplicacion, RespuestaInterpretar,
-                       RespuestaRanking)
+                       PeticionRanking, RespuestaConsulta, RespuestaDiagnostico, RespuestaEjemplo,
+                       RespuestaExplicacion, RespuestaInterpretar, RespuestaRanking)
 
 PROTOTIPO = RAIZ / "frontend" / "prototipo"
 APP = RAIZ / "frontend" / "app" / "dist"
@@ -112,6 +112,13 @@ def consulta(peticion: PeticionConsulta, request: Request):
         return servicio(request).consulta(peticion.evidencia)
     except ErrorEvidencia as e:
         raise HTTPException(422, str(e)) from None
+
+
+@v1.get("/diagnostico", response_model=RespuestaDiagnostico)
+def diagnostico(request: Request):
+    """Diagnóstico territorial (Administración, «Dónde actuar»): necesidad de reequilibrio, viabilidad según el
+    GA²M y frenos (palanca o estructural) de los 178 municipios sin la capital. Describe; no simula políticas."""
+    return servicio(request).diagnostico()
 
 
 @v1.post("/interpretar", response_model=RespuestaInterpretar)

@@ -1,40 +1,53 @@
-// Elementos alrededor del mapa: marca, buscador, leyenda, controles de cámara, etiqueta flotante y
-// la explicación de cómo se decide.
-import { useEffect, useMemo, useRef, useState } from "react";
+// Elementos alrededor del mapa: marca, aviso, buscador, leyenda, controles de cámara, etiqueta flotante y
+// los diálogos «Cómo se decide», «Acerca de» y el vídeo.
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Meta, Municipio } from "../api";
-import { CLASES, FILTRADO, FUERA, type Situacion } from "../modelo";
+import { CLASES, CUADRANTES, FILTRADO, FUERA, pesoMinimoModelo, type Situacion } from "../modelo";
 import type { Camara, MandoMapa } from "./Mapa";
+import type { Modo } from "./Navegacion";
 import { nombreLegible } from "./Ficha";
+import { VIDEO } from "./Navegacion";
 import { Bandera, Cerrar, Columna } from "./piezas";
 import { esMovil, useEsTactil } from "../movil";
 
-export function Marca({ onAyuda }: { onAyuda: () => void }) {
+// children: en móvil, los botones de información junto al nombre
+export function Marca({ children }: { children?: ReactNode }) {
   return (
     <header className="marca">
       <div className="marca-texto">
         <Bandera />
         <h1>Madrid <span>179</span></h1>
       </div>
+      {children}
       <p>Dónde abrir una oficina en los 179 municipios de la Comunidad de Madrid</p>
-      <button className="boton-ayuda" onClick={onAyuda}>Cómo se decide</button>
     </header>
   );
 }
 
 const DATATHON = "https://datathon-mad.sel.inf.uc3m.es/";
 const REPOSITORIO = "https://github.com/GF3000/madrid-179";
+const EN_REPOSITORIO = (ruta: string) => `${REPOSITORIO}/blob/main/${ruta}`;
+// Correo de contacto público: vacío mientras el equipo no decida cuál (entonces solo se ofrece GitHub)
+const CORREO = "";
 
-// Pie del panel: deja claro que la herramienta no es oficial y enlaza el datathon y el código
-export function Pie() {
+// Equipo: aparece en «Acerca de» (enlace directo: /#equipo) y en el aviso sobre el mapa. Sin roles: el
+// trabajo es de los dos. `github` y `foto` (en public/equipo/,
+// cuadrada de 176 px) son opcionales: sin foto, las iniciales
+const EQUIPO = [
+  { nombre: "Gregorio García Velasco", corto: "Gregorio García", centro: "Universidad Carlos III de Madrid",
+    linkedin: "https://www.linkedin.com/in/gregorio-garc%C3%ADa-velasco-481847265/", github: "", foto: "" },
+  { nombre: "Guillermo Franco Gimeno", corto: "Guillermo Franco", centro: "Universidad Politécnica de Madrid",
+    linkedin: "https://www.linkedin.com/in/guillermo-franco-gimeno-335256229/", github: "",
+    foto: "/equipo/guillermo-franco.jpg" },
+];
+
+// Aviso permanente sobre el mapa, como una atribución: la herramienta no es oficial
+export function AvisoMapa({ onAcerca }: { onAcerca: () => void }) {
   return (
-    <footer className="pie">
-      <p><b>Herramienta no oficial.</b> No está vinculada ni avalada por la Comunidad de Madrid. Los resultados son
-        orientativos y salen de datos abiertos.</p>
-      <p>
-        Proyecto para el <a href={DATATHON} target="_blank" rel="noreferrer">MAD Open Data Challenge 2026</a>
-        {" · "}<span className="sin-partir"><a href={REPOSITORIO} target="_blank" rel="noreferrer">Código y fuentes</a> (MIT)</span>
-      </p>
-    </footer>
+    <p className="aviso-mapa">
+      <b>Herramienta no oficial</b>, no vinculada a la Comunidad de Madrid · Hecha por{" "}
+      <button className="enlace" onClick={onAcerca}>{EQUIPO.map((p) => p.corto).join(" y ")}</button>
+    </p>
   );
 }
 
@@ -76,27 +89,31 @@ export function Buscador({ municipios, onSeleccionar }: { municipios: Municipio[
 }
 
 // Pasar el ratón por un grupo lo resalta en el mapa (vista previa); un clic lo fija y se pueden fijar varios.
+// En «Dónde actuar», las cuatro situaciones del diagnóstico (la altura es la necesidad, no el grupo).
 // En táctil no hay vista previa (el toque emula un «pasar» que no se va) ni title: al fijar un solo grupo se lee su resumen
 export function Leyenda({ resaltada, fijadas, onResaltar, onFijar, onLimpiar, modo }: {
   resaltada: string | null; fijadas: Set<string>; onResaltar: (c: string | null) => void;
-  onFijar: (c: string) => void; onLimpiar: () => void; modo: "decidir" | "perfiles";
+  onFijar: (c: string) => void; onLimpiar: () => void; modo: Modo;
 }) {
+  const actuar = modo === "actuar";
+  const clases = actuar ? [...Object.values(CUADRANTES), FUERA] : [...CLASES, FILTRADO, FUERA];
+  const unidad = actuar ? ["situación", "situaciones"] : ["grupo", "grupos"];
   const tactil = useEsTactil();
   const previa = (c: string | null) => !tactil && onResaltar(c);
-  const unica = tactil && fijadas.size === 1 ? [...CLASES, FILTRADO, FUERA].find((c) => fijadas.has(c.id)) : undefined;
+  const unica = tactil && fijadas.size === 1 ? clases.find((c) => fijadas.has(c.id)) : undefined;
   return (
     <div className={`leyenda${fijadas.size > 0 ? " con-fijadas" : ""}`} onMouseLeave={() => onResaltar(null)}>
       {fijadas.size > 0
-        ? <button className="leyenda-titulo leyenda-quitar" onClick={onLimpiar} title="Volver a ver todos los grupos">
-            Solo {fijadas.size === 1 ? "1 grupo" : `${fijadas.size} grupos`}<span>Ver todos</span>
+        ? <button className="leyenda-titulo leyenda-quitar" onClick={onLimpiar} title={actuar ? "Volver a ver todas las situaciones" : "Volver a ver todos los grupos"}>
+            Solo {fijadas.size === 1 ? `1 ${unidad[0]}` : `${fijadas.size} ${unidad[1]}`}<span>{actuar ? "Ver todas" : "Ver todos"}</span>
           </button>
-        : <span className="leyenda-titulo">{modo === "perfiles" ? "Con este perfil" : "Condiciones para una oficina"}</span>}
+        : <span className="leyenda-titulo">{modo === "perfiles" ? "Con este perfil" : actuar ? "Situación del municipio" : "Condiciones para una oficina"}</span>}
       <div className="leyenda-clases">
-        {[...CLASES, FILTRADO, FUERA].map((c) => (
+        {clases.map((c) => (
           <button key={c.id} className={`${resaltada === c.id ? "activa" : ""}${fijadas.has(c.id) ? " fijada" : ""}`}
             aria-pressed={fijadas.has(c.id)} onMouseEnter={() => previa(c.id)} onClick={() => onFijar(c.id)}
             onFocus={() => previa(c.id)} onBlur={() => previa(null)}
-            title={`${c.resumen} ${fijadas.has(c.id) ? "Clic para dejar de mostrar solo este grupo." : "Clic para mostrar solo este grupo."}`}>
+            title={`${c.resumen} ${fijadas.has(c.id) ? `Clic para dejar de mostrar solo ${actuar ? "esta" : "este"} ${unidad[0]}.` : `Clic para mostrar solo ${actuar ? "esta" : "este"} ${unidad[0]}.`}`}>
             <Columna clase={c} />
             <span>{c.nombre}</span>
           </button>
@@ -131,9 +148,11 @@ export function ControlesMapa({ camara, mando }: { camara: Camara; mando: MandoM
   );
 }
 
-// abajo: px tapados por la hoja inferior en móvil; ahí la etiqueta no se sale por los lados ni se mete bajo la hoja
-export function Etiqueta({ x, y, municipio, situacion, abajo = 0 }: {
+// abajo: px tapados por la hoja inferior en móvil; ahí la etiqueta no se sale por los lados ni se mete bajo la hoja.
+// pista: qué pasa al pulsar (por omisión, la ficha); en táctil el segundo toque hace lo mismo
+export function Etiqueta({ x, y, municipio, situacion, abajo = 0, pista }: {
   x: number; y: number; municipio: Municipio | undefined; situacion: Situacion | undefined; abajo?: number;
+  pista?: { raton: string; tacto: string };
 }) {
   const tactil = useEsTactil();
   if (!municipio || !situacion) return null;
@@ -147,24 +166,36 @@ export function Etiqueta({ x, y, municipio, situacion, abajo = 0 }: {
     <div className="etiqueta" style={{ transform: `translate(${izq}px, ${arriba}px)` }}>
       <strong>{nombreLegible(municipio.municipio)}</strong>
       <span><Columna clase={situacion.clase} /> {situacion.clase.nombre}</span>
-      <em>{tactil ? "Toca de nuevo para ver la ficha" : "Pulsa para ver por qué"}</em>
+      <em>{tactil ? pista?.tacto ?? "Toca de nuevo para ver la ficha" : pista?.raton ?? "Pulsa para ver por qué"}</em>
     </div>
   );
 }
 
-export function ComoFunciona({ meta, onCerrar }: { meta: Meta; onCerrar: () => void }) {
+// Diálogo modal: velo, foco al abrir y cabecera con el título y el aspa
+function Ventana({ titulo, clase, onCerrar, children }: {
+  titulo: string; clase?: string; onCerrar: () => void; children: ReactNode;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.focus();
   }, []);
   return (
     <div className="velo" onClick={onCerrar}>
-      <div className="dialogo" role="dialog" aria-modal aria-labelledby="titulo-como" tabIndex={-1} ref={ref}
-        onClick={(e) => e.stopPropagation()}>
+      <div className={`dialogo${clase ? ` ${clase}` : ""}`} role="dialog" aria-modal aria-labelledby="titulo-dialogo"
+        tabIndex={-1} ref={ref} onClick={(e) => e.stopPropagation()}>
         <div className="dialogo-cabecera">
-          <h2 id="titulo-como">Cómo se decide</h2>
+          <h2 id="titulo-dialogo">{titulo}</h2>
           <Cerrar onClick={onCerrar} />
         </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function ComoFunciona({ meta, onCerrar }: { meta: Meta; onCerrar: () => void }) {
+  return (
+    <Ventana titulo="Cómo se decide" onCerrar={onCerrar}>
         <ol className="pasos">
           <li>
             <span className="paso-num">1</span>
@@ -196,8 +227,8 @@ export function ComoFunciona({ meta, onCerrar }: { meta: Meta; onCerrar: () => v
             <div>
               <h3>Tus prioridades, a la vista</h3>
               <p>Transporte, coste, tamaño, talento… los pones tú, a mano o contando tu negocio con tus palabras
-                (un asistente lo traduce al momento y puedes deshacerlo). Las condiciones del municipio siguen decidiendo al menos la
-                mitad, y el mapa muestra qué municipios suben o bajan de grupo y por qué.</p>
+                (un asistente lo traduce al momento y puedes deshacerlo). Las condiciones del municipio siguen pesando al menos{" "}
+                {pesoMinimoModelo(meta.tope_preferencias)}, y el mapa muestra qué municipios suben o bajan de grupo y por qué.</p>
             </div>
           </li>
         </ol>
@@ -210,7 +241,92 @@ export function ComoFunciona({ meta, onCerrar }: { meta: Meta; onCerrar: () => v
           <p className="nota">Los factores describen lo que acompaña al crecimiento empresarial; no garantizan que
             cambiarlos lo provoque. Modelo {meta.version_modelo} · entrenado el {fecha(meta.entrenado)}.</p>
         </div>
+    </Ventana>
+  );
+}
+
+export function AcercaDe({ meta, onCerrar, onComo }: { meta: Meta; onCerrar: () => void; onComo: () => void }) {
+  const fuera = { target: "_blank", rel: "noreferrer" };
+  return (
+    <Ventana titulo="Acerca de Madrid 179" onCerrar={onCerrar}>
+      {VIDEO && <Video />}
+      <p className="acerca-entrada">
+        Madrid 179 ayuda a decidir dónde abrir o trasladar una oficina entre los 179 municipios de la Comunidad de
+        Madrid: compara las condiciones de cada municipio con tus prioridades y explica cada resultado con datos
+        abiertos. Es nuestro proyecto para el <a href={DATATHON} {...fuera}>MAD Open Data Challenge 2026</a>.
+      </p>
+      <section className="equipo" id="equipo" aria-labelledby="titulo-equipo">
+        <h3 id="titulo-equipo">Equipo</h3>
+        <ul>
+          {EQUIPO.map((p) => (
+            <li key={p.nombre}>
+              {p.foto
+                ? <img className="equipo-foto" src={p.foto} alt="" width={44} height={44} loading="lazy" />
+                : <span className="equipo-foto" aria-hidden>{p.nombre.split(" ").slice(0, 2).map((x) => x[0]).join("")}</span>}
+              <div>
+                <strong>{p.nombre}</strong>
+                <span className="equipo-centro">{p.centro}</span>
+                <span className="equipo-enlaces">
+                  <a href={p.linkedin} {...fuera}>LinkedIn</a>
+                  {p.github && <a href={p.github} {...fuera}>GitHub</a>}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p>
+          ¿Una idea, un error o una pregunta? Escríbenos por LinkedIn o{" "}
+          <a href={`${REPOSITORIO}/issues`} {...fuera}>abre una incidencia en GitHub</a>
+          {CORREO && <>; también en <a href={`mailto:${CORREO}`}>{CORREO}</a></>}.
+        </p>
+      </section>
+      <div className="acerca-secciones">
+        <section>
+          <h3>Transparencia</h3>
+          <p>Cada número se puede rehacer a mano: el código, los datos derivados y los cálculos están publicados.</p>
+          <ul className="acerca-enlaces">
+            <li><button className="enlace" onClick={onComo}>Cómo se decide, en cuatro pasos</button></li>
+            <li><a href={EN_REPOSITORIO("docs/informe/Aproximacion_tecnica_CAM.pdf")} {...fuera}>Aproximación técnica</a> (PDF)</li>
+            <li><a href={EN_REPOSITORIO("docs/informe/Calculo_CPTs_CAM.pdf")} {...fuera}>La red bayesiana, calculada paso a paso</a> (PDF)</li>
+            <li><a href={EN_REPOSITORIO("docs/informe/Fuentes_de_datos_CAM.pdf")} {...fuera}>Fuentes de datos</a> (PDF)</li>
+            <li><a href="/docs" {...fuera}>API abierta</a> y <a href={REPOSITORIO} {...fuera}>código en GitHub</a></li>
+          </ul>
+        </section>
+        <section>
+          <h3>Datos y licencia</h3>
+          <p>
+            Datos abiertos de la Comunidad y el Ayuntamiento de Madrid, el INE, el Catastro, el Consorcio de
+            Transportes, la BDNS y OpenStreetMap; cada conjunto conserva la licencia de su fuente
+            (<a href={EN_REPOSITORIO("data/README.md")} {...fuera}>detalle</a>). Resúmenes de Wikipedia (CC BY-SA 4.0)
+            y fotos de Wikimedia Commons con su autor. El código es libre, con <a href={EN_REPOSITORIO("LICENSE")} {...fuera}>licencia MIT</a>.
+          </p>
+        </section>
+        <section className="acerca-aviso">
+          <h3>Herramienta no oficial</h3>
+          <p>
+            No está vinculada ni avalada por la Comunidad de Madrid. Los resultados son orientativos: describen lo que
+            acompañó al crecimiento empresarial entre 2020 y 2024, no garantizan lo que pasará.
+          </p>
+        </section>
       </div>
+      <p className="nota acerca-version">Modelo {meta.version_modelo} · entrenado el {fecha(meta.entrenado)}</p>
+    </Ventana>
+  );
+}
+
+export function VentanaVideo({ onCerrar }: { onCerrar: () => void }) {
+  return (
+    <Ventana titulo="Madrid 179 en vídeo" clase="dialogo-video" onCerrar={onCerrar}>
+      <Video />
+    </Ventana>
+  );
+}
+
+function Video() {
+  return (
+    <div className="video">
+      <iframe src={VIDEO} title="Vídeo de presentación de Madrid 179" allowFullScreen
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
     </div>
   );
 }

@@ -73,8 +73,8 @@ Los scripts de `backend/pipeline/` se ejecutan desde la raíz (usan rutas relati
 
 ## Autores
 
-- **Gregorio García Velasco** · Universidad Carlos III de Madrid (UC3M)
-- **Guillermo Franco Gimeno** · Universidad Politécnica de Madrid (UPM)
+- **Gregorio García Velasco** · Universidad Carlos III de Madrid (UC3M) · [LinkedIn](https://www.linkedin.com/in/gregorio-garc%C3%ADa-velasco-481847265/)
+- **Guillermo Franco Gimeno** · Universidad Politécnica de Madrid (UPM) · [LinkedIn](https://www.linkedin.com/in/guillermo-franco-gimeno-335256229/)
 
 ## Licencia
 

@@ -356,6 +356,16 @@ export default function Mapa(p: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.seleccionado, listo, p.margenes.abajo]);
 
+  // Al plegar o desplegar el panel, lo que estaba en el centro de lo visible sigue en el centro
+  const izquierdaPrevia = useRef(p.margenes.izquierda);
+  useEffect(() => {
+    const m = mapa.current;
+    if (!m || izquierdaPrevia.current === p.margenes.izquierda) return;
+    izquierdaPrevia.current = p.margenes.izquierda;
+    m.easeTo({ padding: relleno(p.margenes, MARGEN_ARRIBA, MARGEN_ABAJO, m), duration: 600 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.margenes.izquierda]);
+
   // ---------------------------------------------------------------- capas
   const centros = useMemo(() => new Map(p.geometria.features.map((f) => [f.properties.ine5, f.properties.centro])),
     [p.geometria]);
@@ -469,7 +479,7 @@ export default function Mapa(p: Props) {
 
   // Al cambiar qué se rotula (grupos, foco, zoom), se recalculan los choques; al mover el mapa, en «moveend»
   useEffect(() => recolocar.current(), [cerca, p.situaciones, p.resaltados, p.etiquetas, p.destacado, p.seleccionado,
-    p.margenes.derecha, p.margenes.abajo]);
+    p.margenes.izquierda, p.margenes.derecha, p.margenes.abajo]);
 
   // el mouseleave emulado tras un toque borraría la etiqueta recién puesta
   return <div ref={nodo} className="mapa" onMouseLeave={() => !esTactil() && p.onPasar(null)} />;
