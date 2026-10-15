@@ -55,15 +55,16 @@ b, strong { font-weight: 650; }
 @keyframes aparecer { from { opacity: 0; transform: translateY(6px); } }
 
 .marca { padding: 22px 24px 14px; position: relative; }
-.marca-texto { display: flex; align-items: baseline; gap: 12px; }
+.marca-texto { display: flex; align-items: center; gap: 12px; }
+.bandera { flex: none; filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.15)); }
+.bandera rect { fill: var(--rojo); }
+.bandera polygon { fill: #fff; transform-box: fill-box; transform-origin: center; animation: estrella 500ms var(--entrar) both; }
 .marca h1 {
   font: 600 30px/1 var(--serif); letter-spacing: -0.02em;
   font-variation-settings: "SOFT" 50, "WONK" 1;
 }
 .marca h1 span { color: var(--rojo); font-style: italic; }
 .marca p { color: var(--tinta-2); margin-top: 6px; font-size: 13px; max-width: 250px; line-height: 1.4; }
-.estrellas { display: inline-flex; gap: 3px; transform: translateY(-3px); }
-.estrellas svg { fill: var(--rojo); animation: estrella 500ms var(--entrar) both; }
 @keyframes estrella { from { opacity: 0; transform: scale(0.2) rotate(-40deg); } }
 .boton-ayuda {
   position: absolute; right: 18px; bottom: 16px;
@@ -117,6 +118,15 @@ b, strong { font-weight: 650; }
   flex: 1; overflow-y: auto; padding: 4px 20px 20px; scrollbar-width: thin;
   scrollbar-color: var(--linea-2) transparent; animation: aparecer 300ms var(--entrar);
 }
+.pie {
+  flex: none; padding: 9px 20px 11px; border-top: 1px solid var(--linea);
+  color: var(--tinta-3); font-size: 11px; line-height: 1.45;
+}
+.pie p + p { margin-top: 2px; }
+.pie b { color: var(--tinta-2); font-weight: 600; }
+.pie a { color: var(--tinta-2); text-underline-offset: 2px; text-decoration-color: var(--linea-2); }
+.pie .sin-partir { white-space: nowrap; }
+.pie a:hover { color: var(--rojo); text-decoration-color: var(--rojo); }
 .panel-contenido { display: flex; flex-direction: column; gap: 6px; }
 .entradilla { color: var(--tinta-2); padding: 14px 0 6px; line-height: 1.55; }
 .entradilla b { color: var(--tinta); }

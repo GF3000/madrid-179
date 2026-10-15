@@ -6,7 +6,7 @@ import Mapa, { type Camara, type MandoMapa } from "./componentes/Mapa";
 import Ficha from "./componentes/Ficha";
 import PanelDecidir, { type Cambio } from "./componentes/PanelDecidir";
 import PanelPerfiles from "./componentes/PanelPerfiles";
-import { Buscador, ComoFunciona, ControlesMapa, Etiqueta, Leyenda, Marca } from "./componentes/Contorno";
+import { Buscador, ComoFunciona, ControlesMapa, Etiqueta, Leyenda, Marca, Pie } from "./componentes/Contorno";
 
 const PETICION_INICIAL: Peticion = { preferencias: {}, filtros: FILTROS_VACIOS };
 const ANCHO_PANEL = 392;
@@ -175,6 +175,7 @@ export default function App() {
             : <PanelPerfiles meta={datos.meta} evidencia={evidencia} onEvidencia={setEvidencia} consulta={consulta}
                 onSeleccionar={setSeleccionado} />}
         </div>
+        <Pie />
       </aside>
 
       {seleccionado && (

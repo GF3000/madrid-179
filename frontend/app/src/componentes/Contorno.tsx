@@ -5,18 +5,35 @@ import type { Meta, Municipio } from "../api";
 import { CLASES, FILTRADO, FUERA, type Situacion } from "../modelo";
 import type { Camara, MandoMapa } from "./Mapa";
 import { nombreLegible } from "./Ficha";
-import { Cerrar, Columna, Estrellas } from "./piezas";
+import { Bandera, Cerrar, Columna } from "./piezas";
 
 export function Marca({ onAyuda }: { onAyuda: () => void }) {
   return (
     <header className="marca">
       <div className="marca-texto">
+        <Bandera />
         <h1>Madrid <span>179</span></h1>
-        <Estrellas />
       </div>
       <p>Dónde abrir una oficina en los 179 municipios de la Comunidad de Madrid</p>
       <button className="boton-ayuda" onClick={onAyuda}>Cómo se decide</button>
     </header>
+  );
+}
+
+const DATATHON = "https://datathon-mad.sel.inf.uc3m.es/";
+const REPOSITORIO = "https://github.com/GF3000/madrid-179";
+
+// Pie del panel: deja claro que la herramienta no es oficial y enlaza el datathon y el código
+export function Pie() {
+  return (
+    <footer className="pie">
+      <p><b>Herramienta no oficial.</b> No está vinculada ni avalada por la Comunidad de Madrid. Los resultados son
+        orientativos y salen de datos abiertos.</p>
+      <p>
+        Proyecto para el <a href={DATATHON} target="_blank" rel="noreferrer">MAD Open Data Challenge 2026</a>
+        {" · "}<span className="sin-partir"><a href={REPOSITORIO} target="_blank" rel="noreferrer">Código y fuentes</a> (MIT)</span>
+      </p>
+    </footer>
   );
 }
 

@@ -89,16 +89,26 @@ export function Seccion({ titulo, children, nota }: { titulo: string; children: 
   );
 }
 
-/** Siete estrellas de la bandera de la Comunidad, como firma visual. */
-export function Estrellas({ n = 7, tam = 7 }: { n?: number; tam?: number }) {
+// Bandera de la Comunidad de Madrid (símbolo público, dibujado aquí): carmesí con siete estrellas blancas de cinco
+// puntas, cuatro arriba y tres abajo, en proporción 3:2. Las estrellas aparecen una a una.
+const ESTRELLA = Array.from({ length: 10 }, (_, k) => {
+  const r = k % 2 ? 4.2 : 10.5;
+  const a = (k * Math.PI) / 5 - Math.PI / 2;
+  return `${(r * Math.cos(a)).toFixed(2)},${(r * Math.sin(a)).toFixed(2)}`;
+}).join(" ");
+const POSICIONES = [[30, 36], [60, 36], [90, 36], [120, 36], [45, 66], [75, 66], [105, 66]];
+
+export function Bandera({ ancho = 36 }: { ancho?: number }) {
   return (
-    <span className="estrellas" aria-hidden>
-      {Array.from({ length: n }, (_, k) => (
-        <svg key={k} width={tam} height={tam} viewBox="0 0 20 20" style={{ animationDelay: `${300 + k * 60}ms` }}>
-          <path d="M10 1.2l2.6 6.1 6.6.5-5 4.3 1.6 6.5L10 15.1l-5.8 3.5 1.6-6.5-5-4.3 6.6-.5z" />
-        </svg>
+    <svg className="bandera" width={ancho} height={(ancho * 2) / 3} viewBox="0 0 150 100" role="img"
+      aria-label="Bandera de la Comunidad de Madrid">
+      <rect width="150" height="100" rx="6" />
+      {POSICIONES.map(([x, y], k) => (
+        <g key={k} transform={`translate(${x} ${y})`}>
+          <polygon points={ESTRELLA} style={{ animationDelay: `${300 + k * 60}ms` }} />
+        </g>
       ))}
-    </span>
+    </svg>
   );
 }
 
