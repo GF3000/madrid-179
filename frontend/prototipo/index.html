@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Madrid 179 · Prototipo</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Madrid 179 <span class="etiqueta">prototipo</span></h1>
+      <p class="sub">Dónde abrir una oficina en los 179 municipios de la Comunidad de Madrid · <span id="version">cargando…</span></p>
+    </div>
+    <label class="buscar">Ir a un municipio
+      <input id="buscador" list="lista-municipios" placeholder="Escribe un nombre…">
+      <datalist id="lista-municipios"></datalist>
+    </label>
+  </header>
+  <div id="aviso" class="aviso" hidden></div>
+
+  <div class="layout">
+    <aside>
+      <h2>Preferencias</h2>
+      <label>Transporte ferroviario cercano
+        <select id="pref-transporte" class="importancia"></select>
+      </label>
+      <label>Ayudas al reequilibrio territorial
+        <select id="pref-ayudas" class="importancia"></select>
+      </label>
+
+      <h2>Imprescindible</h2>
+      <label class="check"><input type="checkbox" id="fil-estacion-on"> Estación a ≤
+        <input type="number" id="fil-estacion" value="5" min="0" step="1" class="corto"> km</label>
+      <label class="check"><input type="checkbox" id="fil-ayudas"> Con ayudas (nivel Medio o Alto)</label>
+
+      <h2>Mostrar</h2>
+      <label>Primeros <input type="number" id="limite" value="25" min="1" max="179" class="corto"> municipios</label>
+
+      <p class="nota">La puntuación es el percentil del GA²M entre los candidatos, ajustado por tus preferencias. La red bayesiana explica cada municipio.</p>
+    </aside>
+
+    <main>
+      <nav class="pestanas">
+        <button data-pestana="ranking" class="activa">Ranking</button>
+        <button data-pestana="consulta">Consulta a la red</button>
+      </nav>
+
+      <section id="pestana-ranking">
+        <p id="resumen-ranking" class="resumen"></p>
+        <div class="leyenda">
+          <span><i class="c-modelo"></i>Modelo</span><span><i class="c-transporte"></i>Transporte</span><span><i class="c-ayudas"></i>Ayudas</span>
+        </div>
+        <div class="tabla-scroll">
+          <table id="tabla-ranking">
+            <thead><tr><th>#</th><th>Municipio</th><th class="ancha">Puntuación</th><th>P(Alta) red</th><th>Ayudas</th><th>Estación</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="pestana-consulta" hidden>
+        <p class="resumen">Fija lo que sabes o quieres (evidencia parcial) y mira cómo cambia P(Viabilidad) según la red bayesiana.</p>
+        <div id="evidencias" class="evidencias"></div>
+        <button id="consultar" class="primario">Consultar</button>
+        <div id="resultado-consulta"></div>
+      </section>
+    </main>
+
+    <section id="ficha" class="ficha" hidden></section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

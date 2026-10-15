@@ -13,6 +13,8 @@ from pyproj import Transformer
 from shapely.geometry import shape
 
 sys.path.insert(0, "backend/pipeline")
+import madrid179.discretizacion as md  # noqa: E402
+import madrid179.red as mr  # noqa: E402
 import red_bayesiana_viabilidad as rb  # noqa: E402
 
 d = pd.read_csv(rb.DATA, sep=";", dtype={"ine5": str}, encoding="utf-8-sig").set_index("ine5")
@@ -50,7 +52,7 @@ ref = {"target": d.tasa_neta_emp, "Dinamismo": d.crec_pob_5a, "Especializ.": d.p
 print(pd.DataFrame({k: [t[c].corr(v, method="spearman") for c in t] for k, v in ref.items()}, index=t.columns).round(2).to_string())
 
 # ---- Comparación de estructuras ----
-d2 = d.join(t[["dist_ferro_km", "paradas_bus_km2"]])
+d2 = d.drop(columns=["dist_ferro_km"], errors="ignore").join(t[["dist_ferro_km", "paradas_bus_km2"]])  # el dataset ya trae dist_ferro_km (2026-10-07)
 rb.DATA_DF = d2
 BASE_NODOS, BASE_EDGES = dict(rb.NODOS), list(rb.EDGES)
 TRANSP = ("Transporte_Publico", ("dist_ferro_km", ["Bueno", "Medio", "Malo"], "terciles"))  # menos km = mejor
@@ -83,7 +85,10 @@ for i in (1, 2, 3):
 
 res = []
 for nombre, nodos, edges in V:
-    rb.NODOS, rb.EDGES = nodos, edges
+    # Las funciones viven en el paquete madrid179: se cambia la estructura allí (solo en este proceso)
+    md.NODOS = mr.NODOS = nodos
+    mr.EDGES = edges
+    mr.EVIDENCIAS = [n for n in nodos if n != "Viabilidad_Empresarial"]
     disc, _ = rb.discretizar(d2)
     accs, lls = [], []
     for seed in range(5):  # 5 repeticiones de CV-5 para estabilizar

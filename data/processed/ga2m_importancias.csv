@@ -1,13 +1,25 @@
 ﻿;importancia_media_abs
-crec_pob_5a;0.0018861062694380034
-vc_residencial_por_uu;0.0014410892600006061
-pct_estudios_superiores;0.0010941996160221995
-dist_sol_km;0.0008217263315962039
-rdb_per_capita;0.0006793268449940271
-pct_up_servicios_prof;0.0006104524703571804
-paradas_ferro;0.0002528004762868279
-vc_residencial_por_uu & crec_pob_5a;0.00018339662570724774
-dist_sol_km & pct_up_servicios_prof;0.0001715703386345749
-dist_sol_km & crec_pob_5a;0.00013980566108309057
-rdb_per_capita & crec_pob_5a;9.494745688202353e-05
-pct_estudios_superiores & crec_pob_5a;7.011786504963683e-05
+crec_pob_5a;0.002031543446568567
+densidad_hab_km2;0.001363000300250316
+dist_sol_km;0.0012037342105685998
+poblacion;0.0009040740227564605
+vc_residencial_por_uu;0.0007918528768553277
+pct_estudios_superiores;0.0007353212796503178
+uu_oficinas_por_1000hab;0.0007120270045146577
+pct_menores_45;0.0005232593942265562
+paro_por_100hab;0.0004918824471276579
+sanidad_por_1000hab;0.00040322449338199963
+dist_ferro_km;0.0003432596323093745
+rdb_per_capita;0.0003365472871020271
+paradas_ferro;0.00031856264522632375
+pct_up_servicios_prof;0.00030510312913412677
+rdb_per_capita & pct_up_servicios_prof;0.00021069268632967658
+crec_pob_5a & paro_por_100hab;0.0001829611467161447
+pct_menores_45 & poblacion;0.0001511847902737509
+dist_ferro_km & poblacion;0.00014470486455115257
+crec_pob_5a & densidad_hab_km2;0.00014414812802647988
+pct_estudios_superiores & crec_pob_5a;0.00012403625501457405
+pct_menores_45 & dist_ferro_km;0.00011457727915307819
+vc_residencial_por_uu & crec_pob_5a;0.0001144209326685858
+vc_residencial_por_uu & densidad_hab_km2;0.0001129682668688694
+crec_pob_5a & dist_ferro_km;0.00010271036246625335

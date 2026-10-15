@@ -1,6 +1,6 @@
 # Arquitectura del backend
 
-Estado: **propuesta** (2026-10-08). Cubre el punto #28 de [`PENDIENTES.md`](../memoria/PENDIENTES.md) y prepara #31 (explicación por municipio) y #16 (simulador `do()`).
+Estado: **pasos 1-5 implementados** en la rama `feat/backend-v1` (2026-10-08); falta el 6 (`/simulacion`). Cubre el punto #28 de [`PENDIENTES.md`](../memoria/PENDIENTES.md) y prepara #31 (explicación por municipio) y #16 (simulador `do()`).
 
 ## 1. Objetivo y orden de trabajo
 
@@ -16,7 +16,7 @@ Para que la fase 2 no obligue a rehacer la fase 1, la regla de diseño es una so
 - **Entrenar y servir son pasos distintos.** El pipeline entrena y guarda un artefacto; la API solo lo carga y consulta. La API nunca reentrena.
 - **Un único modelo auditado.** La API sirve exactamente el artefacto que ha pasado `auditoria_cpts.py`, y cada respuesta lleva su versión.
 - **Cada número se puede rehacer.** Las respuestas devuelven la puntuación desglosada (modelo + preferencias) y las aportaciones de cada término, no solo el total.
-- **Honestidad con la incertidumbre.** La señal es débil (log-loss 1,103 frente a 1,099 de la uniforme). La API devuelve ese aviso en sus metadatos para que cualquier interfaz lo muestre.
+- **Honestidad con la incertidumbre.** La señal es moderada (modelo v2: Spearman del GA²M 0,529; log-loss de la red 1,008 frente a 1,099 de la uniforme). La API devuelve un aviso en sus metadatos para que cualquier interfaz lo muestre.
 - **Lógica sin E/S.** El paquete del modelo no lee ni escribe ficheros salvo en el módulo de artefactos; esto permite probarlo sin datos en disco.
 
 ## 3. Vista general
@@ -33,7 +33,7 @@ flowchart LR
         C --> S[Servicios:<br/>ranking · ficha · consulta]
         S --> R[Rutas FastAPI]
     end
-    R -- HTTP/JSON --> P[Prototipo Streamlit<br/>frontend/prototipo]
+    R -- HTTP/JSON --> P[Prototipo HTML + JS<br/>frontend/prototipo]
     R -- HTTP/JSON --> F[App React<br/>frontend/app]
 ```
 
@@ -41,34 +41,33 @@ flowchart LR
 
 ```
 backend/
-├── madrid179/                 # paquete con la lógica del modelo (importable, sin E/S)
-│   ├── __init__.py
-│   ├── config.py              # NODOS, EDGES, FILTROS, ESS, EBM_KW (hoy en red_bayesiana_viabilidad.py)
+├── pyproject.toml             # paquete madrid179 (pip install -e backend) y configuración de pytest
+├── madrid179/                 # lógica del modelo (importable, sin E/S salvo artefactos.py)
+│   ├── config.py              # NODOS, EDGES, FILTROS, ESS, EBM_KW, rutas, aviso de señal, claves de API (.env)
 │   ├── discretizacion.py      # discretizar(): terciles sobre los 179 municipios
-│   ├── red.py                 # construir_modelo(), consultas con evidencia parcial
+│   ├── red.py                 # construir_modelo(), validar(), distribucion()
 │   ├── ga2m.py                # ajuste del EBM, predicción y aportaciones por término
-│   ├── preferencias.py        # utilidades, pesos calibrados, puntuar() (hoy en pipeline/)
+│   ├── preferencias.py        # utilidades, pesos calibrados, puntuar()
 │   ├── ranking.py             # filtros → percentil → preferencias → orden
-│   └── artefactos.py          # guardar/cargar modelo.joblib con versión y huella del dataset
-├── pipeline/                  # scripts finos que llaman a madrid179
-│   ├── entrenar.py            # nuevo: entrena y guarda el artefacto (sustituye a main() de red_bayesiana_viabilidad.py)
-│   └── …                      # descarga, procesado, auditoría y generadores de PDF, sin cambios de función
+│   ├── artefactos.py          # entrenar / guardar / cargar modelo.joblib
+│   └── servicio.py            # meta, municipios, ranking, ficha, consulta (sin FastAPI)
+├── pipeline/
+│   ├── entrenar.py            # entrena y guarda el artefacto
+│   ├── red_bayesiana_viabilidad.py  # importa de madrid179 y escribe las salidas CSV versionadas
+│   └── …                      # descarga, procesado, auditoría y generadores de PDF
 ├── api/
-│   ├── main.py                # app FastAPI, carga del artefacto en el arranque (lifespan)
-│   ├── esquemas.py            # modelos Pydantic de entrada y salida (el contrato)
-│   ├── rutas/
-│   │   ├── municipios.py
-│   │   ├── ranking.py
-│   │   └── consulta.py
-│   └── dependencias.py        # acceso al modelo cargado
+│   ├── main.py                # app FastAPI: rutas /api/v1, carga del artefacto (lifespan), CORS, sirve el prototipo
+│   └── esquemas.py            # modelos Pydantic de entrada y salida (el contrato)
 ├── tests/
-│   ├── test_equivalencia.py   # el paquete reproduce los CSV actuales
+│   ├── test_equivalencia.py   # el artefacto reproduce los CSV versionados
 │   ├── test_preferencias.py
 │   └── test_api.py            # TestClient sobre los endpoints
-└── requirements.txt           # + fastapi, uvicorn, joblib, httpx (tests)
+└── requirements.txt
 ```
 
-`red_bayesiana_viabilidad.py` y `preferencias.py` del pipeline pasan a importar desde `madrid179`, de modo que `auditoria_cpts.py`, `diagrama_red_bayesiana.py` y los experimentos siguen funcionando.
+Cambio respecto a la propuesta inicial: las rutas caben en `main.py` y la lógica de cada endpoint vive en `madrid179/servicio.py`, que no depende de FastAPI. Así la API queda fina y la lógica se prueba sin servidor.
+
+`red_bayesiana_viabilidad.py` y `pipeline/preferencias.py` importan desde `madrid179` y reexportan los nombres que usan `auditoria_cpts.py`, `diagrama_red_bayesiana.py` y los experimentos.
 
 ## 5. El artefacto del modelo
 
@@ -79,7 +78,7 @@ backend/
 | `version` | fecha + hash corto del commit |
 | `huella_dataset` | SHA-256 de `dataset_bn_municipios.csv` |
 | `umbrales` | cortes de cada nodo (lo mismo que `bn_umbrales.json`) |
-| `red` | `DiscreteBayesianNetwork` ajustada (BDeu, ESS = 10) |
+| `red` | `DiscreteBayesianNetwork` ajustada (BDeu, ESS de `config.py`: 50 en el modelo v2) |
 | `ebm` | `ExplainableBoostingRegressor` ajustado |
 | `municipios` | tabla de los 179: atributos continuos, estados discretos, predicción del GA²M, aportaciones por término, utilidades de preferencias, columnas de filtros |
 | `validacion` | acierto y log-loss de CV-5 × 5 (media ± desviación), para devolverlos en los metadatos |
@@ -111,13 +110,13 @@ Detalle importante: **el percentil y los pesos se recalculan sobre los candidato
 Prefijo `/api/v1`. JSON en UTF-8. Los municipios se identifican siempre por `ine5` (texto de 5 dígitos).
 
 ### `GET /meta`
-Versión del modelo, huella del dataset, métricas de validación y aviso de señal débil.
+Versión del modelo, huella del dataset, métricas de validación y aviso sobre la fuerza de la señal.
 
 ```json
 {
-  "version_modelo": "2026-10-08+49f3e53",
-  "validacion": {"acierto": [0.459, 0.012], "log_loss": [1.103, 0.015], "log_loss_uniforme": 1.099},
-  "aviso": "Señal débil: el orden es orientativo y las probabilidades no están calibradas."
+  "version_modelo": "2026-10-14+257d9bd",
+  "validacion": {"acierto": [0.447, 0.031], "log_loss": [1.008, 0.015], "log_loss_uniforme": 1.099},
+  "aviso": "Señal moderada: el modelo ordena claramente mejor que el azar […] Son asociaciones, no efectos causales."
 }
 ```
 
@@ -146,19 +145,19 @@ Salida (una fila por municipio, ordenadas):
   "resultados": [
     {"posicion": 5, "ine5": "28022", "municipio": "Boadilla del Monte",
      "puntuacion": 80.8, "desglose": {"modelo": 46.8, "transporte": 34.0, "ayudas": 0.0},
-     "p_alta_red": 0.572}
+     "p_alta_red": 0.656}
   ]
 }
 ```
 
-Las cifras del ejemplo salen del modelo actual con esas preferencias (se muestra solo la fila de Boadilla del Monte, 5.ª de 139); la API devolverá las que calcule en cada caso.
+Las cifras del ejemplo salen del modelo v2 (2026-10-14) con esas preferencias (se muestra solo la fila de Boadilla del Monte, 5.ª de 139); la API devolverá las que calcule en cada caso.
 
 ### `GET /municipios/{ine5}`
 La ficha del municipio:
 
 - puntuación base y percentil entre los candidatos;
-- **aportaciones del GA²M** por término (intercepto + 7 efectos principales + 5 interacciones), que suman la predicción;
-- **red bayesiana:** estados de los 7 nodos, P(Baja/Media/Alta) y los padres directos que la explican (Dinamismo Demográfico y Especialización en Servicios);
+- **aportaciones del GA²M** por término (intercepto + 14 efectos principales + 10 interacciones en el modelo v2), que suman la predicción;
+- **red bayesiana:** estados de los nodos, P(Baja/Media/Alta) y los padres directos que la explican (en el modelo v2, Dinamismo Demográfico y Densidad);
 - **aviso de discrepancia** si el GA²M y la red no coinciden (p. ej. puntuación en el tercio superior con P(Alta) < 0,33);
 - utilidades de transporte y nivel de ayudas.
 
@@ -176,13 +175,13 @@ El simulador `do()` (#16) **no se expone todavía**. Depende de #3: hoy la CPT d
 
 ## 8. Rendimiento
 
-Con 179 municipios todo cabe en memoria. El ranking es aritmética vectorizada sobre una tabla de ≤ 179 filas (milisegundos). Las consultas a la red usan `VariableElimination` sobre 8 nodos; si alguna combinación de evidencia se repite mucho, se cachea con `functools.lru_cache` sobre la evidencia ordenada. No hace falta base de datos.
+Con 179 municipios todo cabe en memoria. El ranking es aritmética vectorizada sobre una tabla de ≤ 179 filas (milisegundos). Las consultas a la red usan `VariableElimination` sobre 12 nodos; si alguna combinación de evidencia se repite mucho, se cachea con `functools.lru_cache` sobre la evidencia ordenada. No hace falta base de datos.
 
 ## 9. Pruebas
 
 | Prueba | Qué garantiza |
 |---|---|
-| `test_equivalencia.py` | Tras la refactorización, el paquete reproduce `bn_umbrales.json`, `bn_cpts.txt` y `bn_ranking_municipios.csv` actuales (tolerancia 1e-9). Es la red de seguridad del paso 1. |
+| `test_equivalencia.py` | El artefacto reproduce `bn_umbrales.json`, el orden, la puntuación y P(Alta) de `bn_ranking_municipios.csv` y las aportaciones de `ga2m_contribuciones.csv` (tolerancia 1e-9); la predicción es la suma de las aportaciones. Las CPT las sigue verificando `auditoria_cpts.py`. |
 | `auditoria_cpts.py` | Sigue fallando si el cálculo manual y pgmpy difieren. |
 | `test_preferencias.py` | Con importancia «Me da igual», S' = S; los pesos reproducen los de `PENDIENTES.md` (transporte w = 0,267 / 0,421). |
 | `test_api.py` | Esquemas, códigos 422 con nodos o estados inválidos, filtros que vacían el conjunto, y que el desglose suma la puntuación. |
@@ -191,33 +190,32 @@ La CI (`.github/workflows/ci.yml`) añade: `entrenar.py` → `pytest backend/tes
 
 ## 10. Ejecución y despliegue
 
-- **Local:** `.venv/Scripts/python -m uvicorn backend.api.main:app --reload` desde la raíz. Documentación interactiva en `http://localhost:8000/docs` (Swagger, gratis con FastAPI): sirve para probar la API antes de tener frontend.
+- **Local:** `powershell -ExecutionPolicy Bypass -File infra/scripts/dev.ps1` desde la raíz (prepara el entorno y el artefacto si faltan). A mano: `.venv/Scripts/python -m uvicorn api.main:app --app-dir backend --reload`. Documentación interactiva en `http://localhost:8000/docs` (Swagger, gratis con FastAPI): sirve para probar la API antes de tener frontend.
 - **CORS:** abierto a `localhost` en desarrollo, para el prototipo y la app.
 - **Más adelante (#32):** imagen Docker en `infra/` con el artefacto copiado dentro; el frontend se despliega como estático. Si la app se empaqueta con Tauri, la API puede ir como proceso local.
 
 ## 11. Prototipo de prueba
 
-`frontend/prototipo/app.py` con Streamlit (~100 líneas), que **llama a la API por HTTP** con `httpx` y no importa `madrid179`:
+`frontend/prototipo/` (`index.html`, `app.js`, `estilos.css`): HTML y JavaScript sin dependencias ni compilación, servido por la propia API en `/`. Se cambió Streamlit por esta opción para que probar en local sea **un solo proceso y un solo comando** (`infra/scripts/dev.ps1`), sin dependencias pesadas. Sigue la regla de diseño: **solo llama a la API por HTTP**.
 
-1. barra lateral con las preferencias y los filtros;
-2. tabla del ranking con la puntuación desglosada;
-3. al elegir un municipio, su ficha: barras de aportaciones del GA²M y P(Baja/Media/Alta) de la red;
-4. pestaña de consulta con evidencia parcial;
+1. barra lateral con las preferencias y los filtros «imprescindible»;
+2. tabla del ranking con la puntuación desglosada (modelo, transporte, ayudas);
+3. al elegir un municipio, su ficha: aportaciones del GA²M (positivas y negativas), P(Baja/Media/Alta) de la red, padres de la viabilidad en negrita y aviso de discrepancia; enlace directo `#ine5`;
+4. pestaña de consulta con evidencia parcial, comparada con la probabilidad a priori;
 5. el aviso de `/meta` fijo en la cabecera.
 
 ## 12. Plan por pasos
 
 | Paso | Entregable | Hecho cuando |
 |---|---|---|
-| 1 | Paquete `madrid179` + `entrenar.py` + artefacto | `test_equivalencia.py` y la auditoría pasan; los CSV salen idénticos |
-| 2 | API v1: `/meta`, `/municipios`, `/ranking` | `test_api.py` pasa; `/docs` responde |
-| 3 | API v1: `/municipios/{ine5}`, `/consulta` | ficha con aportaciones que suman la predicción |
-| 4 | Prototipo Streamlit | se puede recorrer el flujo emprendedor de `docs/informe/estados_emprendedor.png` |
-| 5 | Filtros pendientes: «imprescindible» de transporte (#38) y «necesito ayudas» (#12) | filtros en `/ranking` con su test |
+| 1 | Paquete `madrid179` + `entrenar.py` + artefacto | ✅ `test_equivalencia.py` y la auditoría pasan; los CSV salen idénticos |
+| 2 | API v1: `/meta`, `/municipios`, `/ranking` | ✅ `test_api.py` pasa; `/docs` responde |
+| 3 | API v1: `/municipios/{ine5}`, `/consulta` | ✅ ficha con aportaciones que suman la predicción |
+| 4 | Prototipo | ✅ HTML + JS servido por la API; arranque con `dev.ps1` |
+| 5 | Filtros «imprescindible» de transporte (#38) y «necesito ayudas» (#12) | ✅ filtros en `/ranking` con su test |
 | 6 | `/simulacion` | tras #3 y #6 |
 
 ## 13. Decisiones abiertas
 
-- **Nombre del paquete:** `madrid179` (propuesto).
 - **Formato del artefacto:** `joblib` (simple, mismo Python) frente a Parquet + JSON + modelo pgmpy serializado por separado (más portable y legible). Propuesta: `joblib` en v1; reconsiderar si la API se separa del pipeline.
 - **Idioma de la API:** nombres de campos en español, coherentes con el código y los documentos.

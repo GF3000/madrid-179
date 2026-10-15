@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "feat/**"]
   pull_request:
 
 jobs:
@@ -16,7 +16,28 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r backend/requirements.txt
-      - name: Compilar el pipeline
-        run: python -m compileall -q backend/pipeline
+      - run: pip install -e backend
+      - name: Compilar
+        run: python -m compileall -q backend/pipeline backend/madrid179 backend/api
+      - name: Entrenar el modelo (artefacto para la API)
+        run: python backend/pipeline/entrenar.py
+      - name: Tests (equivalencia con las salidas versionadas, preferencias y API)
+        run: python -m pytest backend/tests -q
       - name: Auditoría de las CPT (cálculo manual vs pgmpy)
         run: python backend/pipeline/auditoria_cpts.py
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/app/package-lock.json
+      - run: npm ci
+      - name: Tipos y compilación (React + MapLibre + deck.gl)
+        run: npm run build

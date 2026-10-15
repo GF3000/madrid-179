@@ -17,7 +17,7 @@ digraph BN {
     candidatos [label=<<B>139 municipios candidatos</B>>, shape=box, style="rounded,filled", fillcolor="#e6effb", color="#256abf", penwidth=1.6];
     fopc -> candidatos [style=dashed];
   }
-  subgraph cluster_bn { label=<<B>2 · RED BAYESIANA</B>  <FONT COLOR="#52514e">8 nodos · máx. 2 padres · CPT BDeu (ESS = 10) · explica cada candidato y sostiene el simulador do()</FONT>>; fontname="Segoe UI"; fontsize=12.5; style="rounded"; color="#256abf"; penwidth=1.4; margin=16;
+  subgraph cluster_bn { label=<<B>2 · RED BAYESIANA</B>  <FONT COLOR="#52514e">12 nodos · máx. 2 padres · CPT BDeu (ESS = 50) · explica cada candidato y sostiene el simulador do()</FONT>>; fontname="Segoe UI"; fontsize=12.5; style="rounded"; color="#256abf"; penwidth=1.4; margin=16;
     Distancia_Madrid [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Distancia Madrid</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">dist_sol_km</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Cerca ≤ 31,78 &lt; Media ≤ 45,18 &lt; Lejos</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>, fillcolor="#e6effb", color="#256abf"];
     Talento [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Talento</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">pct_estudios_superiores</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Bajo ≤ 30,64 &lt; Medio ≤ 39,49 &lt; Alto</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>, fillcolor="#e6effb", color="#256abf"];
     Acceso_Ferroviario [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Acceso Ferroviario</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">paradas_ferro</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">No = 0 · Sí &gt; 0</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 145 / 34</FONT></TD></TR></TABLE>>];
@@ -25,6 +25,10 @@ digraph BN {
     Renta [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Renta</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">rdb_per_capita</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Baja ≤ 17.065 &lt; Media ≤ 19.992 &lt; Alta</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
     Especializacion_Servicios [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Especialización Servicios</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">pct_up_servicios_prof</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Baja ≤ 12,74 &lt; Media ≤ 18,25 &lt; Alta</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
     Dinamismo_Demografico [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Dinamismo Demográfico</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">crec_pob_5a</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Bajo ≤ 6,757 % &lt; Medio ≤ 12,91 % &lt; Alto</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
+    Densidad [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Densidad</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">densidad_hab_km2</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Baja ≤ 61,45 &lt; Media ≤ 249 &lt; Alta</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
+    Juventud [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Juventud</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">pct_menores_45</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Baja ≤ 47,68 &lt; Media ≤ 51,89 &lt; Alta</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
+    Sanidad [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Sanidad</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">sanidad_por_1000hab</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Baja ≤ 0,2829 &lt; Media ≤ 0,6137 &lt; Alta</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
+    Paro [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Paro</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">paro_por_100hab</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Bajo ≤ 4,053 &lt; Medio ≤ 5,213 &lt; Alto</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>];
     Viabilidad_Empresarial [label=<<TABLE BORDER="0" CELLSPACING="2"><TR><TD><FONT POINT-SIZE="14"><B>Viabilidad Empresarial</B></FONT></TD></TR><TR><TD><FONT POINT-SIZE="9.5" FACE="Consolas" COLOR="#52514e">tasa_neta_emp</FONT></TD></TR><TR><TD><FONT POINT-SIZE="10">Baja ≤ 0,5958 % &lt; Media ≤ 0,9765 % &lt; Alta</FONT></TD></TR><TR><TD><FONT POINT-SIZE="9" COLOR="#898781">n = 60 / 59 / 60</FONT></TD></TR></TABLE>>, fillcolor="#fde8e7", color="#b8312f", penwidth=2.4];
     {rank=same; Distancia_Madrid Talento}
     Distancia_Madrid -> Acceso_Ferroviario [label=" ρ −0.51"];
@@ -35,8 +39,15 @@ digraph BN {
     Distancia_Madrid -> Especializacion_Servicios [label=" ρ −0.44"];
     Distancia_Madrid -> Dinamismo_Demografico [label=" ρ +0.41"];
     Coste_Inmobiliario -> Dinamismo_Demografico [label=" ρ −0.28"];
+    Distancia_Madrid -> Densidad [label=" ρ −0.86"];
+    Coste_Inmobiliario -> Densidad [label=" ρ +0.73"];
+    Distancia_Madrid -> Juventud [label=" ρ −0.68"];
+    Densidad -> Juventud [label=" ρ +0.63"];
+    Densidad -> Sanidad [label=" ρ −0.24"];
+    Distancia_Madrid -> Paro [label=" ρ +0.31"];
+    Renta -> Paro [label=" ρ −0.70"];
     Dinamismo_Demografico -> Viabilidad_Empresarial [label=" ρ +0.30"];
-    Especializacion_Servicios -> Viabilidad_Empresarial [label=" ρ +0.25"];
+    Densidad -> Viabilidad_Empresarial [label=" ρ +0.20"];
   }
   candidatos -> Talento [lhead=cluster_bn, label="  atributos reales de cada municipio = evidencia", fontname="Segoe UI", fontsize=10];
   prefs [label=<<B>Preferencias blandas del usuario</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">chatbot y preguntas inteligentes<BR/>→ pesos en la puntuación · evidencia parcial en la red</FONT>>, shape=note, style="filled", fillcolor="#fdf1d8", color="#c98a12"];
@@ -46,7 +57,7 @@ digraph BN {
   prefs -> Coste_Inmobiliario [style=dotted, color="#c98a12", arrowsize=0.6];
   {rank=same; prefs; candidatos}
   subgraph cluster_out { label=<<B>3 · PUNTUACIÓN Y RANKING</B>>; fontname="Segoe UI"; fontsize=12.5; style="rounded"; color="#b8312f"; margin=14;
-    ga2m [label=<<B>GA²M (EBM)</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">mismas 7 variables, sin discretizar ·<BR/>predice la tasa neta empresarial</FONT>>, fillcolor="#e6effb", color="#256abf"];
+    ga2m [label=<<B>GA²M (EBM)</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">14 variables continuas ·<BR/>predice la tasa neta empresarial</FONT>>, fillcolor="#e6effb", color="#256abf"];
     score [label=<<B>Puntuación = percentil del GA²M entre candidatos (0-100)</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">altura y color del municipio en el mapa 3D · bn_ranking_municipios.csv</FONT>>, fillcolor="#fde8e7", color="#b8312f", penwidth=1.6];
     pesos [label=<<B>Preferencias ponderadas</B><BR/><FONT POINT-SIZE="9.5" COLOR="#52514e">transporte · ayudas · coste (previsto)<BR/>(S + Σ a·u) / (1 + Σ a) · preferencias.py</FONT>>, fillcolor="#fdf1d8", color="#c98a12"];
     ga2m -> score [penwidth=2, color="#b8312f", label=" S"];

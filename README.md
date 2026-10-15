@@ -3,24 +3,27 @@
 Sistema de apoyo a la decisión para elegir dónde abrir o trasladar oficinas en los **179 municipios de la Comunidad de Madrid**, equilibrando la viabilidad empresarial y el reequilibrio territorial. Proyecto del Datathon de la Comunidad de Madrid.
 
 - **Puntuación:** un GA²M (EBM de InterpretML) ordena los municipios candidatos, ajustado por las preferencias del usuario (transporte, ayudas).
-- **Explicación:** una red bayesiana de 8 nodos (pgmpy) da P(viabilidad alta), las causas y las consultas con evidencia parcial, y sostiene un simulador de escenarios `do()`.
+- **Explicación:** una red bayesiana de 12 nodos (pgmpy) da P(viabilidad alta), las causas y las consultas con evidencia parcial, y sostiene un simulador de escenarios `do()`.
 - **Transparencia:** cada probabilidad de la red puede rehacerse a mano; `backend/pipeline/auditoria_cpts.py` falla si el cálculo manual y pgmpy no coinciden.
 
-> **Limitación conocida.** La señal es débil: en validación cruzada (CV-5 × 5) la red acierta el 45,9 % ± 1,2 % de las veces (azar: 33 %), pero su log-loss (1,103) no mejora a la distribución uniforme (1,099). Los resultados son asociaciones, no efectos causales, y las simulaciones son escenarios según el modelo.
+> **Limitación conocida.** La señal es moderada. En validación cruzada (CV-5 × 5), el GA²M ordena con Spearman 0,53 frente a la tasa neta real y el 64 % de su tercio superior lo es de verdad (azar: 33 %); la red bayesiana mejora a la distribución uniforme (log-loss 1,008 frente a 1,099) pero sus probabilidades siguen siendo aproximadas. Los resultados son asociaciones, no efectos causales, y las simulaciones son escenarios según el modelo.
 
 ## Estructura del monorepo
 
 ```
 .
 ├── backend/
-│   ├── pipeline/        # descarga, normalización, dataset, red bayesiana, GA²M, auditoría, generadores de PDF
-│   ├── api/             # API FastAPI (en preparación)
+│   ├── madrid179/       # paquete del modelo: red bayesiana, GA²M, preferencias, ranking, servicio
+│   ├── api/             # API FastAPI (/api/v1)
+│   ├── pipeline/        # descarga, normalización, dataset, entrenamiento, auditoría, generadores de PDF
+│   ├── tests/
 │   └── requirements.txt
 ├── frontend/
+│   ├── prototipo/       # prototipo sin mapa para probar el modelo (HTML + JS, lo sirve la API)
 │   ├── dashboard/       # plantilla del dashboard de correlaciones
 │   └── app/             # aplicación web con mapa (en preparación)
 ├── infra/
-│   └── scripts/         # entorno y exportación de presentaciones
+│   └── scripts/         # dev.ps1 (arranque local), entorno y exportación de presentaciones
 ├── data/
 │   ├── raw/             # descargas (no versionadas)
 │   └── processed/       # tablas limpias; solo las salidas pequeñas del modelo están en git
@@ -32,17 +35,33 @@ Sistema de apoyo a la decisión para elegir dónde abrir o trasladar oficinas en
 └── .github/workflows/   # CI
 ```
 
-## Puesta en marcha
+## Probar en local
 
-Requisitos: Python 3.13 y Windows (los generadores de PDF usan fuentes del sistema). Graphviz solo para los diagramas.
+Requisitos: Windows con Python 3.13 (`py -3.13`). Desde la raíz del repositorio:
 
 ```powershell
-powershell -File infra/scripts/setup_venv.ps1          # crea .venv e instala backend/requirements.txt
-.venv/Scripts/python backend/pipeline/red_bayesiana_viabilidad.py
-.venv/Scripts/python backend/pipeline/auditoria_cpts.py
+powershell -ExecutionPolicy Bypass -File infra/scripts/dev.ps1
 ```
 
-Ejecuta siempre desde la raíz del repositorio: los scripts usan rutas relativas. El flujo completo de regeneración, desde las descargas hasta los anexos, está en [`CLAUDE.md`](CLAUDE.md) y en [`data/README.md`](data/README.md).
+La primera vez crea `.venv`, instala las dependencias y entrena el modelo (unos 2-3 minutos); después arranca en segundos. Se abre el navegador en:
+
+- **http://localhost:8000**: prototipo (ranking con preferencias y filtros, ficha explicada de cada municipio, consultas a la red);
+- **http://localhost:8000/docs**: la API, documentada y ejecutable desde el navegador.
+
+Opciones: `-Reentrenar` (tras cambiar el modelo o los datos), `-Puerto 8080`, `-SinNavegador`. `Ctrl+C` para parar.
+
+Sin el script, paso a paso:
+
+```powershell
+powershell -File infra/scripts/setup_venv.ps1                       # entorno (una vez)
+.venv/Scripts/python backend/pipeline/entrenar.py                   # modelo -> data/processed/modelo.joblib
+.venv/Scripts/python -m uvicorn api.main:app --app-dir backend      # API + prototipo
+.venv/Scripts/python -m pytest backend/tests                        # tests
+```
+
+## Regenerar datos e informes
+
+Los scripts de `backend/pipeline/` se ejecutan desde la raíz (usan rutas relativas). Los generadores de PDF usan fuentes de Windows y Graphviz para los diagramas. El flujo completo, desde las descargas hasta los anexos, está en [`CLAUDE.md`](CLAUDE.md) y en [`data/README.md`](data/README.md).
 
 ## Documentación
 

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "madrid179"
+version = "0.1.0"
+description = "Modelo de viabilidad empresarial de los 179 municipios de la Comunidad de Madrid"
+requires-python = ">=3.13"
+license = "MIT"
+
+[tool.setuptools]
+packages = ["madrid179"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

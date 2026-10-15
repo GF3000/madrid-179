@@ -1,0 +1,194 @@
+import pytest
+
+API = "/api/v1"
+
+
+def test_meta(cliente):
+    m = cliente.get(f"{API}/meta").json()
+    assert m["municipios"] == 179 and m["candidatos_por_defecto"] == 139
+    assert "causales" in m["aviso"]  # el aviso siempre recuerda que son asociaciones
+    assert m["objetivo"] == "Viabilidad_Empresarial"
+
+
+def test_municipios(cliente):
+    ms = cliente.get(f"{API}/municipios").json()
+    assert len(ms) == 179 and all(len(m["ine5"]) == 5 for m in ms)
+
+
+def test_ranking_por_defecto(cliente, servicio):
+    r = cliente.post(f"{API}/ranking", json={}).json()
+    assert r["candidatos"] == 139 and len(r["resultados"]) == 139
+    assert [f["ine5"] for f in r["resultados"]] == list(servicio.base.index)
+    assert r["resultados"][0]["puntuacion"] == 100
+
+
+def test_ranking_con_preferencias_y_limite(cliente):
+    r = cliente.post(f"{API}/ranking", json={"preferencias": {"transporte": "Muy importante"}, "limite": 10}).json()
+    assert len(r["resultados"]) == 10
+    for f in r["resultados"]:
+        assert sum(f["desglose"].values()) == pytest.approx(f["puntuacion"], abs=0.05)
+
+
+def test_ranking_filtros_que_vacian(cliente):
+    r = cliente.post(f"{API}/ranking", json={"filtros": {"estacion_max_km": 0, "solo_con_ayudas": True}}).json()
+    assert r["candidatos"] == len(r["resultados"])
+
+
+@pytest.mark.parametrize("cuerpo", [
+    {"preferencias": {"transporte": "Muchísimo"}},
+    {"filtros": {"estacion_max_km": -1}},
+    {"limite": 0},
+])
+def test_ranking_entrada_invalida(cliente, cuerpo):
+    assert cliente.post(f"{API}/ranking", json=cuerpo).status_code == 422
+
+
+def test_ficha(cliente):
+    octavo = cliente.post(f"{API}/ranking", json={"limite": 8}).json()["resultados"][-1]
+    f = cliente.get(f"{API}/municipios/{octavo['ine5']}").json()
+    assert f["candidato"] and f["posicion"] == 8 and f["puntuacion"] == octavo["puntuacion"]
+    assert sum(f["red"]["probabilidades"].values()) == pytest.approx(1, abs=1e-3)
+    suma = f["ga2m"]["intercepto_pct"] + sum(a["aportacion_pp"] for a in f["ga2m"]["aportaciones"])
+    assert suma == pytest.approx(f["ga2m"]["prediccion_pct"], abs=1e-3)
+
+
+def test_discrepancia(servicio):
+    """El aviso aparece exactamente cuando los percentiles de la red y del GA²M distan ≥ 50 puntos."""
+    from madrid179.servicio import UMBRAL_DISCREPANCIA
+    b = servicio.base
+    for ine5 in b.index[::7]:
+        esperado = abs(b.loc[ine5, "percentil_ga2m"] - b.loc[ine5, "percentil_bn"]) >= UMBRAL_DISCREPANCIA
+        assert bool(servicio.ficha(ine5)["discrepancia"]) == esperado
+
+
+def test_ficha_no_candidato(cliente):
+    f = cliente.get(f"{API}/municipios/28079").json()
+    assert not f["candidato"] and f["motivo_exclusion"] == ["excluir_madrid_capital"] and f["posicion"] is None
+
+
+def test_ficha_desconocida(cliente):
+    assert cliente.get(f"{API}/municipios/99999").status_code == 404
+
+
+def test_consulta(cliente):
+    r = cliente.post(f"{API}/consulta", json={"evidencia": {"Talento": "Alto", "Distancia_Madrid": "Lejos"}}).json()
+    assert sum(r["probabilidades"].values()) == pytest.approx(1, abs=1e-3)
+    assert all(m["ine5"] for m in r["municipios"])
+
+
+@pytest.mark.parametrize("evidencia", [
+    {"Talento": "Altísimo"}, {"Nodo_Inventado": "Alto"}, {"Viabilidad_Empresarial": "Alta"},
+])
+def test_consulta_invalida(cliente, evidencia):
+    r = cliente.post(f"{API}/consulta", json={"evidencia": evidencia})
+    assert r.status_code == 422 and r.json()["detail"]
+
+
+def test_geometria(cliente, servicio):
+    r = cliente.get(f"{API}/geometria")
+    assert r.status_code == 200
+    g = r.json()
+    assert {f["properties"]["ine5"] for f in g["features"]} == {m["ine5"] for m in servicio.municipios()}
+    assert g["contorno"]["geometry"]["type"] in ("Polygon", "MultiPolygon")
+
+
+def test_meta_catalogo(cliente):
+    m = cliente.get(f"{API}/meta").json()
+    assert len(m["catalogo"]) == 15 and m["tope_preferencias"] == 1
+    assert {"clave", "nombre", "grupo", "sentidos", "en_modelo"} <= set(m["catalogo"][0])
+
+
+def test_ranking_preferencias_con_sentido(cliente):
+    r = cliente.post(f"{API}/ranking", json={
+        "preferencias": {"tamano": {"importancia": "Muy importante", "sentido": "pequeno"}, "coste": "Poco importante"},
+        "filtros": {"madrid_max_km": 50}}).json()
+    assert r["pesos"]["tamano"] > 0 and r["pesos"]["coste"] > 0 and r["pesos"]["transporte"] == 0
+    assert set(r["resultados"][0]["desglose"]) == {"modelo", "tamano", "coste"}
+
+
+@pytest.mark.parametrize("cuerpo", [{"preferencias": {"inventada": "Muy importante"}},
+                                    {"preferencias": {"tamano": {"importancia": "Muy importante", "sentido": "x"}}},
+                                    {"filtros": {"poblacion_min": -5}}])
+def test_ranking_preferencia_invalida(cliente, cuerpo):
+    assert cliente.post(f"{API}/ranking", json=cuerpo).status_code == 422
+
+
+def test_ficha_preferencias(cliente):
+    f = cliente.get(f"{API}/municipios/28149").json()
+    assert len(f["preferencias"]) == 15
+    assert set(f["preferencias"]["tamano"]["utilidad"]) == {"grande", "pequeno"}
+    assert all(0 <= u <= 1 for p in f["preferencias"].values() for u in p["utilidad"].values())
+
+
+def test_interpretar_sin_clave(cliente, monkeypatch):
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    r = cliente.post(f"{API}/interpretar", json={"texto": "Una consultora de diez personas"})
+    assert r.status_code == 503
+
+
+def test_interpretar_sanea_la_respuesta(cliente, monkeypatch):
+    import json
+    from madrid179 import asistente
+    falsa = {"resumen": "Buscas un sitio barato con tren.", "sector": "diseño",
+             "preferencias": {"coste": {"importancia": "Muy importante", "motivo": "lo pides"},
+                              "transporte": {"importancia": "Poco importante", "motivo": ""},
+                              "tamano": {"importancia": "Muy importante", "sentido": "mediano"},
+                              "inventada": {"importancia": "Muy importante"},
+                              "talento": {"importancia": "Importantísimo"}},
+             "filtros": {"madrid_max_km": 40, "poblacion_min": "mucha", "con_coworking": True, "volar": 3},
+             "dudas": ["¿Necesitas tren?", "", 7]}
+    monkeypatch.setattr(asistente, "_llamar", lambda texto: json.dumps(falsa))
+    r = cliente.post(f"{API}/interpretar", json={"texto": "Estudio de diseño de 8 personas"}).json()
+    assert set(r["preferencias"]) == {"coste", "transporte"}
+    assert r["filtros"] == {"madrid_max_km": 40, "con_coworking": True}
+    assert r["dudas"] == ["¿Necesitas tren?"] and len(r["avisos"]) == 5
+    # lo que devuelve el asistente es una petición válida para /ranking
+    pet = {"preferencias": {k: {"importancia": v["importancia"], "sentido": v["sentido"]} for k, v in r["preferencias"].items()},
+           "filtros": r["filtros"]}
+    assert cliente.post(f"{API}/ranking", json=pet).status_code == 200
+
+
+def test_interpretar_texto_corto(cliente):
+    assert cliente.post(f"{API}/interpretar", json={"texto": "hola"}).status_code == 422
+
+
+def test_ficha_wikipedia(cliente):
+    w = cliente.get(f"{API}/municipios/28070").json()["wikipedia"]
+    assert w["titulo"].startswith("Horcajo de la Sierra")  # enlazado por código INE, no se confunde con Horcajuelo
+    assert w["resumen"] and w["imagen"]["url"].startswith("https://") and "wikimedia.org/" in w["imagen"]["url"] and "?" not in w["imagen"]["url"]
+    assert w["imagen"]["autor"] and w["imagen"]["licencia"]
+
+
+def test_hechos_solo_lo_calculado(servicio):
+    h = servicio.hechos("28149", "Muy favorable", {"tamano": {"importancia": "Muy importante", "sentido": "pequeno"}})
+    assert h["grupo"] == "Muy favorable" and h["factores"]["a favor"]
+    assert all(f["fuerza"] in {"mucho", "bastante", "algo"} for lado in h["factores"].values() for f in lado)
+    assert h["preferencias_del_usuario"][0]["encaje"] in {"alto", "medio", "bajo"}
+    assert servicio.hechos("28087")["municipio"] == "Los Molinos"  # el LLM recibe el nombre legible
+    fuera = servicio.hechos("28079")
+    assert fuera["fuera_del_analisis"] and not fuera["factores"]["a favor"] and not fuera["factores"]["en contra"]
+
+
+def test_explicacion(cliente, monkeypatch):
+    import json
+    from madrid179 import asistente
+    recibido = {}
+
+    def falso(texto, sistema=None, temperatura=0.2):
+        recibido.update(json.loads(texto))
+        return json.dumps({"titular": "Un municipio joven y en crecimiento.", "mejor": ["Crece mucho.", "", 3],
+                           "peor": ["Tiene pocas oficinas."]})
+    monkeypatch.setattr(asistente, "_llamar", falso)
+    asistente._CACHE_EXPLICAR.clear()
+    r = cliente.post(f"{API}/municipios/28149/explicacion", json={"clase": "Muy favorable"}).json()
+    assert r == {"titular": "Un municipio joven y en crecimiento.", "mejor": ["Crece mucho."], "peor": ["Tiene pocas oficinas."]}
+    assert recibido["municipio"] == "Torrejón de la Calzada" and recibido["grupo"] == "Muy favorable"
+
+
+def test_explicacion_errores(cliente, monkeypatch):
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    from madrid179 import asistente
+    asistente._CACHE_EXPLICAR.clear()
+    assert cliente.post(f"{API}/municipios/28149/explicacion", json={}).status_code == 503
+    assert cliente.post(f"{API}/municipios/99999/explicacion", json={}).status_code == 404
+

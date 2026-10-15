@@ -10,8 +10,8 @@
 - `docs/informe/` informes, anexos PDF, diagramas y dashboard HTML generado
 - `docs/presentaciones/` entregables del datathon; `_plantilla/` y `_referencias/` quedan fuera de git (plantilla Slidesgo y `Interfaz.pdf`)
 - `backend/pipeline/` scripts reproducibles (recolección, procesado, modelo, generadores de PDF); los de descarga con `python -I`
-- `backend/api/` API FastAPI (pendiente #28) · `backend/logs/` logs de descargas (fuera de git)
-- `frontend/dashboard/` plantilla del dashboard · `frontend/app/` app React (pendiente #32)
+- `backend/madrid179/` paquete del modelo · `backend/api/` API FastAPI · `backend/tests/` · `backend/logs/` logs de descargas (fuera de git)
+- `frontend/prototipo/` prototipo HTML + JS servido por la API · `frontend/dashboard/` plantilla del dashboard · `frontend/app/` app React (pendiente #32)
 - `infra/` scripts de entorno y exportación (`pptx_a_pdf.ps1`), despliegue futuro; CI en `.github/workflows/`
 - `data/raw/` descargas sin modificar (fuera de git, 1,6 GB) · `data/processed/` tablas limpias (en git solo las salidas pequeñas del modelo)
 
@@ -27,6 +27,7 @@
 - Overpass (overpass-api.de) da 504 con consultas grandes (restauración, sanidad); reintentar por partes/provincia-comarca o usar Geofabrik PBF.
 - INE DIRCE tabla 4721 (toda España, 18 MB) descargada; Seg. Social por municipio y paro ya están en el CKAN CAM (`afiliados_seg_social_ultimo_dia_mes_municipio`, hasta 2026-M08).
 - Los CSV del CKAN CAM vienen en latin-1/ISO (; separador); `Territorio` es nombre, no código INE.
+- `din_emp` (dinámica de unidades productivas) tiene años 2015-2024; cada año trae inicio, nacen, mueren, entran y salen, así que se puede rehacer el objetivo con cualquier ventana (`experimento_covid.py`, función `objetivo`). La tasa neta entre ventanas disjuntas apenas correlaciona (Spearman ≈ 0,20): es poco persistente (#46).
 
 ## Estado de tareas
 - [x] Catálogo CKAN CAM completo (docs/fuentes/cam_ckan_catalogo.csv)
@@ -77,3 +78,39 @@
 - OSM: 153.517 POIs; `osm_a_secciones.py` recalculado. Dashboard v2 publicado (misma URL).
 - `nivel_ayudas` por tramos de población en el dataset (informativo, fuera de la red).
 - GA²M: interpret-core 0.7.8, `ExplainableBoostingRegressor(interactions=5, max_bins=32, min_samples_leaf=10, outer_bags=8, learning_rate=0.02, max_rounds=3000)`; `eval_terms(X)` da contribuciones por término; `term_importances()` la importancia global. Las interacciones aportan poco (GAM 0,396 frente a GA²M 0,398).
+
+## Sesión 7 — Monorepo, backend v1 y prototipo (2026-10-08)
+- Repositorio público https://github.com/GF3000/madrid-179 (MIT). Backend v1 en la rama `feat/backend-v1`.
+- `madrid179` es la fuente única de NODOS/EDGES/FILTROS; `red_bayesiana_viabilidad.py` los reexporta. `experimento_transporte.py` cambia la estructura parcheando `madrid179.red` y `madrid179.discretizacion` (no `rb`).
+- El artefacto reproduce exactamente los CSV versionados (orden, puntuación, P(Alta), aportaciones; tolerancia 1e-9). Reejecutar `red_bayesiana_viabilidad.py` da CSV idénticos: el EBM es determinista con `random_state=0`.
+- La validación «0,459 ± 0,012 / 1,103 ± 0,015» usa la desviación poblacional (`np.std`, ddof = 0) de 5 repeticiones de CV-5 (semillas 0-4); `entrenar.py` la reproduce.
+- `auditoria_cpts.py` reescribe el xlsx y el PDF con marca de tiempo aunque no cambie nada: si solo cambia eso, restaurar con `git checkout`.
+- Windows PowerShell 5.1: no admite `;` dentro de `( )`; con `$ErrorActionPreference = "Stop"` la salida a stderr de programas nativos (pip, uvicorn) se convierte en excepción; lee los `.ps1` sin BOM como ANSI (tildes rotas).
+- Captura de pantalla sin navegador visible: `msedge --headless=new --window-size=1500,1000 --virtual-time-budget=8000 --screenshot=<png> <url>`.
+- Experimento de variables (#44): el EBM de producción tarda ~16 s por ajuste (24 s con `n_jobs=1`); un GAM sin interacciones con 4 bolsas y `n_jobs=1` tarda 1,4 s y sirve para cribar. El GAM ligero da Spearman 0,391 frente al 0,398 de producción.
+- Variables por población con OSM (sanidad, deporte, amenidades) son mayores en pueblos pequeños (pocos habitantes): casi todo lo municipal va con el tamaño; controlar siempre por población y distancia (Spearman parcial sobre rangos).
+- El equipo tiene ~15 GB de RAM y a menudo < 3 GB libres: Claude Code corta los procesos en segundo plano con poca memoria. Para trabajos largos, `n_jobs` bajo y guardar resultados parciales.
+
+## Sesión 8 — Modelo v2 y secretos (2026-10-14)
+- Criterio del equipo: en fase de diseño, ante la duda una variable entra (el jurado valora más parámetros); las de fuga nunca. No regenerar PDF ni presentaciones al cambiar el modelo.
+- Red v2: 12 nodos (Densidad, Juventud, Sanidad y Paro nuevos), padres de la viabilidad Dinamismo + Densidad, ESS = 50. Padres de los nodos nuevos por `BDeu(...).local_score(nodo, padres)` (pgmpy) entre candidatos plausibles, máx. 2.
+- Con evidencia completa el ESS no cambia el estado más probable (el acierto es idéntico para todo ESS); solo calibra. Las estructuras con 3 padres aciertan más (0,520) pero rompen la monotonía (15-17 violaciones).
+- GA²M v2: 14 variables y 10 interacciones; el EBM sigue tardando ~30 s en entrenar. `experimento_ga2m_ampliado.py` reutiliza los resultados por repetición de `ga2m_cv.csv` como base (mismas particiones y semillas) y guarda cada configuración al terminar.
+- La auditoría de las CPT sigue verificando la inferencia por enumeración de la conjunta completa: con 12 nodos son 59.049 combinaciones por consulta y sigue siendo rápida.
+- Secretos: `.env` en la raíz (python-dotenv, `override=False`); `.dot` también ignorado. `.gitignore` tenía `.env.*`, que ignoraba la plantilla: añadida la excepción `!.env.example`.
+
+## Sesión 9 — App con mapa 3D (2026-10-15)
+- Límites municipales: `backend/pipeline/limites_municipales.py` disuelve `Seccionado_2019.shp` por `CDMUNI` con shapely (`buffer(1).buffer(-1)` cierra las rendijas entre secciones), simplifica 60 m en EPSG:25830 y reproyecta a WGS84 → `data/processed/municipios.geojson` (179 rasgos, 254 KB, en git) con el contorno de la Comunidad como miembro extra `contorno` (MultiPolygon de 2 partes). Lo sirve `GET /api/v1/geometria`. Cierra #23.
+- App en `frontend/app/` (Vite 6, React 18, MapLibre 5.24, deck.gl 9.1 con `MapboxOverlay` intercalado). La API monta `frontend/app/dist` en `/` si existe (al final, para no tapar `/api` ni `/docs`); el prototipo pasa a `/prototipo/`. La comprobación de `dist/` se hace al importar `api.main`: tras compilar por primera vez hay que reiniciar la API.
+- Trampa: el CSS de MapLibre pone `.maplibregl-map { position: relative }` y anula un `position: absolute` de igual especificidad cargado antes → el lienzo mide 300 px de alto. Usar un selector más específico (`.app > .mapa`).
+- Mapa base: estilo Positron de OpenFreeMap (`https://tiles.openfreemap.org/styles/positron`, sin clave), recoloreado en el cliente y sin capas de símbolos (los rótulos los pone deck.gl con la fuente de la app). Sin red, estilo vacío con fondo liso.
+- Aportaciones del GA²M en valor absoluto (pp de tasa neta, 179 municipios × 24 términos): p50 0,022 · p75 0,063 · p90 0,135 · p95 0,192 · p99 0,299. Son los umbrales de «algo / bastante / mucho» de la ficha.
+- `dist_sol_km` es distancia en línea recta desde el centroide (ponderado por secciones) a Sol, no por carretera; `paradas_ferro` suma Metro, Metro Ligero y Cercanías; `sanidad_osm` = hospitales, clínicas, consultas y farmacias.
+- Preferencias ampliadas (#47): con todas las preferencias «muy importantes», Σ a pasa de 1 y se escala al tope; antes, transporte «muy» + ayudas «poco» ya sumaban 1,14. Las utilidades en percentil con dos sentidos se invierten como 1 − u (prueba en `test_preferencias.py`). Servicios para la plantilla usa conteos absolutos de OSM: por habitante premiaba pueblos de 100 vecinos con una instalación (deporte por 1.000 hab. llega a 214).
+- La ficha calcula cada utilidad entre los 139 candidatos por defecto (más el municipio si está excluido): con una sola fila, un percentil siempre vale 1.
+- DeepSeek: `POST https://api.deepseek.com/chat/completions`, modelo `deepseek-chat`, `response_format: {"type": "json_object"}` (el prompt debe incluir la palabra JSON). Para probar sin clave: servidor local que devuelva `{"choices": [{"message": {"content": "<json>"}}]}` y `DEEPSEEK_URL` apuntando a él.
+- curl desde Git Bash en Windows manda la «ñ» mal codificada y FastAPI responde «error parsing the body»: probar con Python/httpx.
+- Wikidata: el código INE municipal de 5 dígitos es la propiedad **P772** (hay también valores de 11 dígitos de entidades de población: filtrar `STRLEN = 5`). La foto representativa es P18. El SPARQL de Wikidata devuelve **403** si el User-Agent no identifica el proyecto con una URL (política de robots de Wikimedia): usar `Madrid179-datathon/1.0 (https://github.com/GF3000/madrid-179)`.
+- Commons `imageinfo` con `iiurlwidth=800` devuelve miniaturas de 960 px en `thumb.wikimedia.org` con parámetros `utm_*`: se guardan sin ellos. 61 de las 179 fotos son de la Dirección General de Turismo de la Comunidad (CC BY 3.0 es).
+- **CI y GA²M:** el EBM reentrenado en GitHub Actions no reproduce exactamente las salidas versionadas aunque use la misma semilla: el boosting amplifica diferencias de coma flotante entre procesadores (aportaciones con diferencias de hasta 5e-5 y municipios casi empatados intercambiados, p. ej. 28120 y 28154). Unas ejecuciones pasan y otras no, según la máquina. `test_equivalencia.py` compara exacto en local y, con la variable CI, tolera 2e-4 por aportación, 5e-4 en la predicción y 3 posiciones; la red bayesiana se compara exacta siempre.
+- Capturas de verificación con puppeteer-core y el Chrome del sistema (`--use-angle=swiftshader --enable-unsafe-swiftshader`): WebGL2 funciona en modo sin ventana.
