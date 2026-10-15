@@ -6,7 +6,7 @@ exige una estación cercana, cambian el conjunto, sd(S) y sd(u).
 import numpy as np
 
 from .config import FILTROS
-from .preferencias import PREFERENCIAS, normalizar, puntuar, utilidades
+from .preferencias import PREFERENCIAS, ayudas_en, normalizar, puntuar, utilidades
 
 # Filtros «imprescindible» que puede pedir el usuario: nombre -> condición sobre la tabla
 FILTROS_USUARIO = {
@@ -15,7 +15,8 @@ FILTROS_USUARIO = {
     "madrid_min_km": lambda t, v: t.dist_sol_km >= v,
     "poblacion_min": lambda t, v: t.poblacion >= v,
     "poblacion_max": lambda t, v: t.poblacion <= v,
-    "solo_con_ayudas": lambda t, v: t.nivel_ayudas != "Bajo" if v else t.index == t.index,
+    # LEADER o menos de 2.500 hab. (utilidad de la preferencia «ayudas» > 0); sin ayudas_oficiales.csv no queda ninguno
+    "solo_con_ayudas": lambda t, v: ayudas_en(t) > 0 if v else t.index == t.index,
     "con_coworking": lambda t, v: t.coworking_osm > 0 if v else t.index == t.index,
 }
 

@@ -126,6 +126,14 @@ export interface Ficha {
   discrepancia: string | null;
   preferencias: Record<string, { dato: string; utilidad: Record<string, number> }>;
   wikipedia: Wikipedia | null;
+  ayudas: AyudasFicha | null; // null si el servidor no tiene ayudas_oficiales.csv
+}
+
+/** Ayudas oficiales que alcanzan a una empresa o a su gente (sin el PIR, que financia obras municipales). */
+export interface AyudasFicha {
+  leader: { grupo: string; fuente: string; web: string } | null; // LEADER 2023-2027: web del grupo y convenio en el BOCM
+  irpf_menos_2500: boolean; // deducciones del IRPF por trasladarse o comprar vivienda (Ley 5/2024)
+  anio_padron: string;
 }
 
 export interface Wikipedia {

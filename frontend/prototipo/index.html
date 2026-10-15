@@ -25,14 +25,14 @@
       <label>Transporte ferroviario cercano
         <select id="pref-transporte" class="importancia"></select>
       </label>
-      <label>Ayudas al reequilibrio territorial
+      <label>Ayudas oficiales (LEADER o &lt; 2.500 hab.)
         <select id="pref-ayudas" class="importancia"></select>
       </label>
 
       <h2>Imprescindible</h2>
       <label class="check"><input type="checkbox" id="fil-estacion-on"> Estación a ≤
         <input type="number" id="fil-estacion" value="5" min="0" step="1" class="corto"> km</label>
-      <label class="check"><input type="checkbox" id="fil-ayudas"> Con ayudas (nivel Medio o Alto)</label>
+      <label class="check"><input type="checkbox" id="fil-ayudas"> Con ayudas verificadas (LEADER o &lt; 2.500 hab.)</label>
 
       <h2>Mostrar</h2>
       <label>Primeros <input type="number" id="limite" value="25" min="1" max="179" class="corto"> municipios</label>
@@ -53,7 +53,7 @@
         </div>
         <div class="tabla-scroll">
           <table id="tabla-ranking">
-            <thead><tr><th>#</th><th>Municipio</th><th class="ancha">Puntuación</th><th>P(Alta) red</th><th>Ayudas</th><th>Estación</th></tr></thead>
+            <thead><tr><th>#</th><th>Municipio</th><th class="ancha">Puntuación</th><th>P(Alta) red</th><th title="Nivel de ayudas por tramo de población (dato antiguo; la preferencia usa la lista oficial)">Tramo pobl.</th><th>Estación</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>

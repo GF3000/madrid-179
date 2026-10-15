@@ -234,7 +234,7 @@ export function describirFiltro(k: keyof Filtros, v: number | boolean | null): s
     case "madrid_min_km": return `A más de ${v} km de Madrid`;
     case "poblacion_min": return `Más de ${miles(Number(v))} habitantes`;
     case "poblacion_max": return `Menos de ${miles(Number(v))} habitantes`;
-    case "solo_con_ayudas": return "Solo municipios con ayudas por tamaño";
+    case "solo_con_ayudas": return "Solo municipios con ayudas verificadas";
     case "con_coworking": return "Solo municipios con coworking";
   }
 }

@@ -91,7 +91,7 @@
   .boton-primario, .boton-secundario, .segmentado button, .segmentado.compacto button, .comprobado .nota { font-size: 13.5px; }
   .bloque h3, .seccion h3, .miga, .pocas-palabras h3, .leyenda-titulo { font-size: 12px; }
   .chip, .tramo em, .insignia { font-size: 12px; }
-  .factor-detalle, .factor-lectura, .rasgo dt, .rasgo dd, .pref-dato, .pref-suma, .lineas-pref small, .combinados li,
+  .factor-detalle, .factor-lectura, .rasgo dt, .rasgo dd, .pref-dato, .pref-suma, .lineas-pref small, .combinados li, .ayudas-ficha small,
   .lista-factores h4, .mejor-peor h4, .pocas-palabras .firma, .wiki-resumen a { font-size: 13px; }
   .asistente-caja textarea { font-size: 16px; }
 

@@ -23,6 +23,11 @@ CONVENIOS = {  # fichero -> nombre del Grupo de Acción Local
     "BOCM-20250118-15": "GALSINMA (Sierra Norte)",
     "BOCM-20250118-16": "ADI Sierra Oeste (suroeste)",
 }
+WEB_GAL = {  # webs de los grupos (enlazadas desde comunidad.madrid/node/103964), donde publican sus convocatorias
+    "ARACOVE (sureste)": "https://www.aracove.com/",
+    "GALSINMA (Sierra Norte)": "https://www.galsinma.org/",
+    "ADI Sierra Oeste (suroeste)": "https://www.sierraoeste.org/",
+}
 UMBRAL = 2500
 
 
@@ -54,6 +59,7 @@ for f, gal in CONVENIOS.items():
     print(f"{gal}: {len(codigos)} municipios")
 out["leader_fuente"] = out.leader_gal.map(lambda g: "" if not g else BOCM.format(
     next(f for f, n in CONVENIOS.items() if n == g)))
+out["leader_web"] = out.leader_gal.map(lambda g: WEB_GAL.get(g, ""))
 
 # --- Reglas por población (padrón a 1 de enero) ---
 pad = pd.read_csv("data/processed/municipal/padron_por_sexo.csv", sep=";", dtype=str, encoding="utf-8-sig")

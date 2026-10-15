@@ -38,7 +38,8 @@ FILTROS_LLM = {
     "madrid_min_km": (float, 5, 80, "al menos a X km de Madrid"),
     "poblacion_min": (int, 100, 250_000, "al menos X habitantes"),
     "poblacion_max": (int, 100, 250_000, "como mucho X habitantes"),
-    "solo_con_ayudas": (bool, None, None, "solo municipios donde haya ayudas al reequilibrio por tamaño"),
+    "solo_con_ayudas": (bool, None, None,
+                        "solo municipios con ayudas oficiales verificadas (grupo LEADER o menos de 2.500 habitantes)"),
     "con_coworking": (bool, None, None, "solo municipios con coworking"),
 }
 
@@ -446,7 +447,7 @@ SECTORES_EJEMPLO = (
 PLANTILLAS_EJEMPLO = ("2 o 3 personas", "unas 8 personas", "15 a 20 personas", "unas 40 personas", "más de 100 personas")
 NECESIDADES_EJEMPLO = (
     "que la plantilla pueda llegar en tren", "buen transporte público", "estar cerca de Madrid",
-    "alejarse de Madrid para ganar calidad de vida", "un alquiler barato", "aprovechar ayudas para pueblos pequeños",
+    "alejarse de Madrid para ganar calidad de vida", "un alquiler barato", "aprovechar ayudas al desarrollo rural",
     "contratar personal muy cualificado", "contratar mano de obra sin necesidad de titulación", "un municipio joven",
     "una ciudad grande", "un pueblo pequeño y tranquilo", "clientes con poder adquisitivo",
     "proveedores y servicios profesionales cerca", "un municipio en crecimiento", "otras oficinas alrededor",

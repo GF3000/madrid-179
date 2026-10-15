@@ -327,6 +327,9 @@ b, strong { font-weight: 650; }
 .combinados li { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; padding: 3px 0; color: var(--tinta-2); }
 .combinados .marcas { padding-top: 2px; }
 .lineas-pref li { padding: 4px 0; font-size: 13.5px; }
+.ayudas-ficha p { font-size: 13.5px; line-height: 1.55; margin: 0 0 8px; color: var(--tinta); }
+.ayudas-enlaces { white-space: nowrap; }
+.ayudas-ficha small { display: block; color: var(--tinta-3); font-size: 11.5px; line-height: 1.45; }
 
 .perfil { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; margin: 0; }
 .rasgo { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--linea); cursor: help; }
