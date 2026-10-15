@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from madrid179 import artefactos, asistente
+from madrid179 import artefactos, asistente, limites
 from madrid179.config import ARTEFACTO, RAIZ
 from madrid179.servicio import ErrorEvidencia, Servicio
 
@@ -44,6 +44,15 @@ v1 = APIRouter(prefix="/api/v1")
 
 def servicio(request: Request) -> Servicio:
     return request.app.state.servicio
+
+
+def _cliente(request: Request):
+    """IP del visitante (uvicorn la toma de X-Forwarded-For con --proxy-headers; ver madrid179/limites.py)."""
+    return request.client.host if request.client else None
+
+
+def _demasiadas(e: limites.LimiteSuperado):
+    return HTTPException(429, str(e), headers={"Retry-After": str(e.reintentar_s)})
 
 
 @v1.get("/meta", response_model=Meta)
@@ -86,7 +95,9 @@ def explicacion(ine5: str, peticion: PeticionExplicacion, request: Request):
     except ValueError as e:
         raise HTTPException(422, str(e)) from None
     try:
-        return asistente.explicar(hechos)
+        return asistente.explicar(hechos, cliente=_cliente(request))
+    except limites.LimiteSuperado as e:
+        raise _demasiadas(e) from None
     except asistente.AsistenteNoDisponible:
         raise HTTPException(503, "El asistente no está configurado (falta DEEPSEEK_API_KEY en .env)") from None
     except asistente.ErrorAsistente as e:
@@ -102,11 +113,13 @@ def consulta(peticion: PeticionConsulta, request: Request):
 
 
 @v1.post("/interpretar", response_model=RespuestaInterpretar)
-def interpretar(peticion: PeticionInterpretar):
+def interpretar(peticion: PeticionInterpretar, request: Request):
     """Traduce la descripción libre del negocio en preferencias y requisitos (LLM). No puntúa: solo traduce;
     el resultado se valida contra el catálogo; la app lo aplica, lo muestra y permite deshacerlo."""
     try:
-        return asistente.interpretar(peticion.texto)
+        return asistente.interpretar(peticion.texto, cliente=_cliente(request))
+    except limites.LimiteSuperado as e:
+        raise _demasiadas(e) from None
     except asistente.AsistenteNoDisponible:
         raise HTTPException(503, "El asistente no está configurado (falta DEEPSEEK_API_KEY en .env)") from None
     except asistente.ErrorAsistente as e:

@@ -1,0 +1,12 @@
+[
+  {
+    "name": "borrar-antiguas",
+    "action": {"type": "Delete"},
+    "condition": {"tagState": "ANY", "olderThan": "7d"}
+  },
+  {
+    "name": "conservar-ultimas-5",
+    "action": {"type": "Keep"},
+    "mostRecentVersions": {"keepCount": 5}
+  }
+]

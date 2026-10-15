@@ -33,6 +33,9 @@ echo "== Artifact Registry (imágenes)"
 existe gc artifacts repositories describe madrid179 --location "$REGION" ||
   gc artifacts repositories create madrid179 --repository-format docker --location "$REGION" \
     --description "Imágenes de Madrid 179"
+# limpieza: borra las imágenes de más de 7 días salvo las 5 más recientes (cada una pesa unos 200 MB)
+gc artifacts repositories set-cleanup-policies madrid179 --location "$REGION" \
+  --policy "$(dirname "$0")/limpieza_imagenes.json" --no-dry-run >/dev/null
 
 echo "== Cuentas de servicio"
 existe gc iam service-accounts describe "$SA_DEPLOY" ||

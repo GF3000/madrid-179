@@ -40,4 +40,8 @@ Crea:
 cd infra/firebase && firebase deploy --only hosting --project madrid179
 ```
 
+**Costes y protecciones:**
+- **Limpieza de imágenes** (`cloudrun/limpieza_imagenes.json`, aplicada por el script): Artifact Registry borra las imágenes de más de 7 días y conserva siempre las 5 más recientes. Cada imagen pesa unos 200 MB.
+- **Límite del asistente** (`backend/madrid179/limites.py`): solo cuentan las llamadas que llegan de verdad a DeepSeek. Por defecto son 40 por IP y hora, 300 por hora en total y 1.500 al día en total, por instancia (como máximo hay 3). Al superarlo la API responde 429 con `Retry-After` y la app sigue funcionando sin el asistente. Se ajusta con `MADRID179_LLM_POR_IP_HORA`, `MADRID179_LLM_GLOBAL_HORA` y `MADRID179_LLM_GLOBAL_DIA`; 0 desactiva cada límite.
+
 **Cambiar la clave del asistente:** `printf '%s' "<clave>" | gcloud secrets versions add deepseek-api-key --data-file=-` y volver a desplegar.

@@ -15,6 +15,7 @@ import os
 
 import httpx
 
+from . import limites
 from .config import clave_api
 from .preferencias import CATALOGO, POR_CLAVE
 
@@ -23,6 +24,7 @@ log = logging.getLogger(__name__)
 URL = os.environ.get("DEEPSEEK_URL", "https://api.deepseek.com/chat/completions")
 MODELO = os.environ.get("DEEPSEEK_MODELO", "deepseek-chat")
 TIEMPO_MAX_S = 45
+LIMITE = limites.Limitador.desde_entorno()  # protege el saldo del LLM en la URL pública
 IMPORTANCIAS_LLM = ("Poco importante", "Muy importante")
 
 # Filtros «imprescindible» que puede proponer el LLM: nombre -> (tipo, mínimo, máximo, descripción)
@@ -154,7 +156,8 @@ def sanear(bruto):
             "preferencias": prefs, "filtros": filtros, "dudas": dudas}, avisos
 
 
-def interpretar(texto):
+def interpretar(texto, cliente=None):
+    LIMITE.consumir(cliente)
     contenido = _llamar(texto)
     try:
         bruto = json.loads(contenido)
@@ -191,11 +194,13 @@ Responde solo con un objeto JSON: {"titular": "...", "mejor": ["..."], "peor": [
 _CACHE_EXPLICAR = {}
 
 
-def explicar(hechos):
-    """Redacta lo mejor y lo peor del municipio a partir de los hechos de la ficha (con caché en memoria)."""
+def explicar(hechos, cliente=None):
+    """Redacta lo mejor y lo peor del municipio a partir de los hechos de la ficha (con caché en memoria).
+    Solo las llamadas que no están en caché cuentan para el límite."""
     clave = json.dumps(hechos, sort_keys=True, ensure_ascii=False)
     if clave in _CACHE_EXPLICAR:
         return _CACHE_EXPLICAR[clave]
+    LIMITE.consumir(cliente)
     contenido = _llamar(json.dumps(hechos, ensure_ascii=False), INSTRUCCIONES_EXPLICAR, temperatura=0.4)
     try:
         bruto = json.loads(contenido)
