@@ -1,0 +1,9 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": ["**/.*"],
+    "rewrites": [
+      { "source": "**", "run": { "serviceId": "madrid179", "region": "europe-southwest1" } }
+    ]
+  }
+}

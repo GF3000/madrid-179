@@ -1,0 +1,18 @@
+# Contexto del build de infra/Dockerfile (BuildKit lee este fichero junto al Dockerfile).
+# Nunca entran secretos ni datos pesados.
+.git
+.github
+.venv
+.env
+.env.*
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/node_modules
+frontend/app/dist
+data/raw
+data/processed/municipal
+data/processed/osm_poi_con_seccion.csv
+data/processed/gtfs_paradas_con_seccion.csv
+data/processed/modelo.joblib
+docs

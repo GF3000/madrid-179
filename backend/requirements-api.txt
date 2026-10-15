@@ -1,0 +1,16 @@
+# Dependencias de la API en producción (imagen de Cloud Run, infra/Dockerfile).
+# Subconjunto de requirements.txt sin lo que solo usa el pipeline (PDF, Excel, geometría, pruebas).
+# Mantener las mismas versiones que requirements.txt.
+fastapi==0.142.4
+uvicorn==0.54.0
+httpx==0.28.1
+python-dotenv==1.2.4
+joblib==1.6.0
+networkx==3.7
+numpy==2.5.3
+pandas==3.0.6
+pgmpy==1.1.2
+scikit-learn==1.9.1
+scipy==1.18.1
+statsmodels==0.15.0
+interpret-core==0.7.8
