@@ -112,7 +112,7 @@ ETIQUETAS = {
     "dist_sol_km": "Distancia a Madrid (km a Sol)",
     "pct_estudios_superiores": "Talento (% con estudios superiores)",
     "paradas_ferro": "Paradas ferroviarias",
-    "vc_residencial_por_uu": "Coste inmobiliario (valor catastral residencial)",
+    "vc_residencial_por_uu": "Valor de la vivienda (valor catastral residencial)",
     "rdb_per_capita": "Renta disponible per cápita",
     "pct_up_servicios_prof": "Especialización en servicios profesionales",
     "crec_pob_5a": "Crecimiento de población (5 años)",
@@ -123,6 +123,15 @@ ETIQUETAS = {
     "uu_oficinas_por_1000hab": "Oficinas (Catastro, por 1.000 hab.)",
     "dist_ferro_km": "Distancia a la estación ferroviaria (km)",
     "poblacion": "Población",
+}
+
+# Cómo leer una variable cuyo signo en el GA²M puede confundir (ficha y asistente). El GA²M explica el saldo de
+# empresas, no lo que le cuesta instalarse a quien busca sitio: cuando ambas lecturas chocan, se dicen las dos.
+LECTURAS = {
+    "vc_residencial_por_uu": (
+        "Mide lo que vale la vivienda, no el alquiler de oficinas. El modelo lo lee como señal de demanda: donde la "
+        "vivienda vale más, el saldo de empresas fue algo mejor en 2020-2024 (asociación, no causa). Para quien se "
+        "instala, un valor alto también anticipa locales más caros; si eso te importa, activa «Coste inmobiliario bajo»."),
 }
 
 # Pesos de la Opción B (contribución de cada estado padre a la utilidad de viabilidad, escala 0-1)

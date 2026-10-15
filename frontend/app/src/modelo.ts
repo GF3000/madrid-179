@@ -81,7 +81,7 @@ export const NODOS: Record<string, InfoNodo> = {
     estados: { Bajo: "bajo", Medio: "medio", Alto: "alto" } },
   Acceso_Ferroviario: { nombre: "Tren", que: "Si el municipio tiene estación de Cercanías, Metro o Metro Ligero.",
     estados: { No: "sin estación", Si: "con estación" } },
-  Coste_Inmobiliario: { nombre: "Valor inmobiliario", que: "Valor catastral medio de la vivienda.",
+  Coste_Inmobiliario: { nombre: "Valor de la vivienda", que: "Valor catastral medio de la vivienda: indica demanda y, a la vez, lo caro que es instalarse.",
     estados: { Bajo: "bajo", Medio: "medio", Alto: "alto" } },
   Renta: { nombre: "Renta", que: "Renta disponible por habitante.",
     estados: { Baja: "baja", Media: "media", Alta: "alta" } },
@@ -150,6 +150,7 @@ export interface Factor {
   fuerza: Fuerza;
   combinado: boolean;
   columnas: string[];
+  lectura: string | null;
 }
 
 export function factores(aportaciones: Aportacion[], estados: Record<string, string>): Factor[] {
@@ -167,6 +168,7 @@ export function factores(aportaciones: Aportacion[], estados: Record<string, str
       fuerza: f,
       combinado,
       columnas: cols,
+      lectura: a.lectura ?? null,
     });
   }
   return salida;

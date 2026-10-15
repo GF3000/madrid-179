@@ -123,3 +123,4 @@
 - Capturas de verificación con puppeteer-core y el Chrome del sistema (`--use-angle=swiftshader --enable-unsafe-swiftshader`): WebGL2 funciona en modo sin ventana.
 
 - **Ejemplos de negocio (2026-10-15):** `POST /api/v1/ejemplo` inventa una descripción para probar el asistente. El sorteo (sector, plantilla, necesidades) va en Python para asegurar variedad (sin semilla, un LLM con la misma petición tiende a repetir negocios; no medido aquí); cuenta para el límite de llamadas (`limites.py`). Tests con `_llamar` simulado (`test_ejemplo`).
+- **Lecturas de variables con signo engañoso (2026-10-15):** `config.LECTURAS[columna]` → `lectura` en cada aportación de la ficha y `como_leerlo` en los hechos del LLM. Caso de origen: el valor catastral residencial suma en el GA²M (demanda) pero para el usuario es coste; se explican las dos lecturas en vez de esconder el signo.

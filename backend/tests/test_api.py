@@ -188,6 +188,20 @@ def test_hechos_solo_lo_calculado(servicio):
     assert fuera["fuera_del_analisis"] and not fuera["factores"]["a favor"] and not fuera["factores"]["en contra"]
 
 
+def test_valor_vivienda_se_lee_como_demanda(servicio):
+    """Un valor de la vivienda alto suma en el GA²M (señal de demanda), pero no debe leerse como «es caro, y es bueno»."""
+    from madrid179.asistente import INSTRUCCIONES_EXPLICAR
+    aport = {a["termino"]: a for a in servicio.ficha("28080")["ga2m"]["aportaciones"]}  # Majadahonda
+    vc = aport["vc_residencial_por_uu"]
+    assert vc["aportacion_pp"] > 0 and "demanda" in vc["lectura"] and "Coste inmobiliario bajo" in vc["lectura"]
+    assert aport["rdb_per_capita"]["lectura"] is None  # solo las variables que pueden confundir llevan lectura
+    h = servicio.hechos("28080")
+    f = next(f for f in h["factores"]["a favor"] if f["factor"].startswith("Valor de la vivienda"))
+    assert f["nivel"] == "alto" and f["como_leerlo"] == vc["lectura"]
+    assert "valor de la vivienda" in h["perfil"] and "coste inmobiliario" not in h["perfil"]
+    assert "como_leerlo" in INSTRUCCIONES_EXPLICAR and "nunca escribas \"coste inmobiliario alto\"" in INSTRUCCIONES_EXPLICAR
+
+
 def test_explicacion(cliente, monkeypatch):
     import json
     from madrid179 import asistente

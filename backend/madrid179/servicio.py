@@ -10,7 +10,7 @@ import pandas as pd
 from pgmpy.inference import VariableElimination
 
 from . import asistente
-from .config import AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, NODOS, OBJETIVO, PADRES_OBJETIVO, RAIZ
+from .config import AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, LECTURAS, NODOS, OBJETIVO, PADRES_OBJETIVO, RAIZ
 from .preferencias import (CATALOGO, IMPORTANCIA, POR_CLAVE, PREFERENCIAS, TOPE_PREFERENCIAS, catalogo_publico,
                            normalizar)
 from .ranking import rankear
@@ -24,7 +24,7 @@ MOTIVOS = {"excluir_madrid_capital": "la capital queda fuera a propósito: el ob
            "min_uu_oficinas": "no tiene ningún local de oficinas en el Catastro"}
 NODOS_LEGIBLES = {
     "Distancia_Madrid": "distancia a Madrid", "Talento": "talento (estudios superiores)",
-    "Acceso_Ferroviario": "estación de tren", "Coste_Inmobiliario": "coste inmobiliario", "Renta": "renta",
+    "Acceso_Ferroviario": "estación de tren", "Coste_Inmobiliario": "valor de la vivienda", "Renta": "renta",
     "Especializacion_Servicios": "servicios profesionales", "Dinamismo_Demografico": "crecimiento de la población",
     "Densidad": "densidad", "Juventud": "población joven", "Sanidad": "oferta sanitaria", "Paro": "paro",
 }
@@ -96,7 +96,8 @@ class Servicio:
             cols = [c.strip() for c in termino.split("&")]
             aport.append({"termino": termino, "etiqueta": " × ".join(ETIQUETAS.get(c, c) for c in cols),
                           "aportacion_pp": round(float(v) * 100, 4),
-                          "valores": {c: round(float(r[c]), 4) for c in cols}})
+                          "valores": {c: round(float(r[c]), 4) for c in cols},
+                          "lectura": " ".join(LECTURAS[c] for c in cols if c in LECTURAS) or None})
         aport.sort(key=lambda x: abs(x["aportacion_pp"]), reverse=True)
 
         discrepancia = None
@@ -154,7 +155,8 @@ class Servicio:
                 continue
             detalle = [nivel(c) or _redondo(v) for c, v in a["valores"].items()]
             factores["a favor" if a["aportacion_pp"] > 0 else "en contra"].append(
-                {"factor": a["etiqueta"], "nivel": " · ".join(detalle), "fuerza": fuerza})
+                {"factor": a["etiqueta"], "nivel": " · ".join(detalle), "fuerza": fuerza,
+                 **({"como_leerlo": a["lectura"]} if a["lectura"] else {})})
 
         prefs = []
         for k, (imp, sentido) in normalizar(preferencias).items():
