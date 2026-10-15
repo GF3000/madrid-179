@@ -2,7 +2,7 @@
 // Arriba, foto y resumen de Wikipedia (con sus créditos) y, si hay asistente, lo mejor y lo peor redactado por el
 // LLM a partir de los mismos hechos que enseña la ficha.
 import { useEffect, useState } from "react";
-import { api, type Explicacion, type Ficha as TFicha, type Meta, type Negocio, type Peticion, type Wikipedia } from "../api";
+import { api, type AyudasFicha, type Explicacion, type Ficha as TFicha, type Meta, type Negocio, type Peticion, type Wikipedia } from "../api";
 import {
   factores, MOTIVOS, NODOS, nivel, palabraUtilidad, PALABRA_FUERZA, resumenFactores, type Factor, type Situacion,
 } from "../modelo";
@@ -105,6 +105,8 @@ export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticio
           <LecturaCausal ficha={ficha} meta={meta} />
         </>
       )}
+
+      {ficha.ayudas && <Ayudas a={ficha.ayudas} meta={meta} />}
 
       <Seccion titulo="Su perfil" nota="Cada rasgo, comparado con los 179 municipios: un tercio está en cada nivel.">
         <dl className="perfil">
@@ -247,6 +249,45 @@ function Preferencias({ ficha, pesos, meta, peticion }: {
           );
         })}
       </ul>
+    </Seccion>
+  );
+}
+
+/** Ayudas oficiales al alcance de la empresa o de su plantilla. Contexto: solo puntúan si el usuario lo pide. */
+function Ayudas({ a, meta }: { a: AyudasFicha; meta: Meta }) {
+  const pref = meta.catalogo.find((c) => c.clave === "ayudas")?.nombre ?? "Poder optar a ayudas";
+  return (
+    <Seccion titulo="Ayudas que pueden interesarte">
+      <div className="ayudas-ficha">
+        {a.leader && (
+          <p>
+            Está en el territorio del grupo LEADER <b>{a.leader.grupo}</b>, que convoca ayudas a proyectos en su zona,
+            también de empresas.{" "}
+            <span className="ayudas-enlaces">
+              <a className="enlace" href={a.leader.web} target="_blank" rel="noopener noreferrer">web del grupo</a>
+              {" · "}
+              <a className="enlace" href={a.leader.fuente} target="_blank" rel="noopener noreferrer">convenio en el BOCM</a>
+            </span>
+          </p>
+        )}
+        {a.irpf_menos_2500 && (
+          <p>
+            Si tú o tu equipo os trasladáis a vivir aquí o compráis vivienda, hay deducciones autonómicas en el IRPF
+            para municipios de menos de 2.500 habitantes (Ley 5/2024).
+          </p>
+        )}
+        {!a.leader && !a.irpf_menos_2500 && (
+          <p>
+            No está en ningún grupo LEADER ni por debajo de 2.500 habitantes. Puede haber otras convocatorias estatales
+            o regionales que no recogemos aquí.
+          </p>
+        )}
+        <small>
+          Lista verificada en el BOCM (habitantes según el padrón de {a.anio_padron}); no incluye convocatorias
+          puntuales. No forman parte de la puntuación del modelo: solo cuentan en el orden si das importancia
+          a «{pref}».
+        </small>
+      </div>
     </Seccion>
   );
 }

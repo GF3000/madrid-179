@@ -327,6 +327,9 @@ b, strong { font-weight: 650; }
 .combinados li { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; padding: 3px 0; color: var(--tinta-2); }
 .combinados .marcas { padding-top: 2px; }
 .lineas-pref li { padding: 4px 0; font-size: 13.5px; }
+.ayudas-ficha p { font-size: 13.5px; line-height: 1.55; margin: 0 0 8px; color: var(--tinta); }
+.ayudas-enlaces { white-space: nowrap; }
+.ayudas-ficha small { display: block; color: var(--tinta-3); font-size: 11.5px; line-height: 1.45; }
 
 .perfil { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; margin: 0; }
 .rasgo { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--linea); cursor: help; }
@@ -821,6 +824,30 @@ b, strong { font-weight: 650; }
   background: var(--pizarra-suave); color: var(--pizarra);
 }
 .chip-tipo.palanca { background: var(--tinta); color: #fff; }
+.filtros-contexto { display: flex; flex-direction: column; margin-bottom: 8px; }
+.filtros-contexto .pregunta-titulo small { font-weight: 400; color: var(--tinta-3); }
+.filtros-contexto .casilla { margin: 2px 0 6px; }
+.filtros-contexto .nota { margin: 0; }
+.contexto-politica {
+  display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 12px;
+  background: var(--papel); border: 1px dashed var(--linea-2);
+}
+.contexto-politica h4 { margin: 0; font-size: 12.5px; font-weight: 650; color: var(--tinta); }
+.contexto-subtitulo { margin-top: -6px; font-size: 11px; letter-spacing: 0.02em; color: var(--tinta-3); }
+.contexto-politica h5 { margin: 4px 0 0; font-size: 12px; font-weight: 650; color: var(--tinta-2); }
+.contexto-dato { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--tinta-2); }
+.contexto-cifra { display: flex; align-items: center; gap: 12px; padding: 2px 0; }
+.contexto-cifra .cifra {
+  font: 500 40px/0.9 var(--serif); letter-spacing: -0.03em; color: var(--tinta);
+  font-variant-numeric: lining-nums tabular-nums; padding-bottom: 6px; border-bottom: 2px solid currentColor;
+}
+.contexto-cifra.nula .cifra { color: var(--rojo); }
+.contexto-cifra .cifra-pie { font-size: 12px; line-height: 1.35; color: var(--tinta-2); }
+.contexto-lista { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.45; color: var(--tinta-2); }
+.contexto-lista li { padding: 2px 0; }
+.contexto-lista b { color: var(--tinta); }
+.contexto-lista .enlace { font-size: inherit; }
+.contexto-politica small { color: var(--tinta-3); font-size: 11.5px; line-height: 1.4; }
 .diagnostico-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 2px; }
 
 .en-desarrollo { opacity: 0.75; }

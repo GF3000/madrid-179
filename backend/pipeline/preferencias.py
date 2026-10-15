@@ -19,9 +19,12 @@ from madrid179.preferencias import IMPORTANCIA, pesos, puntuar, utilidad_ayudas,
 if __name__ == "__main__":
     rk = pd.read_csv("data/processed/bn_ranking_municipios.csv", sep=";", dtype={"ine5": str}, encoding="utf-8-sig").set_index("ine5")
     d = pd.read_csv("data/processed/dataset_bn_municipios.csv", sep=";", dtype={"ine5": str}, encoding="utf-8-sig").set_index("ine5")
+    # lista oficial de ayudas (backend/pipeline/ayudas_oficiales.py): LEADER = 1, solo < 2.500 hab. = 0,5
+    ay = pd.read_csv("data/processed/ayudas_oficiales.csv", sep=";", dtype=str, encoding="utf-8-sig",
+                     keep_default_na=False).set_index("ine5").loc[rk.index]
     S = rk.puntuacion / 100
     U = {"transporte": utilidad_transporte(d.loc[rk.index, "dist_ferro_km"]),
-         "ayudas": utilidad_ayudas(d.loc[rk.index, "nivel_ayudas_num"])}
+         "ayudas": utilidad_ayudas(ay.leader_gal, ay.irpf_menos_2500.eq("True"))}
     print(f"Candidatos: {len(S)} · sd(S) = {np.std(S):.3f} · sd(u transporte) = {np.std(U['transporte']):.3f} · sd(u ayudas) = {np.std(U['ayudas']):.3f}")
     print("\nPeso w de una sola preferencia y cuántos puntos de modelo compensa una utilidad máxima:")
     for k in U:

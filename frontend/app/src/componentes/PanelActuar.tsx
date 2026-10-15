@@ -1,18 +1,22 @@
 // Pestaña «Dónde actuar» (Administración): qué municipios necesitan actividad, cuáles pueden atraerla y qué les
 // frena. Diagnóstico de la situación 2020-2024 (/api/v1/diagnostico); no es un simulador ni habla de efectos.
 import { useEffect, useRef } from "react";
-import type { Diagnostico, IdCuadrante, MunicipioDiagnostico } from "../api";
+import type { ContextoPolitica, Diagnostico, IdCuadrante, MunicipioDiagnostico } from "../api";
 import { CUADRANTES, enPalabras, fuerza } from "../modelo";
 import { nombreLegible } from "./Ficha";
 import { Columna, MarcasFuerza, Segmentado } from "./piezas";
+import { Casilla } from "./PanelDecidir";
 import { useEsTactil } from "../movil";
 
 export interface Ambito {
   poblacion: "todas" | "menos2500" | "medio" | "mas20000";
   distancia: "da-igual" | "Cerca" | "Media" | "Lejos";
+  // filtros del contexto para la política (no del modelo): restringen la lista, los recuentos y el mapa
+  sinOficinas: boolean;
+  leader: boolean;
 }
 
-export const AMBITO_TODO: Ambito = { poblacion: "todas", distancia: "da-igual" };
+export const AMBITO_TODO: Ambito = { poblacion: "todas", distancia: "da-igual", sinOficinas: false, leader: false };
 
 const POBLACIONES = [
   { valor: "todas", etiqueta: "Todas" },
@@ -32,7 +36,9 @@ export function enAmbito(m: MunicipioDiagnostico, a: Ambito): boolean {
   const p = m.poblacion;
   const okPob = a.poblacion === "todas" || (a.poblacion === "menos2500" ? p < 2500
     : a.poblacion === "medio" ? p >= 2500 && p <= 20000 : p > 20000);
-  return okPob && (a.distancia === "da-igual" || m.distancia === a.distancia);
+  return okPob && (a.distancia === "da-igual" || m.distancia === a.distancia)
+    && (!a.sinOficinas || m.contexto.oficinas.locales === 0)
+    && (!a.leader || !!m.contexto.ayudas?.leader);
 }
 
 interface Props {
@@ -70,6 +76,9 @@ export default function PanelActuar(p: Props) {
   }
   const d = p.diagnostico;
   const dentro = d ? d.municipios.filter((m) => enAmbito(m, p.ambito)) : [];
+  const enElAmbito = d ? d.municipios.filter((m) => enAmbito(m, { ...p.ambito, sinOficinas: false, leader: false })).length : 0;
+  const filtrando = p.ambito.sinOficinas || p.ambito.leader;
+  const hayAyudas = !!d?.municipios.some((m) => m.contexto.ayudas);
   const lista = dentro.filter((m) => p.fijados.has(m.cuadrante)).sort((a, b) => b.necesidad - a.necesidad);
   const elegido = d?.municipios.find((m) => m.ine5 === p.diagnosticado) ?? null;
 
@@ -92,14 +101,26 @@ export default function PanelActuar(p: Props) {
           <Segmentado compacto nombre="Distancia a Madrid" opciones={DISTANCIAS} valor={p.ambito.distancia}
             onCambio={(v) => p.onAmbito({ ...p.ambito, distancia: v })} />
         </div>
-        {d && <p className="nota">{dentro.length === d.municipios.length
+        {d && <p className="nota">{enElAmbito === d.municipios.length
           ? `Los ${d.municipios.length} municipios del análisis (Madrid capital es la referencia y queda fuera).`
-          : `${dentro.length} de ${d.municipios.length} municipios dentro del ámbito.`}</p>}
+          : `${enElAmbito} de ${d.municipios.length} municipios dentro del ámbito.`}</p>}
       </div>
 
       <div className="bloque">
         <h3><span className="paso-n">2</span>Cuatro situaciones</h3>
         {!d && <div className="cargando-actuar"><span className="sombra-texto" /><span className="sombra-texto corto" /></div>}
+        {d && (
+          <div className="filtros-contexto">
+            <span className="pregunta-titulo">Solo los que… <small>(contexto, no modelo)</small></span>
+            <Casilla marcada={p.ambito.sinOficinas} onCambio={(v) => p.onAmbito({ ...p.ambito, sinOficinas: v })}
+              texto={<><b>Sin oficinas</b>: ningún local de oficinas en el Catastro</>} />
+            {hayAyudas && (
+              <Casilla marcada={p.ambito.leader} onCambio={(v) => p.onAmbito({ ...p.ambito, leader: v })}
+                texto={<><b>En LEADER</b>: dentro de un Grupo de Acción Local (2023-2027)</>} />
+            )}
+            {filtrando && <p className="nota">{dentro.length} de {enElAmbito} municipios del ámbito cumplen el filtro.</p>}
+          </div>
+        )}
         {d && (
           <div className="cuadrantes" onMouseLeave={() => previa(null)}>
             {d.cuadrantes.map((c) => {
@@ -123,7 +144,7 @@ export default function PanelActuar(p: Props) {
         )}
         {d && p.fijados.size > 0 && (
           lista.length === 0
-            ? <p className="nota">Ningún municipio del ámbito está en esta situación.</p>
+            ? <p className="nota">Ningún municipio del ámbito{filtrando ? " con estos filtros" : ""} está en esta situación.</p>
             : (
               <>
                 <p className="nota">De más a menos necesidad. Elige uno para ver su diagnóstico.</p>
@@ -161,6 +182,7 @@ export default function PanelActuar(p: Props) {
         <div className="pie-actuar">
           <p className="nota">{d.aviso}</p>
           <p className="nota"><b>Cómo se mide la necesidad.</b> {d.necesidad.nota}</p>
+          <p className="nota"><b>Contexto para la política.</b> {d.contexto_nota}</p>
         </div>
       )}
     </div>
@@ -216,11 +238,71 @@ function DiagnosticoMunicipio({ m, d, onPerfil, onFicha }: {
         </div>
       )}
 
+      <ContextoMunicipio c={m.contexto} cuadrante={m.cuadrante} />
+
       <div className="diagnostico-acciones">
         <button className="boton-secundario" onClick={() => onPerfil(m.ine5)}>Ver su perfil en la red</button>
         <button className="enlace" onClick={() => onFicha(m.ine5)}>Ficha completa</button>
       </div>
     </div>
+  );
+}
+
+// Contexto para la política: oficinas y programas oficiales. No sale del modelo ni dice qué efecto tendrían.
+function ContextoMunicipio({ c, cuadrante }: { c: ContextoPolitica; cuadrante: IdCuadrante }) {
+  const n = (x: number, dec = 0) => x.toLocaleString("es-ES", { maximumFractionDigits: dec });
+  const o = c.oficinas;
+  const a = c.ayudas;
+  const instrumentos = a ? [
+    a.leader && (
+      <li key="leader">
+        <b>LEADER 2023-2027</b>: grupo {a.leader.grupo} ·{" "}
+        <a className="enlace" href={a.leader.fuente} target="_blank" rel="noopener noreferrer">convenio en el BOCM</a>
+      </li>
+    ),
+    a.irpf_menos_2500 && <li key="irpf">Deducciones del IRPF por trasladarse o comprar vivienda (menos de 2.500 hab.)</li>,
+    a.pir_sin_cofinanciacion && <li key="pir"><b>PIR</b>: no cofinancia sus inversiones</li>,
+  ].filter(Boolean) : [];
+  return (
+    <section className="contexto-politica" aria-label="Contexto para la política">
+      <h4>Contexto para la política</h4>
+      <span className="contexto-subtitulo">Datos de contexto, no resultado del modelo</span>
+
+      <h5>Oficinas</h5>
+      {/* Cifra editorial: el dato manda, sin caja de alerta */}
+      <div className={`contexto-cifra${o.locales === 0 ? " nula" : ""}`}>
+        <span className="cifra">{n(o.locales)}</span>
+        <span className="cifra-pie">
+          {o.locales === 1 ? "local" : "locales"} de oficinas en el Catastro
+          {o.locales > 0 && <><br />{n(o.por_1000hab, 1)} por cada 1.000 hab.</>}
+        </span>
+      </div>
+      {o.locales === 0 && (
+        <p className="contexto-dato">
+          Hoy una empresa no tendría dónde instalarse.
+          {(cuadrante === "oportunidad" || cuadrante === "apoyo") &&
+            " Una política puede cubrirlo directamente: vivero, coworking o suelo para oficinas."}
+        </p>
+      )}
+      {o.coworking > 0 && (
+        <p className="contexto-dato">
+          {n(o.coworking)} {o.coworking === 1 ? "espacio" : "espacios"} de coworking según OpenStreetMap.
+        </p>
+      )}
+
+      <h5>Ayudas oficiales que le alcanzan</h5>
+      {!a
+        ? <p className="vacio">No disponibles ahora mismo.</p>
+        : instrumentos.length === 0
+          ? <p className="contexto-dato">No está en LEADER ni en los programas para municipios de menos de 2.500 habitantes.</p>
+          : <ul className="contexto-lista">{instrumentos}</ul>}
+      {a && (
+        <small>
+          {a.irpf_menos_2500 ? `Umbral de 2.500 hab. con el padrón a 1 de enero de ${a.anio_padron}. ` : ""}
+          Tener un programa no mide su efecto en la viabilidad.
+        </small>
+      )}
+    </section>
   );
 }
 

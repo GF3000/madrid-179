@@ -52,6 +52,21 @@ def test_ficha(cliente):
     assert suma == pytest.approx(f["ga2m"]["prediccion_pct"], abs=1e-3)
 
 
+@pytest.mark.parametrize("ine5, leader, irpf", [("28034", "GALSINMA (Sierra Norte)", True),  # Canencia
+                                                ("28122", None, True),                          # Ribatejada
+                                                ("28065", None, False)])                        # Getafe
+def test_ficha_ayudas(cliente, ine5, leader, irpf):
+    """Ayudas para la empresa o su gente: LEADER (con web y convenio) e IRPF; el PIR no se manda a la ficha."""
+    a = cliente.get(f"{API}/municipios/{ine5}").json()["ayudas"]
+    assert set(a) == {"leader", "irpf_menos_2500", "anio_padron"} and a["anio_padron"] == "2025"
+    assert a["irpf_menos_2500"] is irpf
+    if leader:
+        assert a["leader"]["grupo"] == leader and a["leader"]["web"].startswith("https://")
+        assert a["leader"]["fuente"].startswith("https://www.bocm.es/")
+    else:
+        assert a["leader"] is None
+
+
 def test_discrepancia(servicio):
     """El aviso aparece exactamente cuando los percentiles de la red y del GA²M distan ≥ 50 puntos."""
     from madrid179.servicio import UMBRAL_DISCREPANCIA

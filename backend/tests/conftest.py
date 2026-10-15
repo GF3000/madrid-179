@@ -17,6 +17,12 @@ def servicio(art):
 
 
 @pytest.fixture(scope="session")
+def tabla(servicio):
+    """La tabla del artefacto con las ayudas oficiales unidas (la que usa el ranking de la API)."""
+    return servicio.tabla
+
+
+@pytest.fixture(scope="session")
 def cliente():
     from api.main import app
     with TestClient(app) as c:

@@ -166,7 +166,7 @@ export default function PanelDecidir(p: Props) {
           )}
         </div>
         <Casilla marcada={filtros.solo_con_ayudas} onCambio={(m) => ponerFiltro({ solo_con_ayudas: m })}
-          texto="Solo municipios donde haya ayudas por tamaño" />
+          texto="Solo municipios con ayudas verificadas (LEADER o menos de 2.500 hab.)" />
         <Casilla marcada={filtros.con_coworking} onCambio={(m) => ponerFiltro({ con_coworking: m })}
           texto="Solo municipios con coworking" />
       </div>
@@ -240,7 +240,7 @@ function Reparto({ pesos, activas, tope }: { pesos: Record<string, number>; acti
   );
 }
 
-function Casilla({ marcada, onCambio, texto }: { marcada: boolean; onCambio: (m: boolean) => void; texto: React.ReactNode }) {
+export function Casilla({ marcada, onCambio, texto }: { marcada: boolean; onCambio: (m: boolean) => void; texto: React.ReactNode }) {
   return (
     <label className="casilla">
       <input type="checkbox" checked={marcada} onChange={(e) => onCambio(e.target.checked)} />

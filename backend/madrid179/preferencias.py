@@ -13,7 +13,8 @@ Ahora hasta tres preferencias «muy importantes» cuentan enteras y el modelo pe
 
 "Imprescindible" no es un peso: es un filtro duro (ranking.candidatos). "No lo sé" = peso 0.
 
-Utilidades: tren y ayudas conservan su forma calibrada (#38, #12). El resto usa el percentil del dato entre
+Utilidades: el tren conserva su forma calibrada (#38) y las ayudas usan la lista oficial verificada en el BOCM
+(data/processed/ayudas_oficiales.csv, ver utilidad_ayudas). El resto usa el percentil del dato entre
 los candidatos (robusto a colas largas como la población), invertido si "menos es mejor". Las preferencias con
 dos sentidos (cerca o lejos de Madrid, municipio grande o pequeño) se invierten con el sentido elegido.
 """
@@ -32,9 +33,46 @@ def utilidad_transporte(dist_ferro_km, bueno_km=2.0, malo_km=15.0):
     return ((malo_km - np.clip(dist_ferro_km, bueno_km, malo_km)) / (malo_km - bueno_km)).astype(float)
 
 
-def utilidad_ayudas(nivel_ayudas_num):
-    """Bajo = 0, Medio = 0,5, Alto = 1 (columna nivel_ayudas_num del dataset)."""
-    return pd.Series(nivel_ayudas_num, dtype=float)
+def utilidad_ayudas(leader_gal, irpf_menos_2500):
+    """1 si el municipio está en un grupo LEADER, 0,5 si no lo está pero tiene menos de 2.500 habitantes, 0 si no.
+
+    Decisión del 2026-10-15 (antes: tramo de población, nivel_ayudas_num): LEADER 2023-2027 es la única ayuda de la
+    lista verificada que financia proyectos de empresas; las deducciones autonómicas del IRPF para municipios de
+    menos de 2.500 habitantes (Ley 5/2024) son para las personas que se trasladan o compran vivienda, así que valen
+    la mitad. El PIR no cuenta: financia obras municipales. Columnas de ayudas_oficiales.csv (ver unir_ayudas)."""
+    leader = pd.Series(leader_gal, dtype=object).fillna("").astype(str).str.strip() != ""
+    irpf = pd.Series(irpf_menos_2500, dtype=object).fillna(False).astype(bool)
+    return pd.Series(np.where(leader, 1.0, np.where(irpf, 0.5, 0.0)), index=leader.index, dtype=float)
+
+
+COLUMNAS_AYUDAS = ("leader_gal", "irpf_menos_2500")  # las añade unir_ayudas: no están en el dataset del modelo
+
+
+def unir_ayudas(tabla, ayudas):
+    """Añade a la tabla del artefacto las columnas de ayudas oficiales que leen la preferencia «ayudas» y el filtro
+    solo_con_ayudas. `ayudas`: ayudas_oficiales.csv leído como texto e indexado por ine5, o None si falta el fichero.
+    Sin fichero la tabla queda igual: la preferencia vale 0 en todos (peso 0, no cambia el orden) y el filtro
+    «imprescindible» no deja ningún candidato, porque no hay ninguna ayuda verificada que mostrar."""
+    if ayudas is None:
+        return tabla
+    a = ayudas.reindex(tabla.index)
+    return tabla.assign(leader_gal=a.leader_gal.fillna(""), irpf_menos_2500=a.irpf_menos_2500.eq("True"))
+
+
+def ayudas_en(c):
+    """Utilidad de las ayudas en los municipios c; 0 en todos si la tabla no trae las columnas (sin el CSV:
+    Servicio ya lo avisa en el log al arrancar)."""
+    if not set(COLUMNAS_AYUDAS) <= set(c.columns):
+        return pd.Series(0.0, index=c.index)
+    return utilidad_ayudas(c.leader_gal, c.irpf_menos_2500)
+
+
+def _dato_ayudas(r):
+    if "leader_gal" not in r.index:
+        return "sin datos de ayudas oficiales"
+    if r.leader_gal:
+        return f"en LEADER ({r.leader_gal})"
+    return "menos de 2.500 hab. (deducciones del IRPF)" if r.irpf_menos_2500 else "sin ayudas verificadas"
 
 
 def percentil(x, mas_es_mejor=True):
@@ -92,10 +130,10 @@ CATALOGO = [
                 ("vc_residencial_por_uu",), lambda c: percentil(c.vc_residencial_por_uu, mas_es_mejor=False),
                 lambda r: f"valor catastral medio {_num(r.vc_residencial_por_uu)} mil €", en_modelo=True),
     Preferencia("ayudas", "Poder optar a ayudas", "Coste y ayudas",
-                "Ayudas al reequilibrio territorial por tamaño: más en municipios de menos de 20.000 y de 2.500 habitantes.",
-                ("nivel_ayudas_num",), lambda c: utilidad_ayudas(c.nivel_ayudas_num),
-                lambda r: {"Alto": "acceso amplio a ayudas", "Medio": "acceso parcial a ayudas",
-                           "Bajo": "sin ayudas por tamaño"}.get(r.nivel_ayudas, r.nivel_ayudas)),
+                "Ayudas oficiales verificadas en el BOCM: cuenta entera si el municipio está en un grupo LEADER, que "
+                "subvenciona proyectos de empresas en zonas rurales, y la mitad si solo tiene menos de 2.500 "
+                "habitantes, donde hay deducciones del IRPF para quien se traslada a vivir o compra vivienda.",
+                COLUMNAS_AYUDAS, ayudas_en, _dato_ayudas),
     # ------------------------------------------------------------- plantilla y talento
     Preferencia("talento", "Talento cualificado", "Plantilla y talento",
                 "Población con estudios superiores.",
@@ -145,7 +183,8 @@ CATALOGO = [
 ]
 POR_CLAVE = {p.clave: p for p in CATALOGO}
 PREFERENCIAS = [p.clave for p in CATALOGO]
-COLUMNAS = sorted({c for p in CATALOGO for c in p.columnas} | {"nivel_ayudas"})
+# Columnas del dataset que guarda el artefacto (las de ayudas oficiales se unen al cargar el servicio)
+COLUMNAS = sorted({c for p in CATALOGO for c in p.columnas} - set(COLUMNAS_AYUDAS) | {"nivel_ayudas"})
 
 
 def normalizar(preferencias):

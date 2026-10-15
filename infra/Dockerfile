@@ -41,7 +41,7 @@ RUN python backend/pipeline/entrenar.py && CI=1 python -m pytest backend/tests -
 # --- 4. Imagen final: solo lo que sirve la API ---
 FROM base
 COPY data/processed/dataset_bn_municipios.csv data/processed/municipios.geojson \
-     data/processed/wikipedia_municipios.json data/processed/
+     data/processed/wikipedia_municipios.json data/processed/ayudas_oficiales.csv data/processed/
 COPY --from=modelo /srv/data/processed/modelo.joblib data/processed/
 COPY frontend/prototipo frontend/prototipo
 COPY --from=app /src/frontend/app/dist frontend/app/dist

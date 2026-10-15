@@ -14,7 +14,7 @@ class PreferenciaUsuario(BaseModel):
 
 class Filtros(BaseModel):
     estacion_max_km: float | None = Field(None, ge=0, description="Imprescindible: estación ferroviaria a ≤ X km")
-    solo_con_ayudas: bool = Field(False, description="Imprescindible: excluir municipios sin ayudas (nivel Bajo)")
+    solo_con_ayudas: bool = Field(False, description="Imprescindible: solo municipios en LEADER o con menos de 2.500 hab.")
     madrid_max_km: float | None = Field(None, ge=0, description="Imprescindible: a ≤ X km de la Puerta del Sol")
     madrid_min_km: float | None = Field(None, ge=0, description="Imprescindible: a ≥ X km de la Puerta del Sol")
     poblacion_min: int | None = Field(None, ge=0, description="Imprescindible: al menos X habitantes")
@@ -157,6 +157,19 @@ class Wikipedia(BaseModel):
     imagen: Imagen | None
 
 
+class LeaderFicha(BaseModel):
+    grupo: str = Field(description="Grupo de Acción Local")
+    fuente: str = Field(description="Convenio en el BOCM")
+    web: str = Field(description="Web del grupo, donde publica sus convocatorias")
+
+
+class AyudasFicha(BaseModel):
+    """Ayudas oficiales que alcanzan a una empresa o a su gente (sin el PIR, que financia obras municipales)."""
+    leader: LeaderFicha | None
+    irpf_menos_2500: bool = Field(description="Deducciones autonómicas del IRPF por traslado y compra de vivienda")
+    anio_padron: str = Field(description="Padrón a 1 de enero con que se aplica el umbral de 2.500 habitantes")
+
+
 class Ficha(BaseModel):
     ine5: str
     municipio: str
@@ -171,6 +184,7 @@ class Ficha(BaseModel):
     discrepancia: str | None
     preferencias: dict[str, PreferenciaFicha]
     wikipedia: Wikipedia | None = Field(None, description="Resumen (CC BY-SA 4.0) y foto de Commons con su licencia")
+    ayudas: AyudasFicha | None = Field(None, description="null si falta data/processed/ayudas_oficiales.csv")
 
 
 class MunicipioConsulta(BaseModel):
@@ -260,6 +274,30 @@ class Freno(BaseModel):
     lectura: str | None
 
 
+class OficinasContexto(BaseModel):
+    locales: int = Field(description="Locales de uso oficinas en el Catastro")
+    por_1000hab: float
+    coworking: int = Field(description="Espacios de coworking en OpenStreetMap (muy incompleto)")
+
+
+class Leader(BaseModel):
+    grupo: str = Field(description="Grupo de Acción Local")
+    fuente: str = Field(description="Convenio en el BOCM")
+
+
+class AyudasContexto(BaseModel):
+    leader: Leader | None
+    irpf_menos_2500: bool = Field(description="Deducciones autonómicas del IRPF por traslado y compra de vivienda")
+    pir_sin_cofinanciacion: bool = Field(description="PIR 2022-2026: no cofinancia sus inversiones")
+    anio_padron: str = Field(description="Padrón a 1 de enero con que se aplica el umbral de 2.500 habitantes")
+
+
+class ContextoPolitica(BaseModel):
+    """Datos de contexto, no resultado del modelo."""
+    oficinas: OficinasContexto
+    ayudas: AyudasContexto | None = Field(description="null si falta data/processed/ayudas_oficiales.csv")
+
+
 class MunicipioDiagnostico(BaseModel):
     ine5: str
     municipio: str
@@ -272,6 +310,7 @@ class MunicipioDiagnostico(BaseModel):
     cuadrante: Literal["oportunidad", "apoyo", "autonomo", "vigilar"]
     frenos: list[Freno]
     freno_palanca: Freno | None
+    contexto: ContextoPolitica
 
 
 class RespuestaDiagnostico(BaseModel):
@@ -280,3 +319,4 @@ class RespuestaDiagnostico(BaseModel):
     necesidad: Necesidad
     cuadrantes: list[Cuadrante]
     municipios: list[MunicipioDiagnostico]
+    contexto_nota: str

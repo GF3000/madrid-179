@@ -3,6 +3,7 @@
 No depende de FastAPI: los tests y cualquier otro cliente pueden usarlo directamente.
 """
 import json
+import logging
 import re
 
 import numpy as np
@@ -14,12 +15,14 @@ from . import diagnostico as diag
 from .config import (AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, FUERZA, LECTURAS, NODOS, OBJETIVO, PADRES_OBJETIVO,
                      PARA_QUIEN_SE_INSTALA, RAIZ, SENAL_DUDOSA)
 from .preferencias import (CATALOGO, IMPORTANCIA, POR_CLAVE, PREFERENCIAS, TOPE_PREFERENCIAS, catalogo_publico,
-                           normalizar)
+                           normalizar, unir_ayudas)
 from .ranking import rankear
 from .red import distribucion
 
 UMBRAL_DISCREPANCIA = 50  # puntos de percentil entre la red y el GA²M
 WIKIPEDIA = RAIZ / "data" / "processed" / "wikipedia_municipios.json"  # backend/pipeline/descargar_wikipedia.py
+AYUDAS = RAIZ / "data" / "processed" / "ayudas_oficiales.csv"  # backend/pipeline/ayudas_oficiales.py
+log = logging.getLogger(__name__)
 MOTIVOS = {"excluir_madrid_capital": "la capital queda fuera a propósito: el objetivo es llevar actividad al resto de la región",
            "min_uu_oficinas": "no tiene ningún local de oficinas en el Catastro"}
 NODOS_LEGIBLES = {
@@ -37,12 +40,26 @@ class ErrorEvidencia(ValueError):
 class Servicio:
     def __init__(self, art):
         self.art = art
-        self.tabla = art["tabla"]
+        self.ayudas = self._leer_ayudas()
+        # las ayudas oficiales no están en el artefacto: se unen antes del ranking (preferencia y filtro «ayudas»)
+        self.tabla = unir_ayudas(art["tabla"], self.ayudas)
         self.inferencia = VariableElimination(art["red"])
         self.base, _ = rankear(self.tabla)  # ranking por defecto (sin preferencias ni filtros del usuario)
         self.wikipedia = json.loads(WIKIPEDIA.read_text(encoding="utf-8")) if WIKIPEDIA.exists() else {}
         self.tercios = {c: self.tabla[c].quantile([1 / 3, 2 / 3]).tolist() for c in PARA_QUIEN_SE_INSTALA}
         self._diagnostico = None
+
+    @staticmethod
+    def _leer_ayudas():
+        """Programas oficiales por municipio: contexto del diagnóstico y de la ficha, y dato de la preferencia y del
+        filtro «ayudas». Si falta el fichero, diagnóstico y ficha salen sin ese bloque (`ayudas: null`), la
+        preferencia vale 0 en todos y el filtro no deja candidatos; se avisa en el log. No es parte del modelo."""
+        if not AYUDAS.exists():
+            log.warning("No está %s: sin ayudas oficiales en el diagnóstico ni en la ficha, la preferencia «ayudas» "
+                        "no puntúa y el filtro no deja candidatos (generarlo con backend/pipeline/ayudas_oficiales.py)",
+                        AYUDAS)
+            return None
+        return pd.read_csv(AYUDAS, sep=";", dtype=str, encoding="utf-8-sig", keep_default_na=False).set_index("ine5")
 
     def para_quien_se_instala(self, termino, r):
         """'ventaja' / 'inconveniente' de un valor para quien se instala (tercio superior o inferior), o None."""
@@ -142,7 +159,16 @@ class Servicio:
             "discrepancia": discrepancia,
             "preferencias": self._preferencias(ine5),
             "wikipedia": self.wikipedia.get(ine5),
+            "ayudas": self._ayudas_empresa(ine5),
         }
+
+    def _ayudas_empresa(self, ine5):
+        """Ayudas oficiales que alcanzan a una empresa o a su gente (sin el PIR, que financia obras municipales)."""
+        if self.ayudas is None or ine5 not in self.ayudas.index:
+            return None
+        a = self.ayudas.loc[ine5]
+        return {"leader": {"grupo": a.leader_gal, "fuente": a.leader_fuente, "web": a.leader_web} if a.leader_gal else None,
+                "irpf_menos_2500": a.irpf_menos_2500 == "True", "anio_padron": a.anio_padron}
 
     def _preferencias(self, ine5):
         """Dato y utilidad (0-1, entre los candidatos por defecto) de cada preferencia, en cada sentido."""
@@ -210,7 +236,7 @@ class Servicio:
     def diagnostico(self):
         """Diagnóstico territorial de la Administración (madrid179/diagnostico.py); se calcula una vez."""
         if self._diagnostico is None:
-            self._diagnostico = diag.diagnostico(self.tabla, self.art["aportaciones"], self.base.index)
+            self._diagnostico = diag.diagnostico(self.tabla, self.art["aportaciones"], self.base.index, self.ayudas)
         return self._diagnostico
 
     # -------------------------------------------------------------- consulta
