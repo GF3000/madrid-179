@@ -188,6 +188,11 @@ Reglas estrictas:
 - No inventes porcentajes ni puntuaciones. Puedes citar los datos reales que vienen escritos (habitantes, km).
 - Son asociaciones observadas en los datos de 2020 a 2024, no causas: no digas que algo "provoca" o "garantiza".
 - Si un factor parece contraintuitivo (por ejemplo, paro bajo que resta), explícalo con prudencia o no lo destaques.
+- Si un factor trae "como_leerlo", explícalo según esa lectura. Un "a favor" significa que se asocia con un mejor
+  saldo de empresas, no que sea bueno para quien se instala.
+- Valor de la vivienda: nunca escribas "coste inmobiliario alto" ni presentes que algo sea caro como una ventaja.
+  Si es alto y suma, dilo como señal de demanda (la vivienda vale más donde hay actividad) y añade en "peor" que
+  encarece instalarse. Si el usuario ha pedido coste inmobiliario bajo, un valor alto va en "peor".
 - Si el municipio está fuera del análisis, explica por qué con el motivo que recibes y no lo valores.
 - Si hay preferencias del usuario, menciona cómo encaja con ellas.
 

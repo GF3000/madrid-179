@@ -105,6 +105,7 @@ export interface Aportacion {
   etiqueta: string;
   aportacion_pp: number;
   valores: Record<string, number>;
+  lectura: string | null;  // cómo leerla cuando el signo puede confundir
 }
 
 export interface Ficha {

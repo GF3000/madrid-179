@@ -13,26 +13,30 @@ export interface Clase {
   orden: number;
 }
 
-// Cinco grupos por posición entre los candidatos (quintiles), del rojo intenso de la bandera al rosa pálido.
+// Cinco grupos por posición entre los candidatos (quintiles). Rampa de un solo tono (el carmesí de la bandera) con la
+// luminosidad OKLCH repartida (0,37 · 0,53 · 0,69 · 0,85 · 0,92) y la saturación que cae después de «Favorable»
+// (0,15 · 0,21 · 0,10 · 0,04 · 0,01): solo los dos grupos buenos se leen como rojos y los de abajo se funden con el
+// papel. La altura crece más que en línea recta para que los mejores sobresalgan. Los dos grupos que no compiten van
+// en gris frío, fuera de la rampa.
 export const CLASES: Clase[] = [
-  { id: "c0", orden: 0, nombre: "Muy favorable", color: [138, 10, 31], altura: 7200,
+  { id: "c0", orden: 0, nombre: "Muy favorable", color: [122, 0, 24], altura: 9000,
     resumen: "Está en el grupo de municipios con mejores condiciones para abrir una oficina." },
-  { id: "c1", orden: 1, nombre: "Favorable", color: [200, 16, 46], altura: 5400,
+  { id: "c1", orden: 1, nombre: "Favorable", color: [200, 16, 46], altura: 5600,
     resumen: "Reúne buenas condiciones: por encima de la mayoría de municipios de la región." },
-  { id: "c2", orden: 2, nombre: "Intermedio", color: [226, 98, 108], altura: 3700,
+  { id: "c2", orden: 2, nombre: "Intermedio", color: [210, 132, 124], altura: 3000,
     resumen: "Condiciones en la media de la región: con puntos a favor y en contra equilibrados." },
-  { id: "c3", orden: 3, nombre: "Menos favorable", color: [238, 163, 158], altura: 2200,
+  { id: "c3", orden: 3, nombre: "Menos favorable", color: [228, 198, 188], altura: 1300,
     resumen: "Algunos factores clave le restan atractivo frente a otros municipios." },
-  { id: "c4", orden: 4, nombre: "Poco favorable", color: [245, 210, 202], altura: 1100,
+  { id: "c4", orden: 4, nombre: "Poco favorable", color: [234, 226, 218], altura: 500,
     resumen: "Hoy reúne menos condiciones que el resto para una oficina; puede cambiar con tus preferencias." },
 ];
 
 export const FILTRADO: Clase = {
-  id: "filtrado", orden: 5, nombre: "No cumple tus requisitos", color: [204, 197, 188], altura: 260,
+  id: "filtrado", orden: 5, nombre: "No cumple tus requisitos", color: [188, 195, 204], altura: 150,
   resumen: "Lo descartan los requisitos imprescindibles que has marcado.",
 };
 export const FUERA: Clase = {
-  id: "fuera", orden: 6, nombre: "Fuera del análisis", color: [226, 220, 212], altura: 90,
+  id: "fuera", orden: 6, nombre: "Fuera del análisis", color: [210, 214, 219], altura: 80,
   resumen: "No entra en la comparación por decisión de diseño.",
 };
 
@@ -81,7 +85,7 @@ export const NODOS: Record<string, InfoNodo> = {
     estados: { Bajo: "bajo", Medio: "medio", Alto: "alto" } },
   Acceso_Ferroviario: { nombre: "Tren", que: "Si el municipio tiene estación de Cercanías, Metro o Metro Ligero.",
     estados: { No: "sin estación", Si: "con estación" } },
-  Coste_Inmobiliario: { nombre: "Valor inmobiliario", que: "Valor catastral medio de la vivienda.",
+  Coste_Inmobiliario: { nombre: "Valor de la vivienda", que: "Valor catastral medio de la vivienda: indica demanda y, a la vez, lo caro que es instalarse.",
     estados: { Bajo: "bajo", Medio: "medio", Alto: "alto" } },
   Renta: { nombre: "Renta", que: "Renta disponible por habitante.",
     estados: { Baja: "baja", Media: "media", Alta: "alta" } },
@@ -150,6 +154,7 @@ export interface Factor {
   fuerza: Fuerza;
   combinado: boolean;
   columnas: string[];
+  lectura: string | null;
 }
 
 export function factores(aportaciones: Aportacion[], estados: Record<string, string>): Factor[] {
@@ -167,6 +172,7 @@ export function factores(aportaciones: Aportacion[], estados: Record<string, str
       fuerza: f,
       combinado,
       columnas: cols,
+      lectura: a.lectura ?? null,
     });
   }
   return salida;

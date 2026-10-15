@@ -86,7 +86,7 @@ export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticio
                 <h4>Combinaciones que también cuentan</h4>
                 <ul>
                   {combinados.map((f) => (
-                    <li key={f.termino}>
+                    <li key={f.termino} title={f.lectura ?? undefined}>
                       <MarcasFuerza fuerza={f.fuerza} signo={f.signo} />
                       <span>{f.titulo} ({f.detalle}) {f.signo > 0 ? "suman" : "restan"} {PALABRA_FUERZA[f.fuerza]}</span>
                     </li>
@@ -192,6 +192,7 @@ function ListaFactores({ titulo, lista, vacio }: { titulo: string; lista: Factor
               <MarcasFuerza fuerza={f.fuerza} signo={f.signo} />
               <span className="factor-titulo">{f.titulo}</span>
               <span className="factor-detalle">{f.detalle}</span>
+              {f.lectura && <span className="factor-lectura">{f.lectura}</span>}
             </li>
           ))}
         </ul>
