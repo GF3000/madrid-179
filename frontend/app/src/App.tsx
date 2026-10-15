@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { api, type Consulta, type Diagnostico, type Ficha as TFicha, type Geometria, type IdCuadrante, type Interpretacion,
   type Meta, type Municipio, type Negocio, type Peticion, type Ranking } from "./api";
 import { clasificar, describirFiltro, FILTROS_VACIOS, palabraImportancia, situacionesActuar, type Situacion } from "./modelo";
@@ -9,9 +9,11 @@ import PanelPerfiles from "./componentes/PanelPerfiles";
 import PanelActuar, { AMBITO_TODO, enAmbito, type Ambito } from "./componentes/PanelActuar";
 import Intro from "./componentes/Intro";
 import Viaje, { DURACION_VIAJE, origenesTarjeta, type Trayecto } from "./componentes/Viaje";
-import Recorrido, { type Parada } from "./componentes/Recorrido";
-import Navegacion, { type Dialogo, type Modo } from "./componentes/Navegacion";
+import Recorrido, { huecoTarjetaMovil, type Parada } from "./componentes/Recorrido";
+import Navegacion, { BotonesInfo, ModosMovil, type Dialogo, type Modo } from "./componentes/Navegacion";
 import { AcercaDe, AvisoMapa, Buscador, ComoFunciona, ControlesMapa, Etiqueta, Leyenda, Marca, VentanaVideo } from "./componentes/Contorno";
+import Asa from "./componentes/Asa";
+import { esMovil, useEsMovil } from "./movil";
 
 const PETICION_INICIAL: Peticion = { preferencias: {}, filtros: FILTROS_VACIOS };
 const ANCHO_NAV = 68; // barra de navegación vertical
@@ -22,6 +24,11 @@ const IZQ_PANEL = 16 + ANCHO_NAV + 8 + ANCHO_PANEL + 16;
 const IZQ_SIN_PANEL = 16 + ANCHO_NAV + 16;
 const TOP_RECORRIDO = 5; // municipios que visita el recorrido tras el asistente
 const TITULOS: Record<Modo, string> = { decidir: "Dónde abrir", actuar: "Dónde actuar", perfiles: "Explorar perfiles" };
+// Móvil: el panel es una hoja inferior plegada (marca, buscador y modos), media o casi completa; la ficha, otra hoja
+// encima. Fracciones del alto de la ventana
+const HOJA_MEDIA = 0.55;
+const HOJA_COMPLETA = 0.92;
+const FICHA_MEDIA = 0.7;
 
 interface Datos {
   meta: Meta;
@@ -64,6 +71,33 @@ export default function App() {
   const previa = useRef<Map<string, Situacion> | null>(null);
   const motivo = useRef("");
 
+  // ------------------------------------------------------ móvil: hojas inferiores
+  const movil = useEsMovil();
+  const [hoja, setHoja] = useState(0); // panel: 0 plegada · 1 media · 2 completa
+  const [hojaFicha, setHojaFicha] = useState(0); // ficha: 0 media · 1 completa
+  const [alto, setAlto] = useState(() => innerHeight);
+  const [plegada, setPlegada] = useState(180); // px hasta el pie de las pestañas, medido
+  const appRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const fichaRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const medir = () => setAlto(innerHeight);
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, []);
+  const alturasPanel = useMemo(() => {
+    const media = Math.max(plegada + 60, Math.round(alto * HOJA_MEDIA));
+    return [plegada, media, Math.max(media + 40, Math.round(alto * HOJA_COMPLETA))];
+  }, [plegada, alto]);
+  const alturasFicha = useMemo(() => [Math.round(alto * FICHA_MEDIA), Math.round(alto * HOJA_COMPLETA)], [alto]);
+  // px tapados por abajo: la tarjeta del recorrido, la ficha o el panel (lo que esté delante)
+  const abajo = !movil ? 0 : recorrido ? huecoTarjetaMovil(alto) : seleccionado ? alturasFicha[hojaFicha] : alturasPanel[hoja];
+  const abajoRef = useRef(abajo);
+  abajoRef.current = abajo;
+  // --abajo en .app coloca la leyenda encima de la hoja; durante un arrastre lo mueve el asa sin pasar por React
+  const moverAbajo = useCallback((px: number) => appRef.current?.style.setProperty("--abajo", `${Math.round(px)}px`), []);
+  useLayoutEffect(() => { if (movil) moverAbajo(abajo); else appRef.current?.style.removeProperty("--abajo"); });
+
   // ------------------------------------------------------------- carga
   useEffect(() => {
     Promise.all([api.meta(), api.municipios(), api.geometria(), api.ranking(PETICION_INICIAL),
@@ -92,6 +126,10 @@ export default function App() {
   const [negocio, setNegocio] = useState<Negocio | null>(null); // lo que contó de su negocio: adapta las explicaciones
   const aplicarAsistente = useCallback((i: Interpretacion) => {
     antesDelAsistente.current = { peticion, negocio };
+    if (esMovil()) { // fuera el teclado y la hoja a media altura: que se vean el mapa, las estrellas y el recorrido
+      (document.activeElement as HTMLElement | null)?.blur();
+      setHoja(1);
+    }
     setNegocio(i.sector || i.resumen ? { sector: i.sector, resumen: i.resumen } : null);
     desdeAsistente.current = true;
     const preferencias = Object.fromEntries(Object.entries(i.preferencias)
@@ -135,7 +173,8 @@ export default function App() {
         };
         // Con el asistente, las columnas se mueven cuando llegan las estrellas
         const trayectos = desdeAsistente.current
-          ? trayectosAsistente(lista, nuevas, datos.geometria, mandoRef.current, seleccionadoRef.current !== null) : [];
+          ? trayectosAsistente(lista, nuevas, datos.geometria, mandoRef.current,
+            zonaVisible(seleccionadoRef.current !== null, abajoRef.current)) : [];
         desdeAsistente.current = false;
         if (trayectos.length === 0) return aplicar();
         setViajes(trayectos);
@@ -153,6 +192,13 @@ export default function App() {
     api.ficha(seleccionado).then((f) => vigente && setFicha(f)).catch(() => vigente && setSeleccionado(null));
     return () => { vigente = false; };
   }, [seleccionado]);
+
+  // Móvil: al abrir una ficha, su hoja empieza a media altura y el panel deja de ocupar casi toda la pantalla
+  useEffect(() => {
+    if (!movil || !seleccionado) return;
+    setHojaFicha(0);
+    setHoja((h) => Math.min(h, 1));
+  }, [seleccionado, movil]);
 
   useEffect(() => {
     const enlace = () => {
@@ -203,6 +249,7 @@ export default function App() {
     if (i && diagnostico && !diagnostico.municipios.some((m) => m.ine5 === i)) return setSeleccionado(i);
     setDiagnosticado(i);
     if (i) setPanelAbierto(true);
+    if (i && esMovil()) setHoja((h) => Math.max(h, 1)); // en móvil, la hoja sube para que se lea el diagnóstico
     if (i && seleccionado) setSeleccionado(i);
   }, [diagnostico, seleccionado]);
   const seleccionar = pestana === "actuar" ? diagnosticar : setSeleccionado;
@@ -269,6 +316,15 @@ export default function App() {
 
   const porIne = useMemo(() => new Map(datos?.municipios.map((m) => [m.ine5, m])), [datos]);
 
+  // Altura plegada: justo hasta el pie de los modos (más el margen seguro de abajo)
+  const montada = !!datos && !!ranking && intro !== "carga";
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const nav = panel?.querySelector<HTMLElement>(".pestanas");
+    if (!movil || !panel || !nav) return;
+    setPlegada(Math.round(nav.offsetTop + nav.offsetHeight + parseFloat(getComputedStyle(panel).paddingBottom || "0") + 4));
+  }, [movil, montada, alto]);
+
   if (error && !datos) return <div className="pantalla-aviso"><Marca /><p>{error}</p></div>;
   // La intro tapa la carga; cuando entra el carmesí de la bandera se monta la app por debajo
   const pantallaIntro = intro !== "fin" && (
@@ -276,20 +332,38 @@ export default function App() {
   if (!datos || !ranking || intro === "carga") return pantallaIntro;
   const izquierda = panelAbierto ? IZQ_PANEL : IZQ_SIN_PANEL;
 
+  const fichaEl = seleccionado && (
+    <Ficha ficha={ficha?.ine5 === seleccionado ? ficha : null} cargando={false}
+      situacion={situaciones.get(seleccionado)} meta={datos.meta} pesos={ranking.pesos} peticion={peticion}
+      negocio={negocio} onCerrar={() => setSeleccionado(null)} />);
+  // En móvil, cambiar de modo con la hoja plegada la abre para ver el contenido
+  const elegirModoMovil = (m: Modo) => {
+    if (m !== pestana) cambiarModo(m);
+    setHoja((h) => Math.max(h, 1));
+  };
+
   return (<>
-    <div className={`app${seleccionado ? " con-ficha" : ""}${intro !== "fin" ? " intro-activa" : ""}${recorrido ? " recorriendo" : ""}`}
-      style={{ ["--izq" as string]: `${izquierda}px` }}>
+    <div ref={appRef} className={`app${seleccionado ? " con-ficha" : ""}${intro !== "fin" ? " intro-activa" : ""}${recorrido ? " recorriendo" : ""}${movil ? ` hoja-${NOMBRES_HOJA[hoja]}` : ""}`}
+      style={movil ? undefined : { ["--izq" as string]: `${izquierda}px` }}>
       <Mapa geometria={datos.geometria} situaciones={situacionesMapa}
         seleccionado={seleccionado ?? (pestana === "actuar" ? diagnosticado : null)} destacado={destacado}
         resaltados={resaltados} etiquetas={etiquetas} onSeleccionar={seleccionar} onPasar={setPasando}
         onCamara={setCamara} onMando={setMando} entrar={intro === "fin"}
-        margenes={{ izquierda: izquierda, derecha: seleccionado ? ANCHO_FICHA + 32 : 0 }} />
+        margenes={movil ? { izquierda: 0, derecha: 0, abajo }
+          : { izquierda: izquierda, derecha: seleccionado ? ANCHO_FICHA + 32 : 0 }} />
 
-      <Navegacion modo={pestana} abierto={panelAbierto} onModo={elegirModo} onDialogo={setDialogo} />
-      <aside className={`panel${panelAbierto ? "" : " plegado"}`} style={{ width: ANCHO_PANEL, left: 16 + ANCHO_NAV + 8 }}>
-        <Marca />
+      {/* en móvil no cabe la barra lateral: los modos van en la hoja y la información, junto a la marca */}
+      {!movil && <Navegacion modo={pestana} abierto={panelAbierto} onModo={elegirModo} onDialogo={setDialogo} />}
+      <aside className={`panel${panelAbierto || movil ? "" : " plegado"}`} ref={panelRef}
+        style={movil ? undefined : { width: ANCHO_PANEL, left: 16 + ANCHO_NAV + 8 }}
+        onFocus={movil ? (e) => { if ((e.target as HTMLElement).matches("input, textarea")) setHoja(2); } : undefined}>
+        {movil && <Asa hoja={panelRef} alturas={alturasPanel} indice={hoja} onIndice={setHoja} onMover={moverAbajo}
+          etiqueta={hoja < 2 ? "Ampliar el panel" : "Plegar el panel"} />}
+        <Marca>{movil && <BotonesInfo onDialogo={setDialogo} />}</Marca>
         <Buscador municipios={datos.municipios} onSeleccionar={seleccionar} />
-        <h2 className="panel-titulo">{TITULOS[pestana]}</h2>
+        {movil
+          ? <ModosMovil modo={pestana} onModo={elegirModoMovil} />
+          : <h2 className="panel-titulo">{TITULOS[pestana]}</h2>}
         <div className="panel-desplazable" key={pestana}>
           {pestana === "decidir"
             ? <PanelDecidir meta={datos.meta} peticion={peticion} onPeticion={cambiarPeticion}
@@ -302,22 +376,26 @@ export default function App() {
                 diagnosticado={diagnosticado} onDiagnosticar={diagnosticar} onPerfil={verPerfil} onFicha={setSeleccionado} />
             : <PanelPerfiles meta={datos.meta} evidencia={evidencia} onEvidencia={setEvidencia} consulta={consulta}
                 onSeleccionar={setSeleccionado} />}
+          {/* en móvil el aviso «no oficial» va al final del panel: sobre el mapa quedaría bajo la hoja */}
+          {movil && <AvisoMapa onAcerca={() => setDialogo("acerca")} />}
         </div>
       </aside>
-      <AvisoMapa onAcerca={() => setDialogo("acerca")} />
+      {!movil && <AvisoMapa onAcerca={() => setDialogo("acerca")} />}
 
-      {seleccionado && (
-        <Ficha ficha={ficha?.ine5 === seleccionado ? ficha : null} cargando={false}
-          situacion={situaciones.get(seleccionado)} meta={datos.meta} pesos={ranking.pesos} peticion={peticion}
-          negocio={negocio} onCerrar={() => setSeleccionado(null)} />
-      )}
+      {seleccionado && (movil
+        ? <div className="hoja-ficha" ref={fichaRef}>
+            <Asa hoja={fichaRef} alturas={alturasFicha} indice={hojaFicha} onIndice={setHojaFicha} onMover={moverAbajo}
+              onCerrar={() => setSeleccionado(null)} etiqueta={hojaFicha === 0 ? "Ampliar la ficha" : "Reducir la ficha"} />
+            {fichaEl}
+          </div>
+        : fichaEl)}
 
       <Leyenda resaltada={claseResaltada} fijadas={clasesFijadas} onResaltar={setClaseResaltada} onFijar={alternarClase}
         onLimpiar={() => setClasesFijadas(new Set())} modo={pestana} />
       <ControlesMapa camara={camara} mando={mando} />
       {pasando && <Etiqueta x={pasando.x} y={pasando.y} municipio={porIne.get(pasando.ine5)}
-        situacion={situacionesMapa.get(pasando.ine5)}
-        pista={pestana === "actuar" ? "Pulsa para ver su diagnóstico" : undefined} />}
+        situacion={situacionesMapa.get(pasando.ine5)} abajo={abajo}
+        pista={pestana === "actuar" ? { raton: "Pulsa para ver su diagnóstico", tacto: "Toca de nuevo para ver su diagnóstico" } : undefined} />}
       {error && <div className="brindis" role="status" onClick={() => setError(null)}>{error}</div>}
       {dialogo === "como" && <ComoFunciona meta={datos.meta} onCerrar={() => setDialogo(null)} />}
       {dialogo === "acerca" && <AcercaDe meta={datos.meta} onCerrar={() => setDialogo(null)} onComo={() => setDialogo("como")} />}
@@ -332,12 +410,27 @@ export default function App() {
   </>);
 }
 
+const NOMBRES_HOJA = ["plegada", "media", "completa"];
+
+// Zona del mapa que se ve (px de ventana): en escritorio, entre el panel y la ficha; en móvil, entre los controles de
+// arriba y la leyenda que va encima de la hoja inferior
+interface Zona { izq: number; der: number; arriba: number; abajo: number }
+function zonaVisible(conFicha: boolean, tapadoAbajo: number): Zona {
+  return esMovil()
+    ? { izq: 12, der: innerWidth - 12, arriba: 64, abajo: innerHeight - tapadoAbajo - 64 }
+    : { izq: IZQ_PANEL + 24, der: innerWidth - (conFicha ? ANCHO_FICHA + 48 : 48), arriba: 48, abajo: innerHeight - 110 };
+}
+
 // Una estrella por cada cosa entendida, hacia los municipios que suben de grupo (y si no sube ninguno, hacia los
 // primeros del ranking), siempre que se vean en pantalla y no queden tapados por el panel o la ficha
 function trayectosAsistente(lista: Cambio[], nuevas: Map<string, Situacion>, geometria: Geometria,
-  mando: MandoMapa | null, conFicha: boolean): Trayecto[] {
+  mando: MandoMapa | null, zona: Zona): Trayecto[] {
   if (!mando || movimientoReducido()) return [];
-  const origenes = origenesTarjeta();
+  let origenes = origenesTarjeta();
+  if (esMovil()) { // en la hoja, solo las etiquetas que se ven dentro de su zona desplazable
+    const caja = document.querySelector(".panel-desplazable")?.getBoundingClientRect();
+    origenes = caja ? origenes.filter((o) => o.y > caja.top && o.y < caja.bottom) : [];
+  }
   if (origenes.length === 0) return [];
   const suben = lista.filter((c) => c.despues.orden < c.antes.orden)
     .sort((a, b) => a.despues.orden - b.despues.orden || (nuevas.get(a.ine5)?.posicion ?? 999) - (nuevas.get(b.ine5)?.posicion ?? 999))
@@ -346,9 +439,8 @@ function trayectosAsistente(lista: Cambio[], nuevas: Map<string, Situacion>, geo
     .sort((a, b) => a[1].posicion! - b[1].posicion!).map(([i]) => i);
   const centros = new Map(geometria.features.map((f) => [f.properties.ine5, f.properties.centro]));
   const elegidos = [...new Set([...suben, ...primeros])].filter((i) => centros.has(i)).slice(0, 40);
-  const derecha = innerWidth - (conFicha ? ANCHO_FICHA + 48 : 48);
   const destinos = mando.proyectar(elegidos.map((i) => centros.get(i)!))
-    .filter(([x, y]) => x > IZQ_PANEL + 24 && x < derecha && y > 48 && y < innerHeight - 110)
+    .filter(([x, y]) => x > zona.izq && x < zona.der && y > zona.arriba && y < zona.abajo)
     .slice(0, origenes.length);
   if (destinos.length === 0) return [];
   return origenes.map((o, k) => ({ x0: o.x, y0: o.y, x1: destinos[k % destinos.length][0], y1: destinos[k % destinos.length][1] }));

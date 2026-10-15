@@ -1,6 +1,7 @@
 // Barra de navegación vertical a la izquierda: arriba los modos de trabajo (abren el panel; pulsar el activo lo
 // pliega y deja el mapa entero), abajo la información (cómo se decide, vídeo y acerca de). «Dónde abrir» es la
-// pregunta de la empresa; «Dónde actuar», la de la Administración.
+// pregunta de la empresa; «Dónde actuar», la de la Administración. En móvil no cabe: los modos van como pestañas
+// dentro de la hoja inferior (ModosMovil) y la información, como iconos junto a la marca (BotonesInfo).
 import type { ReactNode } from "react";
 
 export type Modo = "decidir" | "actuar" | "perfiles";
@@ -9,6 +10,12 @@ export type Dialogo = "como" | "video" | "acerca";
 // Vídeo de presentación: dejar vacío mientras no exista (se ocultan el botón y la sección). URL de inserción,
 // p. ej. "https://www.youtube-nocookie.com/embed/<id>"
 export const VIDEO = "";
+
+const MODOS: { id: Modo; texto: string; icono: () => ReactNode }[] = [
+  { id: "decidir", texto: "Dónde abrir", icono: () => <IconoColumnas /> },
+  { id: "actuar", texto: "Dónde actuar", icono: () => <IconoDiana /> },
+  { id: "perfiles", texto: "Explorar perfiles", icono: () => <IconoRed /> },
+];
 
 export default function Navegacion({ modo, abierto, onModo, onDialogo }: {
   modo: Modo; abierto: boolean; onModo: (m: Modo) => void; onDialogo: (d: Dialogo) => void;
@@ -26,9 +33,7 @@ export default function Navegacion({ modo, abierto, onModo, onDialogo }: {
   return (
     <nav className="navegacion" aria-label="Secciones">
       <div className="nav-grupo">
-        {boton("decidir", "Dónde abrir", <IconoColumnas />)}
-        {boton("actuar", "Dónde actuar", <IconoDiana />)}
-        {boton("perfiles", "Explorar perfiles", <IconoRed />)}
+        {MODOS.map((m) => boton(m.id, m.texto, m.icono()))}
       </div>
       <div className="nav-grupo">
         <button className="nav-boton" onClick={() => onDialogo("como")}><IconoPasos /><span>Cómo se decide</span></button>
@@ -36,6 +41,32 @@ export default function Navegacion({ modo, abierto, onModo, onDialogo }: {
         <button className="nav-boton" onClick={() => onDialogo("acerca")}><IconoInfo /><span>Acerca de</span></button>
       </div>
     </nav>
+  );
+}
+
+// Móvil: los tres modos como pestañas con icono, en la parte de la hoja que se ve aun plegada
+export function ModosMovil({ modo, onModo }: { modo: Modo; onModo: (m: Modo) => void }) {
+  return (
+    <nav className="pestanas modos-movil" aria-label="Secciones"
+      style={{ ["--i" as string]: MODOS.findIndex((m) => m.id === modo) }}>
+      <span className="pestanas-cursor" aria-hidden />
+      {MODOS.map((m) => (
+        <button key={m.id} className={modo === m.id ? "activa" : ""} aria-pressed={modo === m.id} onClick={() => onModo(m.id)}>
+          {m.icono()}<span>{m.texto}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+// Móvil: la información de la barra (cómo se decide, vídeo, acerca de) como iconos junto a la marca
+export function BotonesInfo({ onDialogo }: { onDialogo: (d: Dialogo) => void }) {
+  return (
+    <div className="botones-info">
+      <button onClick={() => onDialogo("como")} aria-label="Cómo se decide" title="Cómo se decide"><IconoPasos /></button>
+      {VIDEO && <button onClick={() => onDialogo("video")} aria-label="Vídeo" title="Vídeo"><IconoVideo /></button>}
+      <button onClick={() => onDialogo("acerca")} aria-label="Acerca de" title="Acerca de"><IconoInfo /></button>
+    </div>
   );
 }
 

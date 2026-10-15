@@ -833,8 +833,3 @@ b, strong { font-weight: 650; }
 .pie-actuar .nota { font-size: 11.5px; }
 .pie-actuar b { color: var(--tinta-2); }
 .palanca .nota { margin: 0; color: var(--tinta-2); }
-/* Ancho de móvil: el panel (ancho fijo en App) se ajusta al hueco que deja la barra de navegación */
-@media (max-width: 520px) {
-  .panel { width: calc(100vw - 108px) !important; }
-  .cuadrante-lectura { padding-left: 0; }
-}

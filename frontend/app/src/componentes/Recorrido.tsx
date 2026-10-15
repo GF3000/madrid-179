@@ -8,6 +8,7 @@ import { puntosFuertes, type Clase, type PuntoFuerte } from "../modelo";
 import type { MandoMapa } from "./Mapa";
 import { nombreLegible } from "./Ficha";
 import { Columna } from "./piezas";
+import { esMovil } from "../movil";
 
 export interface Parada {
   ine5: string;
@@ -35,6 +36,10 @@ const SALIDA = 6000;
 const RUMBOS = [-24, 6, -34, 14, -10]; // la cámara cambia de ángulo en cada parada para que se note el viaje
 const ANCHO_TARJETA = 480; // la tarjeta va a la derecha, a la altura de la vista: es lo que hay que leer
 const HUECO_TARJETA = ANCHO_TARJETA + 56; // píxeles que deja a la derecha la cámara para no tapar el municipio
+// En móvil la tarjeta va abajo, a todo el ancho y como mucho min(54 % del alto, 460 px) (movil.css): el hueco lo deja
+// abajo la cámara con margenes.abajo de App, así que a la derecha no hace falta
+const hueco = () => (esMovil() ? 0 : HUECO_TARJETA);
+export const huecoTarjetaMovil = (alto: number) => Math.round(Math.min(alto * 0.54, 460) + 24);
 
 export default function Recorrido({ paradas, mando, meta, pesos, peticion, onDestacar, onAbrir, onFin }: Props) {
   const [paso, setPaso] = useState(-1); // -1 presentación · 0..n-1 paradas · n despedida
@@ -75,7 +80,7 @@ export default function Recorrido({ paradas, mando, meta, pesos, peticion, onDes
     const t = [...paradas.map((_, k) => setTimeout(() => setPaso(k), INTRO + k * PARADA)),
       setTimeout(() => setPaso(n), INTRO + n * PARADA),
       setTimeout(() => terminar(false), INTRO + n * PARADA + SALIDA)];
-    mando.encuadrar(paradas.map((q) => q.centro), { duracion: INTRO, derecha: HUECO_TARJETA });
+    mando.encuadrar(paradas.map((q) => q.centro), { duracion: INTRO, derecha: hueco() });
     return () => { t.forEach(clearTimeout); llamadas.current.onDestacar(null); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -83,10 +88,10 @@ export default function Recorrido({ paradas, mando, meta, pesos, peticion, onDes
   useEffect(() => {
     if (terminado.current) return;
     if (paso >= 0 && paso < n) {
-      mando.volarA(paradas[paso].centro, { rumbo: RUMBOS[paso % RUMBOS.length], duracion: VUELO, derecha: HUECO_TARJETA });
+      mando.volarA(paradas[paso].centro, { rumbo: RUMBOS[paso % RUMBOS.length], duracion: VUELO, derecha: hueco() });
       llamadas.current.onDestacar(paradas[paso].ine5);
     } else if (paso === n) {
-      mando.encuadrar(paradas.map((q) => q.centro), { duracion: 1600, derecha: HUECO_TARJETA });
+      mando.encuadrar(paradas.map((q) => q.centro), { duracion: 1600, derecha: hueco() });
       llamadas.current.onDestacar(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

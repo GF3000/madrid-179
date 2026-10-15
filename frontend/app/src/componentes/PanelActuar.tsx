@@ -5,6 +5,7 @@ import type { Diagnostico, IdCuadrante, MunicipioDiagnostico } from "../api";
 import { CUADRANTES, enPalabras, fuerza } from "../modelo";
 import { nombreLegible } from "./Ficha";
 import { Columna, MarcasFuerza, Segmentado } from "./piezas";
+import { useEsTactil } from "../movil";
 
 export interface Ambito {
   poblacion: "todas" | "menos2500" | "medio" | "mas20000";
@@ -50,6 +51,9 @@ interface Props {
 
 export default function PanelActuar(p: Props) {
   const bloqueMunicipio = useRef<HTMLDivElement>(null);
+  // en táctil no hay vista previa: el toque emula un «pasar» que no se va (como en la leyenda)
+  const tactil = useEsTactil();
+  const previa = (c: IdCuadrante | null) => { if (!tactil) p.onResaltarCuadrante(c); };
   // al elegir un municipio (lista, mapa o buscador) el panel lleva la vista a su diagnóstico
   useEffect(() => {
     if (p.diagnosticado) bloqueMunicipio.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -97,15 +101,15 @@ export default function PanelActuar(p: Props) {
         <h3><span className="paso-n">2</span>Cuatro situaciones</h3>
         {!d && <div className="cargando-actuar"><span className="sombra-texto" /><span className="sombra-texto corto" /></div>}
         {d && (
-          <div className="cuadrantes" onMouseLeave={() => p.onResaltarCuadrante(null)}>
+          <div className="cuadrantes" onMouseLeave={() => previa(null)}>
             {d.cuadrantes.map((c) => {
               const n = dentro.filter((m) => m.cuadrante === c.id).length;
               const activo = p.fijados.has(c.id);
               return (
                 <button key={c.id} className={`cuadrante${activo ? " activo" : ""}`} aria-pressed={activo}
                   style={{ ["--c" as string]: `rgb(${CUADRANTES[c.id].color.join(",")})` }}
-                  onMouseEnter={() => p.onResaltarCuadrante(c.id)} onFocus={() => p.onResaltarCuadrante(c.id)}
-                  onBlur={() => p.onResaltarCuadrante(null)} onClick={() => p.onElegirCuadrante(c.id)}>
+                  onMouseEnter={() => previa(c.id)} onFocus={() => previa(c.id)}
+                  onBlur={() => previa(null)} onClick={() => p.onElegirCuadrante(c.id)}>
                   <span className="cuadrante-cabecera">
                     <i className="cuadrante-color" aria-hidden />
                     <strong>{c.nombre}</strong>

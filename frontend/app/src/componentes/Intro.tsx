@@ -8,6 +8,7 @@ import { useEffect, useRef } from "react";
 import type { Position } from "geojson";
 import type { Geometria } from "../api";
 import { PUNTOS } from "../puntos_carga";
+import { esMovil } from "../movil";
 import type { MandoMapa } from "./Mapa";
 import { ESTRELLA, POSICIONES } from "./piezas";
 
@@ -25,6 +26,8 @@ const T = { juntar: 1050, trazar: 1800, deslizar: 2300, telon: 2950, salir: 3800
 const DURACION_TELON = 650;
 const CLAVE_VISTA = "madrid179-intro-vista";
 const ESPERA_MAPA = 2500; // ms que se espera a que cargue el mapa antes de salir sin él
+const PRISA_MOVIL = 2.2; // en móvil la intro dura ≈ 2,5 s: la misma secuencia, sin hacer esperar
+const ESPERA_MAPA_MOVIL = 1200;
 const MUESTRAS = 320; // puntos de la transformación bandera → contorno
 
 const limitar = (x: number) => Math.min(1, Math.max(0, x));
@@ -147,6 +150,7 @@ export default function Intro({ listo, mapa, contorno, onRevelar, onFin }: Props
     const voladoras = q<SVGGElement>(".intro-voladoras g");
 
     const reducido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const movil = esMovil();
     let repetida = false;
     try { repetida = sessionStorage.getItem(CLAVE_VISTA) === "1"; sessionStorage.setItem(CLAVE_VISTA, "1"); } catch { /* sin almacenamiento */ }
 
@@ -170,13 +174,14 @@ export default function Intro({ listo, mapa, contorno, onRevelar, onFin }: Props
       const dt = Math.min(50, ahora - antes);
       antes = ahora;
       const listo = listoRef.current;
-      const velocidad = Math.max(prisa.current, repetida ? 1.9 : 1, listo ? 1.3 : 1);
+      const velocidad = Math.max(prisa.current, repetida ? 1.9 : 1, listo ? 1.3 : 1, movil ? PRISA_MOVIL : 1);
       v += dt * velocidad;
       const tope = reducido ? T.salir - 1 : T.telon;
       const esperando = !listo && v >= tope;
       if (!listo) v = Math.min(v, tope);
       // antes de salir, un margen para que el mapa termine de cargar (si no llega, se sale sin él)
-      if (v >= T.salir && !morfo && !vuelo && !reducido && !mapaRef.current.mapa?.cargado() && esperaMapa < ESPERA_MAPA) {
+      if (v >= T.salir && !morfo && !vuelo && !reducido && !mapaRef.current.mapa?.cargado()
+        && esperaMapa < (movil ? ESPERA_MAPA_MOVIL : ESPERA_MAPA)) {
         esperaMapa += dt;
         v = T.salir;
       }
