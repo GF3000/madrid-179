@@ -1,0 +1,92 @@
+/* Interacción táctil: ayudas desplegables en lugar de title, ficha y mapa. Lo mantiene Mapa/Ficha/piezas */
+
+/* ------------------------------------------------ ayudas desplegables (piezas.tsx · useAyuda / Ayuda) */
+/* El disparador se ve como el texto de siempre (en escritorio, con su title y cursor de ayuda) */
+.ayuda {
+  border: 0; background: none; padding: 0; margin: 0; text-align: left; color: inherit; font: inherit;
+  cursor: help; display: inline; -webkit-tap-highlight-color: transparent;
+}
+.ayuda.pregunta-titulo { align-self: flex-start; font-weight: 550; font-size: 13.5px; }
+.ayuda.abierta { text-decoration: underline dotted var(--tinta-3); text-underline-offset: 3px; }
+.ayuda-i { display: none; }
+.ayuda-texto {
+  display: block; margin: 4px 0 2px; padding: 7px 10px; border-radius: 8px; background: var(--papel);
+  border-left: 2px solid var(--linea-2); color: var(--tinta-2); font-size: 12.5px; line-height: 1.45;
+  font-style: normal; font-weight: 400; animation: aparecer 200ms var(--entrar);
+}
+/* el texto ocupa la fila entera, debajo del rasgo o de la combinación */
+.rasgo { flex-wrap: wrap; }
+.rasgo > .ayuda-texto { flex-basis: 100%; margin: 2px 0 4px; }
+.combinados li { flex-wrap: wrap; }
+.combinados li > .ayuda { flex: 1; min-width: 0; }
+.combinados li > .ayuda-texto { flex-basis: 100%; margin-left: 22px; }
+.mejor-peor .ayuda-texto { margin-top: 3px; }
+/* un botón nunca es inline de verdad (inline-block): en bloque, la viñeta del li vuelve a la primera línea */
+.mejor-peor li > .ayuda { display: block; width: 100%; }
+
+/* ------------------------------------------------------------------------- sin ratón */
+@media (hover: none), (pointer: coarse) {
+  /* marca «i» para que se sepa que se puede tocar */
+  .ayuda-i {
+    display: inline-grid; place-items: center; width: 16px; height: 16px; margin-left: 6px; vertical-align: 1px;
+    border-radius: 50%; border: 1px solid var(--linea-2); color: var(--tinta-3);
+    font: italic 650 10px/1 var(--serif);
+  }
+  .ayuda-i::before { content: "i"; }
+  .ayuda.abierta .ayuda-i { background: var(--tinta); border-color: var(--tinta); color: #fff; }
+  .ayuda { cursor: pointer; }
+  .ayuda.abierta { text-decoration: none; }
+  /* zonas de toque ≥ 44 px en los títulos sueltos; las frases largas ya tienen área de sobra */
+  .pregunta .ayuda, .rasgo dt .ayuda { display: inline-flex; align-items: center; min-height: 44px; }
+  .pregunta { gap: 2px; }
+  .rasgo { padding: 0; cursor: default; }
+  .mejor-peor .ayuda, .combinados .ayuda { padding: 4px 0; }
+
+  /* la etiqueta del mapa: el segundo toque abre la ficha (Mapa.tsx) */
+  .etiqueta em { font-size: 0; }
+  .etiqueta em::after { content: "Toca otra vez para ver por qué"; font-size: 11.5px; }
+
+  /* cerrar: el mismo círculo de 32 px con un área de toque de 46 */
+  .cerrar { position: relative; }
+  .ficha-foto .cerrar { position: absolute; }
+  .cerrar::before { content: ""; position: absolute; inset: -7px; border-radius: 50%; }
+  .cerrar:hover { transform: none; }
+
+  /* segmentados, casillas, enlaces y listas del panel */
+  .segmentado button { min-height: 44px; }
+  .segmentado.compacto button { min-height: 40px; }
+  .casilla { align-items: center; min-height: 44px; margin: 0 0 4px; }
+  .casilla .caja { width: 22px; height: 22px; margin-top: 0; }
+  .casilla .caja::after { left: 7px; top: 3px; }
+  .deslizador { height: 32px; }
+  .enlace { padding: 12px 0; margin: -12px 0; }
+  .grupo-cabecera, .grupo-pref-cabecera { min-height: 48px; }
+  .grupo-lista, .nube { gap: 6px; }
+  .grupo-lista button, .nube button { min-height: 36px; padding: 6px 12px; }
+  .lista-cambios button { padding: 8px 0; }
+}
+
+/* ------------------------------------------------------------------------ pantallas estrechas */
+@media (max-width: 767px) {
+  /* sin desenfoque de fondo (muy caro sobre un mapa WebGL que se repinta): fondo opaco del mismo tono */
+  .panel, .ficha, .leyenda, .controles > button, .controles-grupo, .recorrido-tarjeta {
+    backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--papel-claro);
+  }
+  .velo { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(38, 28, 32, 0.42); }
+
+  /* ficha en una columna y textos de al menos 13 px */
+  .factores, .perfil { grid-template-columns: 1fr; }
+  .factores { gap: 10px; }
+  .lista-factores h4, .combinados h4, .mejor-peor h4 { font-size: 13.5px; }
+  .factor-titulo { font-size: 14px; }
+  .factor-detalle, .factor-lectura, .vacio, .combinados li, .lineas-pref li { font-size: 13px; }
+  .rasgo dt, .rasgo dd { font-size: 13.5px; }
+  .ayuda-texto { font-size: 13px; }
+  .wiki-resumen { font-size: 13.5px; }
+  .wiki-resumen a { font-size: 13px; }
+  .pocas-palabras .firma { font-size: 12.5px; }
+  .mejor-peor ul { font-size: 14px; }
+  .segmentado button, .segmentado.compacto button { font-size: 13px; }
+  .lista-cambios button, .grupo-lista button, .nube button, .enlace { font-size: 13.5px; }
+  .lista-cambios small, .lista-cambios .mas { font-size: 12.5px; }
+}

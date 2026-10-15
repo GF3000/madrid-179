@@ -1,5 +1,5 @@
 // Piezas pequeñas de la interfaz, dibujadas a medida (sin librerías de iconos).
-import type { ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { CLASES, type Clase, type Fuerza } from "../modelo";
 
 export function Segmentado<T extends string>(p: {
@@ -131,4 +131,29 @@ export function Cerrar({ onClick, etiqueta = "Cerrar" }: { onClick: () => void; 
       <span className="aspa" aria-hidden />
     </button>
   );
+}
+
+/**
+ * Explicación que se despliega al pulsar (en táctil no hay title). En escritorio se ve también como title.
+ * Devuelve el disparador y el texto por separado: el texto va donde convenga a la maqueta del padre
+ * (debajo de la fila entera, no dentro de la celda).
+ */
+export function useAyuda(texto: string | undefined) {
+  const [abierta, setAbierta] = useState(false);
+  const id = useId();
+  const boton = (contenido: ReactNode, clase = "") => (texto ? (
+    <button type="button" className={`ayuda${abierta ? " abierta" : ""}${clase ? ` ${clase}` : ""}`} title={texto}
+      aria-expanded={abierta} aria-controls={abierta ? id : undefined}
+      onClick={(e) => { e.stopPropagation(); setAbierta((a) => !a); }}>
+      {contenido}<span className="ayuda-i" aria-hidden />
+    </button>
+  ) : <span className={clase || undefined}>{contenido}</span>);
+  const desplegada = texto && abierta ? <span className="ayuda-texto" id={id}>{texto}</span> : null;
+  return { boton, desplegada, abierta, id };
+}
+
+/** Disparador y explicación juntos, uno detrás de otro. */
+export function Ayuda({ texto, clase, children }: { texto: string | undefined; clase?: string; children: ReactNode }) {
+  const a = useAyuda(texto);
+  return <>{a.boton(children, clase)}{a.desplegada}</>;
 }

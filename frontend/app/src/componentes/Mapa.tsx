@@ -9,6 +9,7 @@ import { GeoJsonLayer, PathLayer, SolidPolygonLayer, TextLayer } from "@deck.gl/
 import type { Feature, Geometry, Position } from "geojson";
 import type { Geometria, PropsMunicipio } from "../api";
 import { FUERA, type Rgb, type Situacion } from "../modelo";
+import { esMovil, esTactil } from "../movil";
 import { nombreLegible } from "./Ficha";
 
 type Rasgo = Feature<Geometry, PropsMunicipio>;
@@ -32,6 +33,13 @@ export interface MandoMapa {
   encuadrar: (puntos: Position[], o: { duracion: number; derecha: number }) => void; // derecha: hueco para la tarjeta
 }
 
+// px tapados por el panel, la ficha o (en móvil) la hoja inferior
+export interface Margenes {
+  izquierda: number;
+  derecha: number;
+  abajo?: number;
+}
+
 interface Props {
   geometria: Geometria;
   situaciones: Map<string, Situacion>;
@@ -43,7 +51,7 @@ interface Props {
   onPasar: (info: { ine5: string; x: number; y: number } | null) => void;
   onCamara: (c: Camara) => void;
   onMando: (m: MandoMapa) => void;
-  margenes: { izquierda: number; derecha: number };
+  margenes: Margenes;
   entrar: boolean; // la intro ha terminado: inclinar y levantar columnas
 }
 
@@ -71,7 +79,7 @@ interface Rotulo {
 
 /** Rótulos del resto que caben sin montarse entre sí ni sobre los fijos (voraz, por prioridad). */
 function sinChoques(m: maplibregl.Map, fijos: Rotulo[], resto: Rotulo[], subida: number,
-  margenes: { izquierda: number; derecha: number }): Set<string> {
+  margenes: Margenes): Set<string> {
   const c = m.getCenter();
   const pad = m.getPadding();
   const vista = new WebMercatorViewport({ width: m.getContainer().clientWidth, height: m.getContainer().clientHeight,
@@ -90,7 +98,8 @@ function sinChoques(m: maplibregl.Map, fijos: Rotulo[], resto: Rotulo[], subida:
   for (const r of [...resto].sort((a, b) => b.prioridad - a.prioridad)) {
     const k = caja(r, TAM_RESTO);
     // fuera de pantalla o detrás del panel o de la ficha: no se ve, así que no ocupa sitio
-    if (k[0] < margenes.izquierda - 16 || k[2] > width - margenes.derecha + 16 || k[1] < 0 || k[3] > height || choca(k)) continue;
+    if (k[0] < margenes.izquierda - 16 || k[2] > width - margenes.derecha + 16 || k[1] < 0
+      || k[3] > height - (margenes.abajo ?? 0) || choca(k)) continue;
     cajas.push(k);
     salida.add(r.ine5);
   }
@@ -98,6 +107,34 @@ function sinChoques(m: maplibregl.Map, fijos: Rotulo[], resto: Rotulo[], subida:
 } // ms de la transición de altura al cambiar de grupo o de foco
 const VISTA_INICIAL = { center: [-3.72, 40.5] as [number, number], zoom: 8.25, pitch: 0, bearing: 0 };
 const VISTA_3D = { zoom: 8.75, pitch: 50, bearing: -14 };
+// Móvil: inclinación moderada (menos teselas y columnas en pantalla, más fluido) y la región entera en el hueco que
+// deja la hoja inferior. El 3D sigue a mano: botón de vista y gesto de dos dedos
+const INCLINACION_MOVIL = 35;
+const REGION: [[number, number], [number, number]] = [[-4.6, 39.87], [-3.04, 41.17]];
+const MARGEN_ARRIBA = 40;
+const MARGEN_ABAJO = 120;
+type Relleno = { left: number; right: number; top: number; bottom: number };
+
+/** Zoom con el que la región cabe en el hueco libre (en móvil baja el de escritorio, pensado para pantallas anchas). */
+function zoomRegion(ancho: number, alto: number, pad: Relleno) {
+  const no = maplibregl.MercatorCoordinate.fromLngLat([REGION[0][0], REGION[1][1]]);
+  const se = maplibregl.MercatorCoordinate.fromLngLat([REGION[1][0], REGION[0][1]]);
+  const libreX = Math.max(ancho - pad.left - pad.right, 120);
+  const libreY = Math.max(alto - pad.top - pad.bottom, 120);
+  return Math.min(Math.log2(libreX / ((se.x - no.x) * 512)), Math.log2(libreY / ((se.y - no.y) * 512))) - 0.1;
+}
+
+/** Vista general inclinada: la de siempre en escritorio; en móvil, más plana y con la región entera. */
+function vista3d(m: maplibregl.Map, pad: Relleno) {
+  if (!esMovil()) return VISTA_3D;
+  const c = m.getContainer();
+  // +0,3: la inclinación encoge el eje vertical
+  return { zoom: Math.max(7, Math.min(VISTA_3D.zoom, zoomRegion(c.clientWidth, c.clientHeight, pad) + 0.3)),
+    pitch: INCLINACION_MOVIL, bearing: VISTA_3D.bearing };
+}
+
+// Resolución del lienzo: con pantallas de 3× el coste de pintar se dispara sin que se note la diferencia
+const densidad = () => Math.min(typeof devicePixelRatio === "number" ? devicePixelRatio : 1, esMovil() ? 1.5 : 2);
 const CAPITAL = "28079";
 const FUENTE = "Hanken Grotesk Variable, Hanken Grotesk, sans-serif";
 
@@ -163,21 +200,44 @@ export default function Mapa(p: Props) {
   const [realce, setRealce] = useState(1); // 0 → 1: contorno y rótulo del destacado suben a la par que su columna
   const llamadas = useRef(p);
   llamadas.current = p;
+  // Táctil (sin «pasar por encima»): el primer toque enseña la etiqueta y resalta el municipio; el segundo sobre el
+  // mismo abre su ficha. Con ratón, pasar y pulsar como siempre. Solo refs y setters: vale desde cualquier cierre
+  const tocado = useRef<string | null>(null);
+  const [marcado, setMarcado] = useState<string | null>(null);
+  const tocar = (ine5: string | null, x = 0, y = 0) => {
+    const segundo = ine5 !== null && ine5 === tocado.current;
+    tocado.current = segundo ? null : ine5;
+    setMarcado(tocado.current);
+    llamadas.current.onPasar(tocado.current && ine5 ? { ine5, x, y } : null);
+    if (segundo) trasToque(() => llamadas.current.onSeleccionar(ine5));
+  };
 
   // ------------------------------------------------------------ montaje
   useEffect(() => {
     let cancelado = false;
     estiloBase().then((style) => {
       if (cancelado || !nodo.current) return;
+      const caja = nodo.current;
+      const inicial = esMovil() ? { ...VISTA_INICIAL, zoom: Math.max(7, Math.min(VISTA_INICIAL.zoom,
+        zoomRegion(caja.clientWidth, caja.clientHeight, { left: 0, right: 0, top: MARGEN_ARRIBA, bottom: MARGEN_ABAJO }))) }
+        : VISTA_INICIAL;
       const m = new maplibregl.Map({
-        container: nodo.current, style, ...VISTA_INICIAL, maxPitch: 72, minZoom: 7, maxZoom: 14,
+        container: caja, style, ...inicial, maxPitch: 72, minZoom: 7, maxZoom: 14,
         maxBounds: [[-6.2, 39.2], [-1.4, 41.9]], attributionControl: false, dragRotate: true,
-        pitchWithRotate: true, fadeDuration: 0,
+        pitchWithRotate: true, fadeDuration: 0, pixelRatio: densidad(),
       });
       m.addControl(new maplibregl.AttributionControl({
         compact: true, customAttribution: "Límites: INE / Comunidad de Madrid",
       }), "bottom-right");
-      const o = new MapboxOverlay({ interleaved: true, effects: [luces], layers: [] });
+      // MapLibre abre el crédito compacto al cargar; en móvil taparía los controles: se queda en el botón «i»
+      if (esMovil()) m.once("load", () => {
+        const c = caja.querySelector(".maplibregl-ctrl-attrib");
+        c?.classList.remove("maplibregl-compact-show");
+        c?.removeAttribute("open");
+      });
+      // en táctil, un toque fuera de los municipios quita la etiqueta
+      const o = new MapboxOverlay({ interleaved: true, effects: [luces], layers: [], useDevicePixels: densidad(),
+        onClick: (i: PickingInfo) => { if (esTactil() && !i.object) tocar(null); } });
       m.addControl(o);
       mapa.current = m;
       capa.current = o;
@@ -192,15 +252,17 @@ export default function Mapa(p: Props) {
         setCaben((antes) => (antes.size === nuevo.size && [...nuevo].every((i) => antes.has(i)) ? antes : nuevo));
       };
       m.on("moveend", () => recolocar.current());
+      // la etiqueta del toque se queda quieta en la pantalla: si el mapa se mueve, deja de señalar su municipio
+      m.on("movestart", () => { if (tocado.current) tocar(null); });
       let cargado = false;
       m.on("load", () => { cargado = true; setListo(true); });
 
-      const padding = () => ({ left: llamadas.current.margenes.izquierda, right: llamadas.current.margenes.derecha,
-        top: 40, bottom: 120 });
+      const padding = () => relleno(llamadas.current.margenes, MARGEN_ARRIBA, MARGEN_ABAJO, m);
       llamadas.current.onMando({
-        recentrar: () => m.flyTo({ center: VISTA_INICIAL.center, ...VISTA_3D, padding: padding(), duration: 1400 }),
+        recentrar: () => m.flyTo({ center: VISTA_INICIAL.center, ...vista3d(m, padding()), padding: padding(), duration: 1400 }),
         alternarVista: () => m.easeTo(m.getPitch() > 10
-          ? { pitch: 0, bearing: 0, duration: 900 } : { pitch: VISTA_3D.pitch, bearing: VISTA_3D.bearing, duration: 900 }),
+          ? { pitch: 0, bearing: 0, duration: 900 }
+          : { pitch: vista3d(m, padding()).pitch, bearing: VISTA_3D.bearing, duration: 900 }),
         norte: () => m.easeTo({ bearing: 0, duration: 700 }),
         girar: (g) => m.easeTo({ bearing: m.getBearing() + g, duration: 700 }),
         proyectar: (puntos) => {
@@ -211,23 +273,26 @@ export default function Mapa(p: Props) {
           });
         },
         cargado: () => cargado,
-        volarA: (centro, o) => m.flyTo({ center: centro as [number, number], zoom: 9.55, pitch: 52, bearing: o.rumbo,
+        volarA: (centro, o) => m.flyTo({ center: centro as [number, number], zoom: 9.55,
+          pitch: esMovil() ? INCLINACION_MOVIL : 52, bearing: o.rumbo,
           padding: { ...padding(), right: o.derecha }, duration: o.duracion, curve: 1.3, essential: true }),
         // fitBounds suma el margen que dejó el último vuelo; aquí el zoom se calcula a mano para el hueco que queda
         encuadrar: (puntos, o) => {
           const caja = puntos.reduce((b, q) => b.extend(q as [number, number]), new maplibregl.LngLatBounds());
           const no = maplibregl.MercatorCoordinate.fromLngLat(caja.getNorthWest());
           const se = maplibregl.MercatorCoordinate.fromLngLat(caja.getSouthEast());
-          const margen = { ...padding(), top: 110, bottom: 110, right: o.derecha };
-          const ancho = m.getContainer().clientWidth - margen.left - margen.right;
-          const alto = m.getContainer().clientHeight - margen.top - margen.bottom;
+          // en móvil la tarjeta del recorrido va abajo: manda el margen de la hoja, no los 110 px fijos
+          const p = padding();
+          const margen = { ...p, top: esMovil() ? p.top : 110, bottom: Math.max(110, p.bottom), right: o.derecha };
+          const ancho = Math.max(40, m.getContainer().clientWidth - margen.left - margen.right);
+          const alto = Math.max(40, m.getContainer().clientHeight - margen.top - margen.bottom);
           // 512 px = el mundo a zoom 0; la inclinación alarga el eje vertical (≈ ×1,6 a 50°)
           const zoom = Math.min(Math.log2(ancho / (Math.max(se.x - no.x, 1e-6) * 512)),
             Math.log2(alto / (Math.max(se.y - no.y, 1e-6) * 512 * 1.6))) - 0.85; // margen: columnas, rótulos y giro
-          m.flyTo({ center: caja.getCenter(), zoom: Math.min(9.4, Math.max(7.6, zoom)), pitch: VISTA_3D.pitch,
+          m.flyTo({ center: caja.getCenter(), zoom: Math.min(9.4, Math.max(7.6, zoom)), pitch: vista3d(m, margen).pitch,
             bearing: VISTA_3D.bearing, padding: margen, duration: o.duracion, essential: true });
         },
-        verRegion: (duracion) => m.flyTo({ center: VISTA_INICIAL.center, ...VISTA_3D, padding: padding(), duration: duracion,
+        verRegion: (duracion) => m.flyTo({ center: VISTA_INICIAL.center, ...vista3d(m, padding()), padding: padding(), duration: duracion,
           essential: true }),
       });
     });
@@ -243,9 +308,12 @@ export default function Mapa(p: Props) {
     if (!listo || !p.entrar || !mapa.current) return;
     const m = mapa.current;
     // con un enlace directo a una ficha, la cámara va al municipio (efecto de selección) en vez de a la región
-    const espera = setTimeout(() => !llamadas.current.seleccionado && m.easeTo({ ...VISTA_3D, center: VISTA_INICIAL.center, duration: 2600,
-      padding: { left: p.margenes.izquierda, right: 0, top: 40, bottom: 120 },
-      easing: (t) => 1 - Math.pow(1 - t, 3) }), 350);
+    const espera = setTimeout(() => {
+      if (llamadas.current.seleccionado) return;
+      const padding = relleno({ ...llamadas.current.margenes, derecha: 0 }, MARGEN_ARRIBA, MARGEN_ABAJO, m);
+      m.easeTo({ ...vista3d(m, padding), center: VISTA_INICIAL.center, duration: 2600, padding,
+        easing: (t) => 1 - Math.pow(1 - t, 3) });
+    }, 350);
     const t0 = performance.now() + 350;
     let id = 0;
     const paso = (t: number) => {
@@ -276,21 +344,24 @@ export default function Mapa(p: Props) {
   // -------------------------------------------- cámara al seleccionar
   useEffect(() => {
     const m = mapa.current;
+    if (tocado.current) tocar(null); // elegido desde el panel: fuera la etiqueta del toque
     if (!m || !p.seleccionado) return;
     const f = p.geometria.features.find((x) => x.properties.ine5 === p.seleccionado);
     if (!f) return;
-    m.flyTo({ center: f.properties.centro, zoom: Math.max(m.getZoom(), 9.15), pitch: Math.max(m.getPitch(), 45),
+    m.flyTo({ center: f.properties.centro, zoom: Math.max(m.getZoom(), 9.15),
+      pitch: Math.max(m.getPitch(), esMovil() ? 30 : 45),
       bearing: listo && m.getPitch() > 10 ? m.getBearing() : VISTA_3D.bearing,
-      padding: { left: p.margenes.izquierda, right: p.margenes.derecha, top: 60, bottom: 120 },
-      duration: 1500, essential: true });
+      padding: relleno(p.margenes, 60, MARGEN_ABAJO, m), duration: 1500, essential: true });
+    // en móvil la hoja de la ficha cambia el margen de abajo después de elegir: se recentra en la franja que queda
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [p.seleccionado, listo]);
+  }, [p.seleccionado, listo, p.margenes.abajo]);
 
   // ---------------------------------------------------------------- capas
   const centros = useMemo(() => new Map(p.geometria.features.map((f) => [f.properties.ine5, f.properties.centro])),
     [p.geometria]);
   const anillos = useMemo(() => mascara(p.geometria.contorno), [p.geometria]);
   const bordes = useMemo(() => lineasContorno(p.geometria.contorno), [p.geometria]);
+  const indices = useMemo(() => new Map(p.geometria.features.map((f, k) => [f.properties.ine5, k])), [p.geometria]);
 
   useEffect(() => {
     if (!capa.current) return;
@@ -328,6 +399,7 @@ export default function Mapa(p: Props) {
       .map((f) => ({ ine5: f.properties.ine5, texto: nombreLegible(f.properties.municipio), centro: f.properties.centro,
         altura: alturaVisible(f), prioridad: 800 - (situ(f)?.posicion ?? 800) }));
     candidatos.current = { fijos: rotulos, resto, subida };
+    const tactil = esTactil();
 
     capa.current.setProps({
       layers: [
@@ -339,7 +411,9 @@ export default function Mapa(p: Props) {
           id: "municipios",
           data: p.geometria as never,
           extruded: true, wireframe: false, filled: true, stroked: false, pickable: true,
-          autoHighlight: true, highlightColor: [255, 255, 255, 80],
+          // en táctil el resaltado lo fija el toque (el automático se quedaría pegado donde se levantó el dedo)
+          autoHighlight: !tactil, highlightColor: [255, 255, 255, 80],
+          highlightedObjectIndex: tactil ? (marcado ? indices.get(marcado) ?? -1 : -1) : null,
           elevationScale: (subida * ESCALA_ALTURA) as never,
           getElevation: (f: Rasgo) => altura(f),
           getFillColor: (f: Rasgo) => (apagado(f) ? ATENUADO : (situ(f)?.clase.color ?? FUERA.color)),
@@ -347,8 +421,14 @@ export default function Mapa(p: Props) {
           material: MATERIAL,
           transitions: { getElevation: { duration: DURACION_ALTURA, easing: suave }, getFillColor: { duration: 700, easing: suave } },
           updateTriggers: { getElevation: clave, getFillColor: clave },
-          onClick: (i: PickingInfo<Rasgo>) => i.object && llamadas.current.onSeleccionar(i.object.properties.ine5),
-          onHover: (i: PickingInfo<Rasgo>) => llamadas.current.onPasar(
+          onClick: (i: PickingInfo<Rasgo>, e: object) => {
+            if (!i.object) return false;
+            if (!esTactil()) llamadas.current.onSeleccionar(i.object.properties.ine5);
+            else if ((e as { tapCount?: number }).tapCount !== 2) tocar(i.object.properties.ine5, i.x, i.y); // el doble toque ya lo trataron los dos simples
+            return true;
+          },
+          // en táctil no hay hover de verdad: los mousemove emulados tras un toque dejarían etiquetas pegadas
+          onHover: (i: PickingInfo<Rasgo>) => !esTactil() && llamadas.current.onPasar(
             i.object ? { ine5: i.object.properties.ine5, x: i.x, y: i.y } : null),
         }),
         new PathLayer({
@@ -382,13 +462,40 @@ export default function Mapa(p: Props) {
         }),
       ],
     });
-  }, [p.situaciones, p.resaltados, p.seleccionado, p.destacado, p.etiquetas, p.geometria, subida, realce, cerca, caben, anillos, bordes, centros, p]);
+    // sin «p» entero en las dependencias: cada movimiento del ratón vuelve a pintar App y rehacía todas las capas
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.situaciones, p.resaltados, p.seleccionado, p.destacado, p.etiquetas, p.geometria, subida, realce, cerca, caben,
+    anillos, bordes, centros, indices, marcado]);
 
   // Al cambiar qué se rotula (grupos, foco, zoom), se recalculan los choques; al mover el mapa, en «moveend»
   useEffect(() => recolocar.current(), [cerca, p.situaciones, p.resaltados, p.etiquetas, p.destacado, p.seleccionado,
-    p.margenes.derecha]);
+    p.margenes.derecha, p.margenes.abajo]);
 
-  return <div ref={nodo} className="mapa" onMouseLeave={() => p.onPasar(null)} />;
+  // el mouseleave emulado tras un toque borraría la etiqueta recién puesta
+  return <div ref={nodo} className="mapa" onMouseLeave={() => !esTactil() && p.onPasar(null)} />;
+}
+
+/** Tras un toque el navegador emite ratón de compatibilidad (mousedown… click) y el mousedown hace que MapLibre pare
+ * cualquier vuelo de cámara: lo que mueve la cámara espera a que acabe esa ráfaga (o 350 ms si no llega). */
+function trasToque(f: () => void) {
+  let hecho = false;
+  const una = () => {
+    if (hecho) return;
+    hecho = true;
+    removeEventListener("click", una, true);
+    clearTimeout(t);
+    setTimeout(f, 0);
+  };
+  addEventListener("click", una, true);
+  const t = setTimeout(una, 350);
+}
+
+/** Padding de cámara: lo que tapan panel, ficha y hoja inferior (en móvil, la hoja sustituye al margen de abajo).
+ * Con una hoja muy alta se deja siempre una franja de mapa de 140 px. */
+function relleno(mg: Margenes, arriba: number, abajo: number, m: maplibregl.Map): Relleno {
+  const libre = m.getContainer().clientHeight - arriba - 140;
+  return { left: mg.izquierda, right: mg.derecha, top: arriba,
+    bottom: mg.abajo ? Math.max(0, Math.min(mg.abajo + 24, libre)) : abajo };
 }
 
 function suave(t: number) {
