@@ -139,6 +139,14 @@ export interface Explicacion {
   titular: string;
   mejor: string[];
   peor: string[];
+  apoyos: { mejor: string[][]; peor: string[][] };  // hechos de la ficha en que se basa cada frase
+  comprobacion: { corregida: boolean; descartadas: number };
+}
+
+/** Lo que el usuario contó de su negocio (de /interpretar): adapta «En pocas palabras». */
+export interface Negocio {
+  sector: string | null;
+  resumen: string | null;
 }
 
 export interface Consulta {
@@ -176,8 +184,8 @@ export const api = {
   geometria: () => pedir<Geometria>("/geometria"),
   ranking: (p: Peticion) => pedir<Ranking>("/ranking", p),
   ficha: (ine5: string) => pedir<Ficha>(`/municipios/${ine5}`),
-  explicacion: (ine5: string, clase: string | null, preferencias: Peticion["preferencias"]) =>
-    pedir<Explicacion>(`/municipios/${ine5}/explicacion`, { clase, preferencias }),
+  explicacion: (ine5: string, clase: string | null, preferencias: Peticion["preferencias"], negocio: Negocio | null) =>
+    pedir<Explicacion>(`/municipios/${ine5}/explicacion`, { clase, preferencias, negocio }),
   interpretar: (texto: string) => pedir<Interpretacion>("/interpretar", { texto }),
   ejemplo: () => pedir<{ texto: string; sector: string | null }>("/ejemplo", {}),
   consulta: (evidencia: Record<string, string>) => pedir<Consulta>("/consulta", { evidencia }),

@@ -2,7 +2,7 @@
 // Arriba, foto y resumen de Wikipedia (con sus créditos) y, si hay asistente, lo mejor y lo peor redactado por el
 // LLM a partir de los mismos hechos que enseña la ficha.
 import { useEffect, useState } from "react";
-import { api, type Explicacion, type Ficha as TFicha, type Meta, type Peticion, type Wikipedia } from "../api";
+import { api, type Explicacion, type Ficha as TFicha, type Meta, type Negocio, type Peticion, type Wikipedia } from "../api";
 import {
   factores, MOTIVOS, NODOS, nivel, palabraUtilidad, PALABRA_FUERZA, resumenFactores, type Factor, type Situacion,
 } from "../modelo";
@@ -15,12 +15,13 @@ interface Props {
   meta: Meta;
   pesos: Record<string, number>;
   peticion: Peticion;
+  negocio: Negocio | null;
   onCerrar: () => void;
 }
 
 const num = (x: number) => x.toLocaleString("es-ES", { maximumFractionDigits: 0 });
 
-export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticion, onCerrar }: Props) {
+export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticion, negocio, onCerrar }: Props) {
   if (!ficha) {
     return (
       <aside className="ficha cargando" aria-busy>
@@ -64,7 +65,7 @@ export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticio
       )}
 
       {meta.asistente_disponible && (
-        <EnPocasPalabras ine5={ficha.ine5} clase={clase?.nombre ?? null} preferencias={peticion.preferencias} />
+        <EnPocasPalabras ine5={ficha.ine5} clase={clase?.nombre ?? null} preferencias={peticion.preferencias} negocio={negocio} />
       )}
 
       {ficha.wikipedia?.resumen && (
@@ -136,18 +137,21 @@ function Foto({ wiki, nombre, onCerrar }: { wiki: Wikipedia; nombre: string; onC
   );
 }
 
+/** Hechos de la ficha en que se apoya una frase del asistente (tooltip). */
+const apoyo = (hechos: string[] | undefined) => (hechos?.length ? `Se basa en: ${hechos.join(" · ")}` : undefined);
+
 /** Lo mejor y lo peor del municipio, redactado por el LLM solo con los hechos de esta ficha. */
-function EnPocasPalabras({ ine5, clase, preferencias }: {
-  ine5: string; clase: string | null; preferencias: Peticion["preferencias"];
+function EnPocasPalabras({ ine5, clase, preferencias, negocio }: {
+  ine5: string; clase: string | null; preferencias: Peticion["preferencias"]; negocio: Negocio | null;
 }) {
   const [texto, setTexto] = useState<Explicacion | null>(null);
   const [estado, setEstado] = useState<"cargando" | "listo" | "error">("cargando");
-  const clave = JSON.stringify(preferencias);
+  const clave = JSON.stringify([preferencias, negocio]);
   useEffect(() => {
     let vigente = true;
     setEstado("cargando");
     const t = setTimeout(() => {
-      api.explicacion(ine5, clase, preferencias)
+      api.explicacion(ine5, clase, preferencias, negocio)
         .then((e) => { if (vigente) { setTexto(e); setEstado("listo"); } })
         .catch(() => { if (vigente) setEstado("error"); });
     }, 250);
@@ -168,13 +172,18 @@ function EnPocasPalabras({ ine5, clase, preferencias }: {
           {texto.titular && <p className="titular">{texto.titular}</p>}
           <div className="mejor-peor">
             {texto.mejor.length > 0 && (
-              <div className="mejor"><h4>Lo mejor</h4><ul>{texto.mejor.map((f) => <li key={f}>{f}</li>)}</ul></div>
+              <div className="mejor"><h4>Lo mejor</h4><ul>{texto.mejor.map((f, k) => (
+                <li key={f} title={apoyo(texto.apoyos?.mejor[k])}>{f}</li>))}</ul></div>
             )}
             {texto.peor.length > 0 && (
-              <div className="peor"><h4>Lo que conviene vigilar</h4><ul>{texto.peor.map((f) => <li key={f}>{f}</li>)}</ul></div>
+              <div className="peor"><h4>Lo que conviene vigilar</h4><ul>{texto.peor.map((f, k) => (
+                <li key={f} title={apoyo(texto.apoyos?.peor[k])}>{f}</li>))}</ul></div>
             )}
           </div>
-          <p className="firma">Redactado con IA a partir de los factores y datos de esta ficha.</p>
+          <p className="firma">
+            Redactado con IA a partir de los factores y datos de esta ficha{negocio?.sector && <> y de lo que nos contaste de tu negocio ({negocio.sector})</>}.
+            Cada frase se comprueba contra la ficha; pasa el ratón por encima para ver en qué se basa.
+          </p>
         </>
       )}
     </section>

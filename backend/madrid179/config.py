@@ -132,7 +132,37 @@ LECTURAS = {
         "Mide lo que vale la vivienda, no el alquiler de oficinas. El modelo lo lee como señal de demanda: donde la "
         "vivienda vale más, el saldo de empresas fue algo mejor en 2020-2024 (asociación, no causa). Para quien se "
         "instala, un valor alto también anticipa locales más caros; si eso te importa, activa «Coste inmobiliario bajo»."),
+    "uu_oficinas_por_1000hab": (
+        "Mide cuántos locales de oficina hay en el Catastro. En el modelo, tener muchos resta: suelen ser municipios "
+        "ya consolidados (más grandes y que crecen menos), cuyo saldo de empresas avanzó menos en 2020-2024 "
+        "(asociación de señal dudosa, no causa). Para quien se instala, más oferta facilita encontrar local; si eso "
+        "te importa, activa «Oferta de oficinas»."),
+    "dist_sol_km": (
+        "Estar más lejos de Madrid no resta en el modelo, y a veces suma: los municipios alejados crecieron más en "
+        "población en estos años y su saldo de empresas fue algo mejor (asociación, no causa). Para quien necesita "
+        "ir a menudo a Madrid, la distancia sigue siendo un coste; si te importa, activa «Distancia a Madrid» (cerca)."),
+    "paro_por_100hab": (
+        "Un paro algo mayor suma un poco en el modelo una vez descontadas la renta y el talento, con los que va muy "
+        "unido. No significa que el paro sea bueno: es un ajuste estadístico sin causa demostrada. Para quien "
+        "contrata, puede indicar más gente disponible; si te importa, activa «Mano de obra disponible»."),
+    "dist_ferro_km": (
+        "Estar más lejos de una estación suma algo en el modelo porque esos municipios crecieron más en población "
+        "(asociación de señal dudosa, no causa). Para quien depende del tren, la cercanía a una estación es una "
+        "ventaja; si te importa, activa «Estación de tren cerca»."),
 }
+
+# Qué supone un valor alto (tercio superior) para quien se instala; uno bajo (tercio inferior), lo contrario. Cuando
+# choca con el signo del GA²M, «lo mejor» y «lo peor» de la explicación siguen esta lectura, no la del modelo.
+PARA_QUIEN_SE_INSTALA = {
+    "vc_residencial_por_uu": "inconveniente",    # locales más caros
+    "uu_oficinas_por_1000hab": "ventaja",        # más locales donde elegir
+    "dist_sol_km": "inconveniente",              # más lejos de clientes y proveedores de Madrid
+    "dist_ferro_km": "inconveniente",            # más lejos del tren
+}
+
+# Variables que entraron en el GA²M por el criterio de «incluir ante la duda» (#44): en validación aportan ≈ +0,01,
+# dentro del ruido. La ficha y el asistente las marcan para no presentarlas como razones de peso.
+SENAL_DUDOSA = set(EXTRAS_GA2M)
 
 # Pesos de la Opción B (contribución de cada estado padre a la utilidad de viabilidad, escala 0-1)
 PESOS_B = {"Dinamismo_Demografico": 0.55, "Especializacion_Servicios": 0.45}

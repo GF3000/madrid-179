@@ -90,7 +90,8 @@ def explicacion(ine5: str, peticion: PeticionExplicacion, request: Request):
     """Lo mejor y lo peor del municipio en lenguaje natural (LLM), redactado solo con los hechos de su ficha."""
     prefs = {k: v if isinstance(v, str) else v.model_dump() for k, v in peticion.preferencias.items()}
     try:
-        hechos = servicio(request).hechos(ine5, peticion.clase, prefs)
+        hechos = servicio(request).hechos(ine5, peticion.clase, prefs,
+                                          peticion.negocio.model_dump() if peticion.negocio else None)
     except KeyError:
         raise HTTPException(404, f"Municipio o preferencia desconocidos: {ine5}") from None
     except ValueError as e:

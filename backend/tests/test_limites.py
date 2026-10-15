@@ -59,7 +59,8 @@ def test_api_responde_429_y_la_cache_no_gasta(cliente, monkeypatch):
 
     def falso(texto, sistema=None, temperatura=0.2):
         llamadas.append(1)
-        return json.dumps({"titular": "Un municipio tranquilo.", "mejor": ["Es tranquilo."], "peor": []})
+        return json.dumps({"titular": "Un municipio tranquilo.", "mejor": [{"texto": "Es tranquilo.", "apoyo": ["perfil"]}],
+                           "peor": []})
     monkeypatch.setattr(asistente, "_llamar", falso)
     monkeypatch.setattr(asistente, "LIMITE", limites.Limitador(por_cliente_hora=1, global_hora=0, global_dia=0))
     asistente._CACHE_EXPLICAR.clear()

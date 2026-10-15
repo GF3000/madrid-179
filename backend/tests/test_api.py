@@ -197,25 +197,110 @@ def test_valor_vivienda_se_lee_como_demanda(servicio):
     assert aport["rdb_per_capita"]["lectura"] is None  # solo las variables que pueden confundir llevan lectura
     h = servicio.hechos("28080")
     f = next(f for f in h["factores"]["a favor"] if f["factor"].startswith("Valor de la vivienda"))
-    assert f["nivel"] == "alto" and f["como_leerlo"] == vc["lectura"]
+    assert f["nivel"] == "alto" and f["como_leerlo"] == vc["lectura"] and f["para_quien_se_instala"] == "inconveniente"
     assert "valor de la vivienda" in h["perfil"] and "coste inmobiliario" not in h["perfil"]
-    assert "como_leerlo" in INSTRUCCIONES_EXPLICAR and "nunca escribas \"coste inmobiliario alto\"" in INSTRUCCIONES_EXPLICAR
+    assert "como_leerlo" in INSTRUCCIONES_EXPLICAR and "para_quien_se_instala" in INSTRUCCIONES_EXPLICAR
+
+
+def _id(hechos, prefijo, lado=None):
+    """Id del factor de los hechos cuya etiqueta empieza por `prefijo`."""
+    lados = [lado] if lado else ["a favor", "en contra"]
+    return next(f["id"] for l in lados for f in hechos["factores"][l] if f["factor"].startswith(prefijo))
+
+
+def test_oficinas_senal_dudosa(servicio):
+    """Muchas oficinas restan en el GA²M (señal dudosa), pero para quien se instala son una ventaja."""
+    of = next(a for a in servicio.ficha("28083")["ga2m"]["aportaciones"] if a["termino"] == "uu_oficinas_por_1000hab")
+    assert of["aportacion_pp"] < 0 and of["senal_dudosa"] and of["para_quien_se_instala"] == "ventaja"
+    assert "Oferta de oficinas" in of["lectura"]
+    f = next(f for f in servicio.hechos("28083")["factores"]["en contra"] if f["factor"].startswith("Oficinas"))
+    assert f["senal"] == "dudosa" and f["para_quien_se_instala"] == "ventaja"
 
 
 def test_explicacion(cliente, monkeypatch):
+    """La respuesta del LLM se revisa: si incumple reglas se pide una corrección y lo que siga mal se descarta."""
     import json
     from madrid179 import asistente
-    recibido = {}
+    llamadas = []
 
     def falso(texto, sistema=None, temperatura=0.2):
-        recibido.update(json.loads(texto))
-        return json.dumps({"titular": "Un municipio joven y en crecimiento.", "mejor": ["Crece mucho.", "", 3],
-                           "peor": ["Tiene pocas oficinas."]})
+        entrada = json.loads(texto)
+        llamadas.append(entrada)
+        h = entrada.get("hechos", entrada)
+        fa = next(f["id"] for f in h["factores"]["a favor"] if "senal" not in f and "para_quien_se_instala" not in f)
+        fc = next(f["id"] for f in h["factores"]["en contra"] if "senal" not in f and "para_quien_se_instala" not in f)
+        if "problemas" not in entrada:
+            return json.dumps({"titular": "Un municipio joven y en crecimiento.",
+                               "mejor": [{"texto": "Crece mucho.", "apoyo": [fa]},
+                                         {"texto": "Tiene 999.999 empresas.", "apoyo": [fa]},
+                                         {"texto": "Le resta, pero lo pongo aquí.", "apoyo": [fc]}],
+                               "peor": [{"texto": "Le resta algo.", "apoyo": [fc]}]})
+        return json.dumps({"titular": "Un municipio joven y en crecimiento.",
+                           "mejor": [{"texto": "Crece mucho.", "apoyo": [fa]}],
+                           "peor": [{"texto": "Le resta algo.", "apoyo": [fc]},
+                                    {"texto": "Esto provoca cierres.", "apoyo": [fc]}]})
     monkeypatch.setattr(asistente, "_llamar", falso)
     asistente._CACHE_EXPLICAR.clear()
     r = cliente.post(f"{API}/municipios/28149/explicacion", json={"clase": "Muy favorable"}).json()
-    assert r == {"titular": "Un municipio joven y en crecimiento.", "mejor": ["Crece mucho."], "peor": ["Tiene pocas oficinas."]}
-    assert recibido["municipio"] == "Torrejón de la Calzada" and recibido["grupo"] == "Muy favorable"
+    assert r["titular"] == "Un municipio joven y en crecimiento."
+    assert r["mejor"] == ["Crece mucho."] and r["peor"] == ["Le resta algo."]
+    assert r["comprobacion"] == {"corregida": True, "descartadas": 1}  # «provoca» sigue mal tras la corrección
+    assert len(r["apoyos"]["mejor"]) == 1 and r["apoyos"]["mejor"][0][0].endswith(")")  # factor (nivel)
+    assert len(llamadas) == 2 and llamadas[0]["municipio"] == "Torrejón de la Calzada"
+    problemas = " ".join(llamadas[1]["problemas"])
+    assert "999.999" in problemas and "pone en lo mejor algo que resta" in problemas
+
+
+def test_explicacion_adaptada_al_negocio(cliente, monkeypatch):
+    """Con el negocio del usuario, el titular debe nombrar su actividad: si no, se pide una corrección."""
+    import json
+    from madrid179 import asistente
+    llamadas = []
+
+    def falso(texto, sistema=None, temperatura=0.2):
+        llamadas.append(json.loads(texto))
+        titular = "Favorable para una oficina." if len(llamadas) == 1 else "Favorable para tu empresa de ciberseguridad."
+        return json.dumps({"titular": titular, "mejor": [{"texto": "Tiene buen perfil.", "apoyo": ["perfil"]}], "peor": []})
+    monkeypatch.setattr(asistente, "_llamar", falso)
+    asistente._CACHE_EXPLICAR.clear()
+    negocio = {"sector": "ciberseguridad", "resumen": "Oficina de ciberseguridad de 12 personas."}
+    r = cliente.post(f"{API}/municipios/28149/explicacion", json={"clase": "Favorable", "negocio": negocio}).json()
+    assert llamadas[0]["negocio_del_usuario"] == negocio
+    assert "no nombra la actividad" in llamadas[1]["problemas"][0]
+    assert r["titular"] == "Favorable para tu empresa de ciberseguridad." and r["comprobacion"]["corregida"]
+
+
+def test_revisar_reglas(servicio):
+    """Cada regla del verificador de explicaciones, sobre Majadahonda con la preferencia de coste bajo."""
+    from madrid179.asistente import revisar
+    h = servicio.hechos("28080", "Favorable", {"coste": {"importancia": "Muy importante"}})
+    vivienda, distancia = _id(h, "Valor de la vivienda"), _id(h, "Distancia a Madrid")
+    talento, crecimiento = _id(h, "Talento", "a favor"), _id(h, "Crecimiento", "en contra")
+    dudosa = next(f["id"] for l in h["factores"].values() for f in l if f.get("senal") == "dudosa")
+    coste = h["preferencias_del_usuario"][0]
+    assert coste["encaje"] == "bajo"
+
+    def problemas(lado, texto, apoyo):
+        return revisar({"titular": "", lado: [{"texto": texto, "apoyo": apoyo}]}, h)[1]
+
+    assert not problemas("mejor", "Tiene mucho talento y 73.625 habitantes.", [talento])  # cifra de los hechos
+    assert not problemas("peor", "El valor de la vivienda es alto: los locales serán más caros.", [vivienda])
+    assert not problemas("peor", "No encaja con tu preferencia de coste bajo.", [coste["id"]])
+    assert not problemas("peor", "La población crece poco.", [crecimiento])
+    # el lado: lo que es un inconveniente para quien se instala no va en lo mejor aunque el GA²M lo sume
+    assert problemas("mejor", "La vivienda vale mucho.", [vivienda])
+    assert problemas("peor", "Estar cerca de Madrid es un coste.", [distancia])  # cerca = ventaja
+    assert problemas("mejor", "La población crece poco.", [crecimiento])
+    assert problemas("mejor", "Encaja con el coste.", [coste["id"]])
+    assert problemas("mejor", "Tiene lo que buscas.", [dudosa])                      # señal dudosa
+    assert problemas("mejor", "Tiene talento.", [])                                 # sin apoyo
+    assert problemas("mejor", "Tiene talento.", ["F999"])                           # hecho inexistente
+    assert problemas("mejor", "Tiene 12.345 empresas de talento.", [talento])       # cifra inventada
+    assert problemas("mejor", "El talento garantiza el éxito.", [talento])          # lenguaje causal
+    assert problemas("mejor", "Según el modelo, tiene talento.", [talento])         # jerga
+    assert problemas("mejor", "Tiene talento y poca competencia.", [talento])       # mecanismo inventado
+    assert problemas("mejor", "Es caro, pero tiene talento.", [talento])            # lo caro como ventaja
+    assert revisar({"titular": "Majadahonda provoca empresas.", "mejor": []}, h)[1]  # el titular también se revisa
 
 
 def test_explicacion_errores(cliente, monkeypatch):
