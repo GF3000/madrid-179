@@ -34,7 +34,9 @@ COPY backend/pyproject.toml backend/
 COPY backend/pipeline/entrenar.py backend/pipeline/
 COPY backend/tests backend/tests
 COPY data/processed data/processed
-RUN python backend/pipeline/entrenar.py && python -m pytest backend/tests -q -p no:cacheprovider
+# El GA²M se reentrena en otra máquina que las salidas versionadas: CI=1 activa la tolerancia al ruido de coma
+# flotante de test_equivalencia.py (sin ella la comparación es exacta y falla o pasa según el procesador)
+RUN python backend/pipeline/entrenar.py && CI=1 python -m pytest backend/tests -q -p no:cacheprovider
 
 # --- 4. Imagen final: solo lo que sirve la API ---
 FROM base
