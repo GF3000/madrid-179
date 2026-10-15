@@ -11,6 +11,10 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
+    <!-- Con JavaScript, el texto de respaldo de #raiz no se pinta mientras carga la app (evita el destello antes de la intro) -->
+    <script>document.documentElement.classList.add("js")</script>
+    <style>html { background: #f6f2ec } .js #raiz > main { visibility: hidden }</style>
+
     <!-- Vista previa al compartir (imagen: backend/pipeline/imagen_social.py) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Madrid 179" />
