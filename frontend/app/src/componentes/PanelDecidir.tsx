@@ -4,7 +4,7 @@ import type { Filtros, Importancia, Interpretacion, Meta, Municipio, Peticion, P
 import { CLASES, FILTRADO, OPCIONES_IMPORTANCIA, type Clase, type Situacion } from "../modelo";
 import Asistente from "./Asistente";
 import { nombreLegible } from "./Ficha";
-import { Columna, Segmentado } from "./piezas";
+import { Ayuda, Columna, Segmentado } from "./piezas";
 
 export interface Cambio {
   ine5: string;
@@ -106,7 +106,7 @@ export default function PanelDecidir(p: Props) {
                 <div className="grupo-pref-cuerpo">
                   {lista.map((c) => (
                     <div className={`pregunta${importancia(c.clave) !== "Me da igual" ? " activa" : ""}`} key={c.clave}>
-                      <span className="pregunta-titulo" title={c.descripcion}>{c.nombre}</span>
+                      <Ayuda texto={c.descripcion} clase="pregunta-titulo">{c.nombre}</Ayuda>
                       {c.sentidos && (
                         <Segmentado compacto nombre={`Sentido: ${c.nombre}`} opciones={c.sentidos}
                           valor={pref[c.clave]?.sentido ?? c.sentidos[0].valor}

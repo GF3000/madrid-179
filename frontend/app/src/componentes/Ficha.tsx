@@ -6,7 +6,8 @@ import { api, type Explicacion, type Ficha as TFicha, type Meta, type Negocio, t
 import {
   factores, MOTIVOS, NODOS, nivel, palabraUtilidad, PALABRA_FUERZA, resumenFactores, type Factor, type Situacion,
 } from "../modelo";
-import { Cerrar, Columna, Escalones, MarcasFuerza, Reparto, Seccion } from "./piezas";
+import { useEsTactil } from "../movil";
+import { Ayuda, Cerrar, Columna, Escalones, MarcasFuerza, Reparto, Seccion, useAyuda } from "./piezas";
 
 interface Props {
   ficha: TFicha | null;
@@ -87,9 +88,11 @@ export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticio
                 <h4>Combinaciones que también cuentan</h4>
                 <ul>
                   {combinados.map((f) => (
-                    <li key={f.termino} title={f.lectura ?? undefined}>
+                    <li key={f.termino}>
                       <MarcasFuerza fuerza={f.fuerza} signo={f.signo} />
-                      <span>{f.titulo} ({f.detalle}) {f.signo > 0 ? "suman" : "restan"} {PALABRA_FUERZA[f.fuerza]}</span>
+                      <Ayuda texto={f.lectura ?? undefined}>
+                        {f.titulo} ({f.detalle}) {f.signo > 0 ? "suman" : "restan"} {PALABRA_FUERZA[f.fuerza]}
+                      </Ayuda>
                     </li>
                   ))}
                 </ul>
@@ -106,17 +109,26 @@ export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticio
       <Seccion titulo="Su perfil" nota="Cada rasgo, comparado con los 179 municipios: un tercio está en cada nivel.">
         <dl className="perfil">
           {Object.entries(meta.nodos).filter(([n]) => n !== meta.objetivo).map(([n, d]) => (
-            <div key={n} className="rasgo" title={NODOS[n]?.que}>
-              <dt>{NODOS[n]?.nombre ?? n}</dt>
-              <dd>
-                <Escalones total={d.estados.length} nivel={nivel(d.estados, ficha.red.estados[n])} />
-                {NODOS[n]?.estados[ficha.red.estados[n]] ?? ficha.red.estados[n]}
-              </dd>
-            </div>
+            <Rasgo key={n} nodo={n} estados={d.estados} estado={ficha.red.estados[n]} />
           ))}
         </dl>
       </Seccion>
     </aside>
+  );
+}
+
+/** Un rasgo del perfil; lo que mide se despliega debajo de la fila al pulsar su nombre. */
+function Rasgo({ nodo, estados, estado }: { nodo: string; estados: string[]; estado: string }) {
+  const a = useAyuda(NODOS[nodo]?.que);
+  return (
+    <div className={`rasgo${a.abierta ? " con-ayuda" : ""}`}>
+      <dt>{a.boton(NODOS[nodo]?.nombre ?? nodo)}</dt>
+      <dd>
+        <Escalones total={estados.length} nivel={nivel(estados, estado)} />
+        {NODOS[nodo]?.estados[estado] ?? estado}
+      </dd>
+      {a.abierta && <dd className="ayuda-texto" id={a.id}>{NODOS[nodo]?.que}</dd>}
+    </div>
   );
 }
 
@@ -137,7 +149,7 @@ function Foto({ wiki, nombre, onCerrar }: { wiki: Wikipedia; nombre: string; onC
   );
 }
 
-/** Hechos de la ficha en que se apoya una frase del asistente (tooltip). */
+/** Hechos de la ficha en que se apoya una frase del asistente (se despliegan al pulsar la frase). */
 const apoyo = (hechos: string[] | undefined) => (hechos?.length ? `Se basa en: ${hechos.join(" · ")}` : undefined);
 
 /** Lo mejor y lo peor del municipio, redactado por el LLM solo con los hechos de esta ficha. */
@@ -147,6 +159,7 @@ function EnPocasPalabras({ ine5, clase, preferencias, negocio }: {
   const [texto, setTexto] = useState<Explicacion | null>(null);
   const [estado, setEstado] = useState<"cargando" | "listo" | "error">("cargando");
   const clave = JSON.stringify([preferencias, negocio]);
+  const tactil = useEsTactil();
   useEffect(() => {
     let vigente = true;
     setEstado("cargando");
@@ -173,16 +186,17 @@ function EnPocasPalabras({ ine5, clase, preferencias, negocio }: {
           <div className="mejor-peor">
             {texto.mejor.length > 0 && (
               <div className="mejor"><h4>Lo mejor</h4><ul>{texto.mejor.map((f, k) => (
-                <li key={f} title={apoyo(texto.apoyos?.mejor[k])}>{f}</li>))}</ul></div>
+                <li key={f}><Ayuda texto={apoyo(texto.apoyos?.mejor[k])}>{f}</Ayuda></li>))}</ul></div>
             )}
             {texto.peor.length > 0 && (
               <div className="peor"><h4>Lo que conviene vigilar</h4><ul>{texto.peor.map((f, k) => (
-                <li key={f} title={apoyo(texto.apoyos?.peor[k])}>{f}</li>))}</ul></div>
+                <li key={f}><Ayuda texto={apoyo(texto.apoyos?.peor[k])}>{f}</Ayuda></li>))}</ul></div>
             )}
           </div>
           <p className="firma">
             Redactado con IA a partir de los factores y datos de esta ficha{negocio?.sector && <> y de lo que nos contaste de tu negocio ({negocio.sector})</>}.
-            Cada frase se comprueba contra la ficha; pasa el ratón por encima para ver en qué se basa.
+            Cada frase se comprueba contra la ficha; {tactil ? "toca una frase" : "pasa el ratón por encima o pulsa una frase"}{" "}
+            para ver en qué se basa.
           </p>
         </>
       )}

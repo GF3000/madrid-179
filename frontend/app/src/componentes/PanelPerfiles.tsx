@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Consulta, Meta } from "../api";
 import { NODOS } from "../modelo";
 import { nombreLegible } from "./Ficha";
-import { Reparto, Segmentado } from "./piezas";
+import { Ayuda, Reparto, Segmentado } from "./piezas";
 
 interface Props {
   meta: Meta;
@@ -27,7 +27,7 @@ export default function PanelPerfiles({ meta, evidencia, onEvidencia, consulta, 
 
   const fila = (n: string) => (
     <div className="pregunta" key={n}>
-      <span title={NODOS[n]?.que}>{NODOS[n]?.nombre ?? n}</span>
+      <Ayuda texto={NODOS[n]?.que} clase="pregunta-titulo">{NODOS[n]?.nombre ?? n}</Ayuda>
       <Segmentado compacto nombre={NODOS[n]?.nombre ?? n}
         opciones={[{ valor: CUALQUIERA, etiqueta: "Da igual" },
           ...meta.nodos[n].estados.map((s) => ({ valor: s, etiqueta: cap(NODOS[n]?.estados[s] ?? s) }))]}

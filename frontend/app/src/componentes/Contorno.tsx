@@ -6,6 +6,7 @@ import { CLASES, FILTRADO, FUERA, type Situacion } from "../modelo";
 import type { Camara, MandoMapa } from "./Mapa";
 import { nombreLegible } from "./Ficha";
 import { Bandera, Cerrar, Columna } from "./piezas";
+import { esMovil, useEsTactil } from "../movil";
 
 export function Marca({ onAyuda }: { onAyuda: () => void }) {
   return (
@@ -75,10 +76,14 @@ export function Buscador({ municipios, onSeleccionar }: { municipios: Municipio[
 }
 
 // Pasar el ratón por un grupo lo resalta en el mapa (vista previa); un clic lo fija y se pueden fijar varios.
+// En táctil no hay vista previa (el toque emula un «pasar» que no se va) ni title: al fijar un solo grupo se lee su resumen
 export function Leyenda({ resaltada, fijadas, onResaltar, onFijar, onLimpiar, modo }: {
   resaltada: string | null; fijadas: Set<string>; onResaltar: (c: string | null) => void;
   onFijar: (c: string) => void; onLimpiar: () => void; modo: "decidir" | "perfiles";
 }) {
+  const tactil = useEsTactil();
+  const previa = (c: string | null) => !tactil && onResaltar(c);
+  const unica = tactil && fijadas.size === 1 ? [...CLASES, FILTRADO, FUERA].find((c) => fijadas.has(c.id)) : undefined;
   return (
     <div className={`leyenda${fijadas.size > 0 ? " con-fijadas" : ""}`} onMouseLeave={() => onResaltar(null)}>
       {fijadas.size > 0
@@ -89,14 +94,15 @@ export function Leyenda({ resaltada, fijadas, onResaltar, onFijar, onLimpiar, mo
       <div className="leyenda-clases">
         {[...CLASES, FILTRADO, FUERA].map((c) => (
           <button key={c.id} className={`${resaltada === c.id ? "activa" : ""}${fijadas.has(c.id) ? " fijada" : ""}`}
-            aria-pressed={fijadas.has(c.id)} onMouseEnter={() => onResaltar(c.id)} onClick={() => onFijar(c.id)}
-            onFocus={() => onResaltar(c.id)} onBlur={() => onResaltar(null)}
+            aria-pressed={fijadas.has(c.id)} onMouseEnter={() => previa(c.id)} onClick={() => onFijar(c.id)}
+            onFocus={() => previa(c.id)} onBlur={() => previa(null)}
             title={`${c.resumen} ${fijadas.has(c.id) ? "Clic para dejar de mostrar solo este grupo." : "Clic para mostrar solo este grupo."}`}>
             <Columna clase={c} />
             <span>{c.nombre}</span>
           </button>
         ))}
       </div>
+      {unica && <p className="leyenda-resumen" role="status">{unica.resumen}</p>}
     </div>
   );
 }
@@ -125,15 +131,23 @@ export function ControlesMapa({ camara, mando }: { camara: Camara; mando: MandoM
   );
 }
 
-export function Etiqueta({ x, y, municipio, situacion }: {
-  x: number; y: number; municipio: Municipio | undefined; situacion: Situacion | undefined;
+// abajo: px tapados por la hoja inferior en móvil; ahí la etiqueta no se sale por los lados ni se mete bajo la hoja
+export function Etiqueta({ x, y, municipio, situacion, abajo = 0 }: {
+  x: number; y: number; municipio: Municipio | undefined; situacion: Situacion | undefined; abajo?: number;
 }) {
+  const tactil = useEsTactil();
   if (!municipio || !situacion) return null;
+  let izq = x + 14;
+  let arriba = y + 14;
+  if (esMovil()) {
+    izq = Math.max(8, Math.min(izq, innerWidth - 236));
+    if (arriba + 100 > innerHeight - abajo) arriba = Math.max(8, y - 110);
+  }
   return (
-    <div className="etiqueta" style={{ transform: `translate(${x + 14}px, ${y + 14}px)` }}>
+    <div className="etiqueta" style={{ transform: `translate(${izq}px, ${arriba}px)` }}>
       <strong>{nombreLegible(municipio.municipio)}</strong>
       <span><Columna clase={situacion.clase} /> {situacion.clase.nombre}</span>
-      <em>Pulsa para ver por qué</em>
+      <em>{tactil ? "Toca de nuevo para ver la ficha" : "Pulsa para ver por qué"}</em>
     </div>
   );
 }
