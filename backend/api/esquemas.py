@@ -260,6 +260,30 @@ class Freno(BaseModel):
     lectura: str | None
 
 
+class OficinasContexto(BaseModel):
+    locales: int = Field(description="Locales de uso oficinas en el Catastro")
+    por_1000hab: float
+    coworking: int = Field(description="Espacios de coworking en OpenStreetMap (muy incompleto)")
+
+
+class Leader(BaseModel):
+    grupo: str = Field(description="Grupo de Acción Local")
+    fuente: str = Field(description="Convenio en el BOCM")
+
+
+class AyudasContexto(BaseModel):
+    leader: Leader | None
+    irpf_menos_2500: bool = Field(description="Deducciones autonómicas del IRPF por traslado y compra de vivienda")
+    pir_sin_cofinanciacion: bool = Field(description="PIR 2022-2026: no cofinancia sus inversiones")
+    anio_padron: str = Field(description="Padrón a 1 de enero con que se aplica el umbral de 2.500 habitantes")
+
+
+class ContextoPolitica(BaseModel):
+    """Datos de contexto, no resultado del modelo."""
+    oficinas: OficinasContexto
+    ayudas: AyudasContexto | None = Field(description="null si falta data/processed/ayudas_oficiales.csv")
+
+
 class MunicipioDiagnostico(BaseModel):
     ine5: str
     municipio: str
@@ -272,6 +296,7 @@ class MunicipioDiagnostico(BaseModel):
     cuadrante: Literal["oportunidad", "apoyo", "autonomo", "vigilar"]
     frenos: list[Freno]
     freno_palanca: Freno | None
+    contexto: ContextoPolitica
 
 
 class RespuestaDiagnostico(BaseModel):
@@ -280,3 +305,4 @@ class RespuestaDiagnostico(BaseModel):
     necesidad: Necesidad
     cuadrantes: list[Cuadrante]
     municipios: list[MunicipioDiagnostico]
+    contexto_nota: str

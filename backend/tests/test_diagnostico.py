@@ -51,10 +51,14 @@ def test_endpoint(cliente):
     r = cliente.get(f"{API}/diagnostico")
     assert r.status_code == 200
     d = r.json()
-    assert set(d) == {"corte", "aviso", "necesidad", "cuadrantes", "municipios"}
+    assert set(d) == {"corte", "aviso", "necesidad", "cuadrantes", "municipios", "contexto_nota"}
+    assert "no resultado del modelo" in d["contexto_nota"]
     assert [c["id"] for c in d["cuadrantes"]] == ["oportunidad", "apoyo", "autonomo", "vigilar"]
     assert set(d["municipios"][0]) == {"ine5", "municipio", "poblacion", "distancia", "candidato", "necesidad",
-                                       "componentes", "viabilidad", "cuadrante", "frenos", "freno_palanca"}
+                                       "componentes", "viabilidad", "cuadrante", "frenos", "freno_palanca", "contexto"}
+    c = d["municipios"][0]["contexto"]
+    assert set(c) == {"oficinas", "ayudas"} and set(c["oficinas"]) == {"locales", "por_1000hab", "coworking"}
+    assert set(c["ayudas"]) == {"leader", "irpf_menos_2500", "pir_sin_cofinanciacion", "anio_padron"}
     assert {m["distancia"] for m in d["municipios"]} <= {"Cerca", "Media", "Lejos"}
 
 
@@ -74,3 +78,37 @@ def test_umbral_freno(servicio):
     principales, palanca = frenos(contrib)
     assert [f["termino"] for f in principales] == ["crec_pob_5a"] and palanca is None
     assert frenos(contrib.drop("crec_pob_5a")) == ([], None)
+
+
+def test_contexto_oficinas(diag, servicio):
+    """Locales de oficinas, por 1.000 hab. y coworking salen de la tabla del artefacto, sin tocar."""
+    t = servicio.tabla
+    sin = {m["ine5"] for m in diag["municipios"] if m["contexto"]["oficinas"]["locales"] == 0}
+    assert sin == set(t.drop(index=CAPITAL).index[t.drop(index=CAPITAL).uu_oficinas < 1])
+    assert len(sin) == 39
+    for m in diag["municipios"]:
+        o = m["contexto"]["oficinas"]
+        assert o["locales"] == int(t.at[m["ine5"], "uu_oficinas"]) and o["coworking"] >= 0
+
+
+def test_contexto_ayudas(diag):
+    """99 municipios en LEADER (Madrid no lo está); IRPF y PIR = población < 2.500 con el padrón del CSV."""
+    ms = diag["municipios"]
+    assert all(m["contexto"]["ayudas"] is not None for m in ms)
+    leader = [m for m in ms if m["contexto"]["ayudas"]["leader"]]
+    assert len(leader) == 99
+    assert {m["contexto"]["ayudas"]["leader"]["grupo"] for m in leader} == {
+        "ARACOVE (sureste)", "GALSINMA (Sierra Norte)", "ADI Sierra Oeste (suroeste)"}
+    assert all(m["contexto"]["ayudas"]["leader"]["fuente"].startswith("https://www.bocm.es/") for m in leader)
+    for m in ms:
+        a = m["contexto"]["ayudas"]
+        assert a["irpf_menos_2500"] == (m["poblacion"] < 2500) == a["pir_sin_cofinanciacion"]
+        assert a["anio_padron"] == "2025"
+    assert sum(m["contexto"]["ayudas"]["irpf_menos_2500"] for m in ms) == 70
+
+
+def test_contexto_sin_fichero_de_ayudas(servicio):
+    """Sin ayudas_oficiales.csv el diagnóstico sigue saliendo, con `ayudas: null`."""
+    from madrid179.diagnostico import diagnostico
+    d = diagnostico(servicio.tabla, servicio.art["aportaciones"], servicio.base.index, None)
+    assert all(m["contexto"]["ayudas"] is None for m in d["municipios"])

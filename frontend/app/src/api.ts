@@ -179,6 +179,18 @@ export interface MunicipioDiagnostico {
   cuadrante: IdCuadrante;
   frenos: Freno[];
   freno_palanca: Freno | null;
+  contexto: ContextoPolitica;
+}
+
+// Contexto para la política: datos de contexto, no resultado del modelo
+export interface ContextoPolitica {
+  oficinas: { locales: number; por_1000hab: number; coworking: number }; // Catastro; coworking según OpenStreetMap
+  ayudas: {
+    leader: { grupo: string; fuente: string } | null; // LEADER 2023-2027 (convenio en el BOCM)
+    irpf_menos_2500: boolean;        // deducciones del IRPF por traslado o compra de vivienda (Ley 5/2024)
+    pir_sin_cofinanciacion: boolean; // PIR 2022-2026
+    anio_padron: string;
+  } | null; // null si el servidor no tiene ayudas_oficiales.csv
 }
 
 export interface Diagnostico {
@@ -187,6 +199,7 @@ export interface Diagnostico {
   necesidad: { componentes: { columna: string; etiqueta: string; sentido: "bajo" | "alto" }[]; nota: string };
   cuadrantes: { id: IdCuadrante; nombre: string; lectura: string }[];
   municipios: MunicipioDiagnostico[];
+  contexto_nota: string;
 }
 
 export interface PropsMunicipio {

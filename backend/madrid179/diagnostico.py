@@ -28,6 +28,11 @@ CUADRANTES = [
      "lectura": "Ni la necesidad ni la viabilidad destacan: conviene seguir su evolución."},
 ]
 NODO_DISTANCIA = "Distancia_Madrid"
+CONTEXTO_NOTA = ("Datos de contexto, no resultado del modelo: la presencia de un programa no mide su efecto en la "
+                 "viabilidad. Fuentes: Catastro (locales de oficinas), OpenStreetMap (coworking, incompleto), BOCM de "
+                 "18-01-2025 (convenios LEADER 2023-2027), Ley 5/2024 (deducciones del IRPF por traslado y compra de "
+                 "vivienda en municipios de menos de 2.500 habitantes, con el padrón a 1 de enero del año anterior) y "
+                 "PIR 2022-2026 (los municipios de menos de 2.500 habitantes no cofinancian).")
 
 
 def percentil(serie, sentido="alto"):
@@ -74,8 +79,25 @@ def tabla_diagnostico(tabla):
     return d
 
 
-def diagnostico(tabla, aportaciones, candidatos):
-    """Respuesta de GET /api/v1/diagnostico. `candidatos`: índices del ranking por defecto."""
+def contexto(r, ayudas):
+    """Contexto para la política (no es resultado del modelo): oficinas y coworking de la tabla del artefacto y
+    programas oficiales que alcanzan al municipio (fila de ayudas_oficiales.csv, o None si falta el fichero)."""
+    oficinas = {"locales": int(r.uu_oficinas), "por_1000hab": round(float(r.uu_oficinas_por_1000hab), 2),
+                "coworking": int(r.coworking_osm)}
+    if ayudas is None:
+        return {"oficinas": oficinas, "ayudas": None}
+    grupo = ayudas.leader_gal
+    return {"oficinas": oficinas, "ayudas": {
+        "leader": {"grupo": grupo, "fuente": ayudas.leader_fuente} if grupo else None,
+        "irpf_menos_2500": ayudas.irpf_menos_2500 == "True",
+        "pir_sin_cofinanciacion": ayudas.pir_sin_cofinanciacion == "True",
+        "anio_padron": ayudas.anio_padron,
+    }}
+
+
+def diagnostico(tabla, aportaciones, candidatos, ayudas=None):
+    """Respuesta de GET /api/v1/diagnostico. `candidatos`: índices del ranking por defecto. `ayudas`: tabla de
+    data/processed/ayudas_oficiales.csv indexada por ine5 (texto) o None si no está disponible."""
     d = tabla_diagnostico(tabla)
     cand = set(candidatos)
     municipios = []
@@ -92,6 +114,7 @@ def diagnostico(tabla, aportaciones, candidatos):
             "cuadrante": x.cuadrante,
             "frenos": principales,
             "freno_palanca": palanca,
+            "contexto": contexto(r, None if ayudas is None else ayudas.loc[i]),
         })
     return {
         "corte": CORTE_DIAGNOSTICO,
@@ -101,4 +124,5 @@ def diagnostico(tabla, aportaciones, candidatos):
                       "nota": NOTA_NECESIDAD},
         "cuadrantes": CUADRANTES,
         "municipios": municipios,
+        "contexto_nota": CONTEXTO_NOTA,
     }

@@ -240,7 +240,7 @@ function Reparto({ pesos, activas, tope }: { pesos: Record<string, number>; acti
   );
 }
 
-function Casilla({ marcada, onCambio, texto }: { marcada: boolean; onCambio: (m: boolean) => void; texto: React.ReactNode }) {
+export function Casilla({ marcada, onCambio, texto }: { marcada: boolean; onCambio: (m: boolean) => void; texto: React.ReactNode }) {
   return (
     <label className="casilla">
       <input type="checkbox" checked={marcada} onChange={(e) => onCambio(e.target.checked)} />
