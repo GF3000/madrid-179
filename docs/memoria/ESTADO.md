@@ -28,6 +28,12 @@
 - INE DIRCE tabla 4721 (toda España, 18 MB) descargada; Seg. Social por municipio y paro ya están en el CKAN CAM (`afiliados_seg_social_ultimo_dia_mes_municipio`, hasta 2026-M08).
 - Los CSV del CKAN CAM vienen en latin-1/ISO (; separador); `Territorio` es nombre, no código INE.
 - `din_emp` (dinámica de unidades productivas) tiene años 2015-2024; cada año trae inicio, nacen, mueren, entran y salen, así que se puede rehacer el objetivo con cualquier ventana (`experimento_covid.py`, función `objetivo`). La tasa neta entre ventanas disjuntas apenas correlaciona (Spearman ≈ 0,20): es poco persistente (#46).
+- **Despliegue (2026-10-15):**
+  - Proyecto GCP `madrid179` (número 122292942792), con la facturación "Pago de Firebase".
+  - Cloud Run `madrid179` en `europe-southwest1`: https://madrid179-122292942792.europe-southwest1.run.app (público, asistente activo). La primera revisión se desplegó a mano desde la imagen local.
+  - Firebase Hosting `https://madrid179.web.app`: reenvía al servicio con `infra/firebase/firebase.json`.
+  - CD con `.github/workflows/deploy.yml`. Las variables del repositorio y la WIF ya están configuradas con `infra/cloudrun/configurar_gcp.sh`.
+- Imagen Docker (`infra/Dockerfile`): todas las dependencias de la API tienen ruedas para Linux y Python 3.13; en Linux el artefacto reproduce las métricas de Windows y pasan los tests. `madrid179` va por `PYTHONPATH=/srv/backend` y no instalado, porque `config.RAIZ` se calcula desde la ruta del paquete. La `.env` usa `CLAVE = valor` con espacios: python-dotenv lo admite, pero `docker --env-file` no. Docker Desktop tarda un rato en aceptar builds después de arrancar: el primer intento devuelve 500 en `_ping`.
 
 ## Estado de tareas
 - [x] Catálogo CKAN CAM completo (docs/fuentes/cam_ckan_catalogo.csv)

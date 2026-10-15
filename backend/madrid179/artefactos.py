@@ -3,6 +3,7 @@
 La API carga el artefacto y nunca reentrena: sirve exactamente el modelo que ha pasado la auditoría.
 """
 import hashlib
+import os
 import subprocess
 from datetime import datetime, timezone
 
@@ -28,11 +29,13 @@ def leer_dataset(ruta=DATASET):
 
 def _version():
     fecha = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    try:
-        h = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=RAIZ, capture_output=True, text=True,
-                           check=True).stdout.strip()
-    except (OSError, subprocess.CalledProcessError):
-        h = "sin-git"
+    h = os.environ.get("MADRID179_COMMIT")  # en la imagen Docker no hay git: el commit llega como argumento del build
+    if not h:
+        try:
+            h = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=RAIZ, capture_output=True, text=True,
+                               check=True).stdout.strip()
+        except (OSError, subprocess.CalledProcessError):
+            h = "sin-git"
     return f"{fecha}+{h}"
 
 

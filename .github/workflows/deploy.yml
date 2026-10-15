@@ -1,0 +1,70 @@
+name: Despliegue (Cloud Run)
+
+# Despliega main en Cloud Run cuando la CI de un push a main termina en verde (o a mano desde Actions).
+# La imagen entrena el modelo y pasa los tests en Linux durante el build (infra/Dockerfile).
+# Autenticación sin claves: Workload Identity Federation, restringida a este repositorio y a la rama main.
+# Configuración única de GCP y de las variables del repositorio: infra/cloudrun/configurar_gcp.sh
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: despliegue-produccion
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  desplegar:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      REGION: ${{ vars.GCP_REGION }}
+      SERVICIO: ${{ vars.CLOUD_RUN_SERVICE }}
+      IMAGEN: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/madrid179/madrid179
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Construir la imagen (entrena el modelo y pasa los tests)
+        run: |
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          docker build -f infra/Dockerfile --build-arg COMMIT="${SHA::7}" -t "$IMAGEN:$SHA" .
+          docker push "$IMAGEN:$SHA"
+
+      - id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICIO }}
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGEN }}:${{ env.SHA }}
+          secrets: DEEPSEEK_API_KEY=deepseek-api-key:latest
+          flags: >-
+            --service-account=${{ vars.GCP_RUNTIME_SA }}
+            --allow-unauthenticated
+            --memory=1Gi --cpu=1
+            --min-instances=0 --max-instances=3
+            --concurrency=40 --timeout=60
+
+      - name: Comprobación tras desplegar
+        run: |
+          curl -fsS --retry 5 --retry-delay 3 "${{ steps.deploy.outputs.url }}/api/v1/meta" | head -c 400
+          echo
+          echo "Desplegado: ${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
