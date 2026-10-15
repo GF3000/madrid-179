@@ -27,6 +27,7 @@
 - Overpass (overpass-api.de) da 504 con consultas grandes (restauración, sanidad); reintentar por partes/provincia-comarca o usar Geofabrik PBF.
 - INE DIRCE tabla 4721 (toda España, 18 MB) descargada; Seg. Social por municipio y paro ya están en el CKAN CAM (`afiliados_seg_social_ultimo_dia_mes_municipio`, hasta 2026-M08).
 - Los CSV del CKAN CAM vienen en latin-1/ISO (; separador); `Territorio` es nombre, no código INE.
+- `din_emp` (dinámica de unidades productivas) tiene años 2015-2024; cada año trae inicio, nacen, mueren, entran y salen, así que se puede rehacer el objetivo con cualquier ventana (`experimento_covid.py`, función `objetivo`). La tasa neta entre ventanas disjuntas apenas correlaciona (Spearman ≈ 0,20): es poco persistente (#46).
 
 ## Estado de tareas
 - [x] Catálogo CKAN CAM completo (docs/fuentes/cam_ckan_catalogo.csv)
@@ -97,3 +98,18 @@
 - GA²M v2: 14 variables y 10 interacciones; el EBM sigue tardando ~30 s en entrenar. `experimento_ga2m_ampliado.py` reutiliza los resultados por repetición de `ga2m_cv.csv` como base (mismas particiones y semillas) y guarda cada configuración al terminar.
 - La auditoría de las CPT sigue verificando la inferencia por enumeración de la conjunta completa: con 12 nodos son 59.049 combinaciones por consulta y sigue siendo rápida.
 - Secretos: `.env` en la raíz (python-dotenv, `override=False`); `.dot` también ignorado. `.gitignore` tenía `.env.*`, que ignoraba la plantilla: añadida la excepción `!.env.example`.
+
+## Sesión 9 — App con mapa 3D (2026-10-15)
+- Límites municipales: `backend/pipeline/limites_municipales.py` disuelve `Seccionado_2019.shp` por `CDMUNI` con shapely (`buffer(1).buffer(-1)` cierra las rendijas entre secciones), simplifica 60 m en EPSG:25830 y reproyecta a WGS84 → `data/processed/municipios.geojson` (179 rasgos, 254 KB, en git) con el contorno de la Comunidad como miembro extra `contorno` (MultiPolygon de 2 partes). Lo sirve `GET /api/v1/geometria`. Cierra #23.
+- App en `frontend/app/` (Vite 6, React 18, MapLibre 5.24, deck.gl 9.1 con `MapboxOverlay` intercalado). La API monta `frontend/app/dist` en `/` si existe (al final, para no tapar `/api` ni `/docs`); el prototipo pasa a `/prototipo/`. La comprobación de `dist/` se hace al importar `api.main`: tras compilar por primera vez hay que reiniciar la API.
+- Trampa: el CSS de MapLibre pone `.maplibregl-map { position: relative }` y anula un `position: absolute` de igual especificidad cargado antes → el lienzo mide 300 px de alto. Usar un selector más específico (`.app > .mapa`).
+- Mapa base: estilo Positron de OpenFreeMap (`https://tiles.openfreemap.org/styles/positron`, sin clave), recoloreado en el cliente y sin capas de símbolos (los rótulos los pone deck.gl con la fuente de la app). Sin red, estilo vacío con fondo liso.
+- Aportaciones del GA²M en valor absoluto (pp de tasa neta, 179 municipios × 24 términos): p50 0,022 · p75 0,063 · p90 0,135 · p95 0,192 · p99 0,299. Son los umbrales de «algo / bastante / mucho» de la ficha.
+- `dist_sol_km` es distancia en línea recta desde el centroide (ponderado por secciones) a Sol, no por carretera; `paradas_ferro` suma Metro, Metro Ligero y Cercanías; `sanidad_osm` = hospitales, clínicas, consultas y farmacias.
+- Preferencias ampliadas (#47): con todas las preferencias «muy importantes», Σ a pasa de 1 y se escala al tope; antes, transporte «muy» + ayudas «poco» ya sumaban 1,14. Las utilidades en percentil con dos sentidos se invierten como 1 − u (prueba en `test_preferencias.py`). Servicios para la plantilla usa conteos absolutos de OSM: por habitante premiaba pueblos de 100 vecinos con una instalación (deporte por 1.000 hab. llega a 214).
+- La ficha calcula cada utilidad entre los 139 candidatos por defecto (más el municipio si está excluido): con una sola fila, un percentil siempre vale 1.
+- DeepSeek: `POST https://api.deepseek.com/chat/completions`, modelo `deepseek-chat`, `response_format: {"type": "json_object"}` (el prompt debe incluir la palabra JSON). Para probar sin clave: servidor local que devuelva `{"choices": [{"message": {"content": "<json>"}}]}` y `DEEPSEEK_URL` apuntando a él.
+- curl desde Git Bash en Windows manda la «ñ» mal codificada y FastAPI responde «error parsing the body»: probar con Python/httpx.
+- Wikidata: el código INE municipal de 5 dígitos es la propiedad **P772** (hay también valores de 11 dígitos de entidades de población: filtrar `STRLEN = 5`). La foto representativa es P18. El SPARQL de Wikidata devuelve **403** si el User-Agent no identifica el proyecto con una URL (política de robots de Wikimedia): usar `Madrid179-datathon/1.0 (https://github.com/GF3000/madrid-179)`.
+- Commons `imageinfo` con `iiurlwidth=800` devuelve miniaturas de 960 px en `thumb.wikimedia.org` con parámetros `utm_*`: se guardan sin ellos. 61 de las 179 fotos son de la Dirección General de Turismo de la Comunidad (CC BY 3.0 es).
+- Capturas de verificación con puppeteer-core y el Chrome del sistema (`--use-angle=swiftshader --enable-unsafe-swiftshader`): WebGL2 funciona en modo sin ventana.

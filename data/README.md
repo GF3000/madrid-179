@@ -34,5 +34,6 @@ La licencia MIT del repositorio cubre el código, no los datos. Cada conjunto co
 - Portales de datos abiertos de la Comunidad de Madrid y del Ayuntamiento de Madrid: condiciones de reutilización de cada portal (citar la fuente).
 - INE, BDNS, Catastro y CRTM: condiciones de reutilización de cada organismo.
 - OpenStreetMap: © colaboradores de OpenStreetMap, [ODbL](https://opendatacommons.org/licenses/odbl/). Los conteos derivados (`osm_conteo_por_municipio.csv`) se distribuyen con la misma licencia.
+- Wikipedia y Wikimedia Commons (`wikipedia_municipios.json`, de `backend/pipeline/descargar_wikipedia.py`): los resúmenes son texto de Wikipedia en español, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.es); las fotos no se copian (se enlazan a Commons) y cada una conserva su licencia, que el fichero guarda con su autor y la app muestra al pie de la foto.
 
 Antes de redistribuir un fichero, comprueba la licencia de su fuente en `docs/informe/FICHAS_FUENTES.md`.

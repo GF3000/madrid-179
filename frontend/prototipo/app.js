@@ -165,8 +165,8 @@ async function abrirFicha(ine5) {
     <table class="estados">${estados}</table>
 
     <h3>Preferencias</h3>
-    <p class="pie">Estación ferroviaria a ${fmt(f.preferencias.transporte.dist_ferro_km)} km (utilidad ${fmt(f.preferencias.transporte.utilidad, 2)}) ·
-      ayudas: nivel ${esc(f.preferencias.ayudas.nivel)} (utilidad ${fmt(f.preferencias.ayudas.utilidad, 1)})</p>`;
+    <p class="pie">Tren: ${esc(f.preferencias.transporte.dato)} (utilidad ${fmt(f.preferencias.transporte.utilidad[""], 2)}) ·
+      ayudas: ${esc(f.preferencias.ayudas.dato)} (utilidad ${fmt(f.preferencias.ayudas.utilidad[""], 1)})</p>`;
   el.querySelector(".cerrar").addEventListener("click", () => { el.hidden = true; seleccionado = null; history.replaceState(null, "", location.pathname); });
 }
 

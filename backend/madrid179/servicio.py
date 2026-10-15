@@ -2,16 +2,32 @@
 
 No depende de FastAPI: los tests y cualquier otro cliente pueden usarlo directamente.
 """
+import json
+import re
+
 import numpy as np
 import pandas as pd
 from pgmpy.inference import VariableElimination
 
-from .config import AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, NODOS, OBJETIVO, PADRES_OBJETIVO
-from .preferencias import IMPORTANCIA, PREFERENCIAS
-from .ranking import rankear, utilidades
+from . import asistente
+from .config import AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, NODOS, OBJETIVO, PADRES_OBJETIVO, RAIZ
+from .preferencias import (CATALOGO, IMPORTANCIA, POR_CLAVE, PREFERENCIAS, TOPE_PREFERENCIAS, catalogo_publico,
+                           normalizar)
+from .ranking import rankear
 from .red import distribucion
 
 UMBRAL_DISCREPANCIA = 50  # puntos de percentil entre la red y el GA²M
+WIKIPEDIA = RAIZ / "data" / "processed" / "wikipedia_municipios.json"  # backend/pipeline/descargar_wikipedia.py
+# Fuerza de una aportación del GA²M en palabras (pp de tasa neta; p90 / p75 / p50 de |aportación|, igual que la app)
+FUERZA = [(0.13, "mucho"), (0.05, "bastante"), (0.02, "algo")]
+MOTIVOS = {"excluir_madrid_capital": "la capital queda fuera a propósito: el objetivo es llevar actividad al resto de la región",
+           "min_uu_oficinas": "no tiene ningún local de oficinas en el Catastro"}
+NODOS_LEGIBLES = {
+    "Distancia_Madrid": "distancia a Madrid", "Talento": "talento (estudios superiores)",
+    "Acceso_Ferroviario": "estación de tren", "Coste_Inmobiliario": "coste inmobiliario", "Renta": "renta",
+    "Especializacion_Servicios": "servicios profesionales", "Dinamismo_Demografico": "crecimiento de la población",
+    "Densidad": "densidad", "Juventud": "población joven", "Sanidad": "oferta sanitaria", "Paro": "paro",
+}
 
 
 class ErrorEvidencia(ValueError):
@@ -24,6 +40,7 @@ class Servicio:
         self.tabla = art["tabla"]
         self.inferencia = VariableElimination(art["red"])
         self.base, _ = rankear(self.tabla)  # ranking por defecto (sin preferencias ni filtros del usuario)
+        self.wikipedia = json.loads(WIKIPEDIA.read_text(encoding="utf-8")) if WIKIPEDIA.exists() else {}
 
     # ------------------------------------------------------------------ meta
     def meta(self):
@@ -34,7 +51,8 @@ class Servicio:
             "objetivo": OBJETIVO, "padres_objetivo": PADRES_OBJETIVO,
             "nodos": {n: {"columna": NODOS[n][0], "estados": NODOS[n][1], "cortes": a["umbrales"][n]["cortes"]}
                       for n in NODOS},
-            "preferencias": PREFERENCIAS, "importancias": list(IMPORTANCIA),
+            "preferencias": PREFERENCIAS, "catalogo": catalogo_publico(), "importancias": list(IMPORTANCIA),
+            "tope_preferencias": TOPE_PREFERENCIAS, "asistente_disponible": asistente.disponible(),
             "filtros_base": list(FILTROS), "municipios": len(self.tabla), "candidatos_por_defecto": len(self.base),
         }
 
@@ -48,8 +66,8 @@ class Servicio:
                 for i, r in t.iterrows()]
 
     # --------------------------------------------------------------- ranking
-    def ranking(self, importancias=None, estacion_max_km=None, solo_con_ayudas=False, limite=None):
-        c, a = rankear(self.tabla, importancias, estacion_max_km, solo_con_ayudas)
+    def ranking(self, importancias=None, estacion_max_km=None, solo_con_ayudas=False, limite=None, **filtros):
+        c, a = rankear(self.tabla, importancias, estacion_max_km, solo_con_ayudas, **filtros)
         filas = c if limite is None else c.head(limite)
         partes = [k for k in ["modelo", *PREFERENCIAS] if f"parte_{k}" in c.columns]
         return {
@@ -89,7 +107,6 @@ class Servicio:
                             f"{b.percentil_bn:.0f} en la red (P(Alta) = {p_alta}). Lo valora mejor {mejor}; "
                             "revisa las aportaciones antes de fiarte de la puntuación.")
 
-        u = utilidades(self.tabla.loc[[ine5]])
         return {
             "ine5": ine5, "municipio": r.nombre_iecm, "poblacion": int(r.poblacion),
             "candidato": en_base,
@@ -106,9 +123,59 @@ class Servicio:
                     "padres": {p: r[p] for p in PADRES_OBJETIVO},
                     "percentil": round(float(b.percentil_bn), 2) if en_base else None},
             "discrepancia": discrepancia,
-            "preferencias": {"transporte": {"dist_ferro_km": round(float(r.dist_ferro_km), 2),
-                                            "utilidad": round(float(u["transporte"].iloc[0]), 4)},
-                             "ayudas": {"nivel": r.nivel_ayudas, "utilidad": float(u["ayudas"].iloc[0])}},
+            "preferencias": self._preferencias(ine5),
+            "wikipedia": self.wikipedia.get(ine5),
+        }
+
+    def _preferencias(self, ine5):
+        """Dato y utilidad (0-1, entre los candidatos por defecto) de cada preferencia, en cada sentido."""
+        grupo = self.tabla.loc[self.base.index.union([ine5])]
+        r = self.tabla.loc[ine5]
+        salida = {}
+        for p in CATALOGO:
+            sentidos = [v for v, _ in p.sentidos] or [None]
+            salida[p.clave] = {"dato": p.dato(r),
+                               "utilidad": {s or "": round(float(p.utilidad_en(grupo, s).loc[ine5]), 4) for s in sentidos}}
+        return salida
+
+    def hechos(self, ine5, clase=None, preferencias=None):
+        """Lo que ya ha calculado la herramienta sobre un municipio, en palabras: la única materia prima del LLM."""
+        f = self.ficha(ine5)
+        est = f["red"]["estados"]
+
+        def nivel(col):
+            nodo = next((n for n in NODOS if NODOS[n][0] == col), None)
+            return est[nodo].lower() if nodo else None
+
+        factores = {"a favor": [], "en contra": []}
+        for a in ([] if f["motivo_exclusion"] else f["ga2m"]["aportaciones"]):  # fuera del análisis: no se valora
+            fuerza = next((w for u, w in FUERZA if abs(a["aportacion_pp"]) >= u), None)
+            if not fuerza:
+                continue
+            detalle = [nivel(c) or _redondo(v) for c, v in a["valores"].items()]
+            factores["a favor" if a["aportacion_pp"] > 0 else "en contra"].append(
+                {"factor": a["etiqueta"], "nivel": " · ".join(detalle), "fuerza": fuerza})
+
+        prefs = []
+        for k, (imp, sentido) in normalizar(preferencias).items():
+            if IMPORTANCIA[imp] == 0:
+                continue
+            util = f["preferencias"][k]["utilidad"]
+            u = util.get(sentido or "", next(iter(util.values())))
+            prefs.append({"preferencia": POR_CLAVE[k].nombre + (f" ({sentido})" if sentido else ""),
+                          "importancia": imp, "dato": f["preferencias"][k]["dato"],
+                          "encaje": "alto" if u >= 0.66 else "medio" if u >= 0.33 else "bajo"})
+        probs = f["red"]["probabilidades"]
+        return {
+            "municipio": _legible(f["municipio"]), "habitantes": f["poblacion"], "grupo": clase,
+            "fuera_del_analisis": [MOTIVOS.get(m, m) for m in f["motivo_exclusion"] or []] or None,
+            "factores": factores,
+            "perfil": {NODOS_LEGIBLES.get(n, n): s.lower() for n, s in est.items() if n != OBJETIVO},
+            "red_de_causas": {"viabilidad_mas_habitual_en_municipios_asi": max(probs, key=probs.get).lower(),
+                              "depende_de": {NODOS_LEGIBLES.get(n, n): s.lower() for n, s in f["red"]["padres"].items()},
+                              "discrepa_de_la_tabla_de_factores": bool(f["discrepancia"])},
+            "preferencias_del_usuario": prefs or None,
+            "resumen_wikipedia": (f.get("wikipedia") or {}).get("resumen"),
         }
 
     def _motivo_exclusion(self, ine5):
@@ -136,3 +203,14 @@ class Servicio:
             "municipios": [{"ine5": i, "municipio": t.loc[i, "nombre_iecm"], "candidato": i in cand}
                            for i in t.index[mask]],
         }
+
+
+def _redondo(x):
+    """Número legible en español: 3,9 · 10.653."""
+    return f"{x:,.0f}".replace(",", ".") if abs(x) >= 100 else f"{x:.1f}".replace(".", ",")
+
+
+def _legible(nombre):
+    """«Molinos (Los)» -> «Los Molinos» (nombres del IECM con artículo pospuesto)."""
+    m = re.match(r"^(.*) \((La|El|Los|Las)\)$", nombre)
+    return f"{m[2]} {m[1]}" if m else nombre

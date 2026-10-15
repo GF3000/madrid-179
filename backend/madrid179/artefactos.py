@@ -12,12 +12,14 @@ import pandas as pd
 from pgmpy.inference import VariableElimination
 
 from . import ga2m
+from .preferencias import COLUMNAS as PREF_COLUMNAS
 from .config import ARTEFACTO, DATASET, EVIDENCIAS, FEATURES_GA2M, NODOS, RAIZ
 from .discretizacion import discretizar
 from .red import construir_modelo, distribucion, validar
 
 FORMATO = 1
-COLUMNAS_INFO = ["nombre_iecm", "poblacion", "uu_oficinas", "dist_ferro_km", "nivel_ayudas", "nivel_ayudas_num"]
+COLUMNAS_INFO = ["nombre_iecm", "poblacion", "uu_oficinas", "dist_ferro_km", "nivel_ayudas", "nivel_ayudas_num",
+                 *PREF_COLUMNAS]  # las preferencias del usuario (preferencias.CATALOGO) leen de la tabla
 
 
 def leer_dataset(ruta=DATASET):

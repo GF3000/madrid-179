@@ -9,4 +9,4 @@
 
 Los scripts funcionan con Windows PowerShell 5.1 y PowerShell 7 (guardados con BOM para que 5.1 lea bien las tildes).
 
-Pendiente: contenedor de la API y despliegue del frontend (#32).
+Pendiente: contenedor de la API y despliegue (#45, propuesta en `docs/memoria/PENDIENTES.md`) y frontend (#32).
