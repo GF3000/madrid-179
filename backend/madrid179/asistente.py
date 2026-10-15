@@ -1,5 +1,6 @@
 """Asistente LLM (PENDIENTES #29): traduce la descripción de un negocio en preferencias y filtros (interpretar) y
-redacta lo mejor y lo peor de un municipio a partir de los hechos ya calculados de su ficha (explicar).
+redacta lo mejor y lo peor de un municipio a partir de los hechos ya calculados de su ficha (explicar). También
+inventa descripciones de negocio de ejemplo para probar la app (ejemplo).
 
 El LLM (DeepSeek, API compatible con OpenAI) solo **traduce**: devuelve un JSON con preferencias del catálogo
 (preferencias.CATALOGO), filtros «imprescindible», un resumen y dudas. No puntúa ni explica municipios: eso lo
@@ -12,6 +13,7 @@ Clave en .env (DEEPSEEK_API_KEY); modelo y URL configurables con DEEPSEEK_MODELO
 import json
 import logging
 import os
+import random
 
 import httpx
 
@@ -220,3 +222,50 @@ def explicar(hechos, cliente=None):
         _CACHE_EXPLICAR.clear()
     _CACHE_EXPLICAR[clave] = salida
     return salida
+
+
+# ------------------------------------------------------------------ ejemplo de negocio para probar la app
+# El sorteo se hace aquí y no en el LLM, que con la misma petición tiende a repetir el mismo negocio.
+SECTORES_EJEMPLO = (
+    "consultora de ingeniería", "estudio de arquitectura", "agencia de marketing digital", "gestoría y asesoría fiscal",
+    "empresa de desarrollo de software", "despacho de abogados", "centro de atención telefónica",
+    "empresa de logística ligera y reparto", "laboratorio de análisis de alimentos", "academia de formación",
+    "productora audiovisual", "startup de energía solar", "inmobiliaria", "agencia de viajes rurales",
+    "clínica de fisioterapia con oficina administrativa", "empresa de ciberseguridad", "editorial pequeña",
+    "cooperativa agroalimentaria (oficina comercial)", "estudio de videojuegos", "empresa de traducción",
+)
+PLANTILLAS_EJEMPLO = ("2 o 3 personas", "unas 8 personas", "15 a 20 personas", "unas 40 personas", "más de 100 personas")
+NECESIDADES_EJEMPLO = (
+    "que la plantilla pueda llegar en tren", "buen transporte público", "estar cerca de Madrid",
+    "alejarse de Madrid para ganar calidad de vida", "un alquiler barato", "aprovechar ayudas para pueblos pequeños",
+    "contratar personal muy cualificado", "contratar mano de obra sin necesidad de titulación", "un municipio joven",
+    "una ciudad grande", "un pueblo pequeño y tranquilo", "clientes con poder adquisitivo",
+    "proveedores y servicios profesionales cerca", "un municipio en crecimiento", "otras oficinas alrededor",
+    "un coworking para empezar", "restaurantes, guarderías y servicios para el equipo",
+)
+INSTRUCCIONES_EJEMPLO = """Escribes ejemplos para probar Madrid 179, una herramienta que recomienda en qué municipio de la
+Comunidad de Madrid abrir una oficina. Recibes un sector, un tamaño de plantilla y unas necesidades. Inventa un negocio
+verosímil y escribe cómo se lo describiría su responsable a la herramienta: en primera persona del plural, en español
+coloquial, de 2 a 4 frases y menos de 450 caracteres. Di a qué os dedicáis, cuántos sois y qué necesitáis, con tus
+palabras (no copies las necesidades al pie de la letra). No nombres municipios concretos ni marcas reales.
+
+Responde solo con un objeto JSON: {"texto": "...", "sector": "actividad en pocas palabras"}"""
+
+
+def ejemplo(cliente=None, azar=None):
+    """Inventa la descripción de un negocio para probar el asistente. Sector, plantilla y necesidades se sortean
+    aquí; el LLM solo los redacta. No puntúa ni toca el ranking: el texto pasa luego por interpretar()."""
+    azar = azar or random.Random()
+    semilla = {"sector": azar.choice(SECTORES_EJEMPLO), "plantilla": azar.choice(PLANTILLAS_EJEMPLO),
+               "necesidades": azar.sample(NECESIDADES_EJEMPLO, azar.randint(2, 3))}
+    LIMITE.consumir(cliente)
+    contenido = _llamar(json.dumps(semilla, ensure_ascii=False), INSTRUCCIONES_EJEMPLO, temperatura=1.0)
+    try:
+        bruto = json.loads(contenido)
+    except (TypeError, ValueError):
+        raise ErrorAsistente("El asistente no devolvió JSON válido") from None
+    texto = str(bruto.get("texto") or "").strip() if isinstance(bruto, dict) else ""
+    if len(texto) < 10:
+        raise ErrorAsistente("El asistente devolvió un ejemplo vacío")
+    sector = bruto.get("sector")
+    return {"texto": texto[:2000], "sector": str(sector)[:80] if sector else semilla["sector"]}

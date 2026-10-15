@@ -19,7 +19,8 @@ from madrid179.config import ARTEFACTO, RAIZ
 from madrid179.servicio import ErrorEvidencia, Servicio
 
 from .esquemas import (Ficha, Meta, Municipio, PeticionConsulta, PeticionExplicacion, PeticionInterpretar,
-                       PeticionRanking, RespuestaConsulta, RespuestaExplicacion, RespuestaInterpretar, RespuestaRanking)
+                       PeticionRanking, RespuestaConsulta, RespuestaEjemplo, RespuestaExplicacion, RespuestaInterpretar,
+                       RespuestaRanking)
 
 PROTOTIPO = RAIZ / "frontend" / "prototipo"
 APP = RAIZ / "frontend" / "app" / "dist"
@@ -118,6 +119,20 @@ def interpretar(peticion: PeticionInterpretar, request: Request):
     el resultado se valida contra el catálogo; la app lo aplica, lo muestra y permite deshacerlo."""
     try:
         return asistente.interpretar(peticion.texto, cliente=_cliente(request))
+    except limites.LimiteSuperado as e:
+        raise _demasiadas(e) from None
+    except asistente.AsistenteNoDisponible:
+        raise HTTPException(503, "El asistente no está configurado (falta DEEPSEEK_API_KEY en .env)") from None
+    except asistente.ErrorAsistente as e:
+        raise HTTPException(502, str(e)) from None
+
+
+@v1.post("/ejemplo", response_model=RespuestaEjemplo)
+def ejemplo(request: Request):
+    """Inventa la descripción de un negocio (LLM) para probar el asistente sin tener que escribirla.
+    Solo genera texto; para aplicarlo hay que pasarlo por /interpretar."""
+    try:
+        return asistente.ejemplo(cliente=_cliente(request))
     except limites.LimiteSuperado as e:
         raise _demasiadas(e) from None
     except asistente.AsistenteNoDisponible:

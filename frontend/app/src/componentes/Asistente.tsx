@@ -17,6 +17,7 @@ export default function Asistente({ meta, onAplicar, onDeshacer }: Props) {
   const [texto, setTexto] = useState("");
   const [estado, setEstado] = useState<"reposo" | "pensando" | "listo" | "deshecho" | "error">("reposo");
   const [resultado, setResultado] = useState<Interpretacion | null>(null);
+  const [inventando, setInventando] = useState(false);
   const nombres = new Map(meta.catalogo.map((p) => [p.clave, p]));
 
   const interpretar = async () => {
@@ -32,6 +33,18 @@ export default function Asistente({ meta, onAplicar, onDeshacer }: Props) {
     }
   };
 
+  // Para probar la app sin escribir: el LLM inventa un negocio y lo deja en el cuadro, listo para interpretar
+  const inventar = async () => {
+    setInventando(true);
+    try {
+      setTexto((await api.ejemplo()).texto);
+    } catch {
+      setTexto(EJEMPLO);
+    } finally {
+      setInventando(false);
+    }
+  };
+
   const prefs = resultado ? Object.entries(resultado.preferencias) : [];
   const filtros = resultado ? Object.entries(resultado.filtros) as [keyof Filtros, number | boolean][] : [];
   const vacio = resultado && prefs.length === 0 && filtros.length === 0;
@@ -44,7 +57,11 @@ export default function Asistente({ meta, onAplicar, onDeshacer }: Props) {
           onChange={(e) => setTexto(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) interpretar(); }} />
         <div className="asistente-pie">
-          <span className="nota">A qué te dedicas, cuántos sois y qué necesitáis.</span>
+          <span className="nota">A qué te dedicas, cuántos sois y qué necesitáis.{" "}
+            <button className="enlace" disabled={inventando || estado === "pensando"} onClick={inventar}>
+              {inventando ? "Inventando…" : "Inventar un ejemplo"}
+            </button>
+          </span>
           <button className="boton-primario" disabled={estado === "pensando" || texto.trim().length < 10} onClick={interpretar}>
             {estado === "pensando" ? "Leyendo…" : "Interpretar"}
           </button>

@@ -152,6 +152,25 @@ def test_interpretar_texto_corto(cliente):
     assert cliente.post(f"{API}/interpretar", json={"texto": "hola"}).status_code == 422
 
 
+def test_ejemplo(cliente, monkeypatch):
+    import json
+    from madrid179 import asistente
+    recibido = {}
+
+    def falso(texto, sistema=None, temperatura=0.2):
+        recibido.update(json.loads(texto))
+        return json.dumps({"texto": "Somos una gestoría de 8 personas y queremos tren cerca.", "sector": "gestoría"})
+    monkeypatch.setattr(asistente, "_llamar", falso)
+    r = cliente.post(f"{API}/ejemplo").json()
+    assert r == {"texto": "Somos una gestoría de 8 personas y queremos tren cerca.", "sector": "gestoría"}
+    assert recibido["sector"] in asistente.SECTORES_EJEMPLO and 2 <= len(recibido["necesidades"]) <= 3
+    monkeypatch.setattr(asistente, "_llamar", lambda *a, **k: json.dumps({"texto": ""}))
+    assert cliente.post(f"{API}/ejemplo").status_code == 502
+    monkeypatch.undo()  # vuelve el _llamar real, que sin clave no llega a la red
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    assert cliente.post(f"{API}/ejemplo").status_code == 503
+
+
 def test_ficha_wikipedia(cliente):
     w = cliente.get(f"{API}/municipios/28070").json()["wikipedia"]
     assert w["titulo"].startswith("Horcajo de la Sierra")  # enlazado por código INE, no se confunde con Horcajuelo

@@ -201,6 +201,11 @@ class RespuestaInterpretar(BaseModel):
     avisos: list[str]
 
 
+class RespuestaEjemplo(BaseModel):
+    texto: str
+    sector: str | None
+
+
 class PeticionExplicacion(BaseModel):
     clase: str | None = Field(None, max_length=60, description="Grupo que muestra la app (depende de las preferencias)")
     preferencias: dict[str, Importancia | PreferenciaUsuario] = Field(default_factory=dict)

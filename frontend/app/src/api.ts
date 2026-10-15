@@ -178,5 +178,6 @@ export const api = {
   explicacion: (ine5: string, clase: string | null, preferencias: Peticion["preferencias"]) =>
     pedir<Explicacion>(`/municipios/${ine5}/explicacion`, { clase, preferencias }),
   interpretar: (texto: string) => pedir<Interpretacion>("/interpretar", { texto }),
+  ejemplo: () => pedir<{ texto: string; sector: string | null }>("/ejemplo", {}),
   consulta: (evidencia: Record<string, string>) => pedir<Consulta>("/consulta", { evidencia }),
 };
