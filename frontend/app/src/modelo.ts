@@ -1,6 +1,6 @@
 // Traducción del modelo a lenguaje claro: clases en lugar de cifras, frases en lugar de coeficientes.
 // Las puntuaciones del modelo son orientativas, así que la interfaz enseña grupos y razones, no decimales.
-import type { Aportacion, Filtros, Municipio, Ranking } from "./api";
+import type { Aportacion, Diagnostico, Ficha, Filtros, IdCuadrante, Meta, Municipio, Peticion, Ranking } from "./api";
 
 export type Rgb = [number, number, number];
 
@@ -213,6 +213,12 @@ export function palabraImportancia(i: string): string {
   return i === "Muy importante" ? "Mucho" : i === "Poco importante" ? "Algo" : "Me da igual";
 }
 
+/** Lo mínimo que pesa el modelo frente a las preferencias, 1 / (1 + tope), dicho con palabras. */
+export function pesoMinimoModelo(tope: number): string {
+  return { 1: "la mitad", 2: "un tercio", 3: "una cuarta parte", 4: "una quinta parte" }[tope]
+    ?? `el ${Math.round(100 / (1 + tope))} %`;
+}
+
 export const FILTROS_VACIOS: Filtros = {
   estacion_max_km: null, madrid_max_km: null, madrid_min_km: null, poblacion_min: null, poblacion_max: null,
   solo_con_ayudas: false, con_coworking: false,
@@ -236,4 +242,83 @@ export function describirFiltro(k: keyof Filtros, v: number | boolean | null): s
 export function filtrosActivos(f: Filtros): [keyof Filtros, number | boolean][] {
   return (Object.entries(f) as [keyof Filtros, number | boolean | null][])
     .filter((e): e is [keyof Filtros, number | boolean] => e[1] !== null && e[1] !== false);
+}
+
+// ------------------------------------------------------------ recorrido
+// Factores que suman en el modelo pero que, leídos como «lo mejor» sin más contexto, confunden: paro o vivienda altos
+// (son señal de tamaño y demanda, no ventajas para quien se instala) o una estación lejana
+function raroComoVentaja(columna: string, ficha: Ficha): boolean {
+  const e = ficha.red.estados;
+  if (columna === "paro_por_100hab") return e.Paro === "Alto";
+  if (columna === "vc_residencial_por_uu") return e.Coste_Inmobiliario === "Alto";
+  if (columna === "dist_ferro_km") return e.Acceso_Ferroviario !== "Si";
+  return false;
+}
+
+export interface PuntoFuerte {
+  titulo: string;
+  detalle: string;
+  tuyo: boolean; // viene de una preferencia del usuario (no del modelo)
+}
+
+/** Lo mejor de un municipio en 1-3 frases cortas, para el recorrido del Top. Primero lo que el usuario ha pedido y el
+ *  municipio cumple de sobra (utilidad ≥ 0,66); después los factores del GA²M que más le suman. Se dejan fuera los
+ *  factores con «lectura» (su signo puede confundir y en tres segundos no da tiempo a explicarlo). */
+export function puntosFuertes(ficha: Ficha, pesos: Record<string, number>, peticion: Peticion, meta: Meta, n = 3): PuntoFuerte[] {
+  const salida: PuntoFuerte[] = [];
+  const prefs = meta.catalogo.filter((c) => (pesos[c.clave] ?? 0) > 0).sort((a, b) => pesos[b.clave] - pesos[a.clave]);
+  for (const c of prefs) {
+    const f = ficha.preferencias[c.clave];
+    const u = f?.utilidad[peticion.preferencias[c.clave]?.sentido ?? ""] ?? f?.utilidad[""] ?? 0;
+    if (f && u >= 0.66) salida.push({ titulo: c.nombre, detalle: f.dato, tuyo: true });
+    if (salida.length === 2) break;
+  }
+  const vistos = new Set(salida.map((p) => p.titulo.toLowerCase()));
+  for (const f of factores(ficha.ga2m.aportaciones, ficha.red.estados)) {
+    if (salida.length >= n) break;
+    if (f.signo < 0 || f.combinado || f.lectura || vistos.has(f.titulo.toLowerCase())) continue;
+    if (raroComoVentaja(f.columnas[0], ficha)) continue;
+    salida.push({ titulo: f.titulo, detalle: f.detalle, tuyo: false });
+  }
+  return salida;
+}
+
+// ------------------------------------------------------- dónde actuar
+// Cuatro situaciones del diagnóstico territorial (Administración). Colores de la paleta de Okabe-Ito (distinguibles
+// con daltonismo) y fuera de la rampa carmesí de «Dónde abrir»: verde azulado, ámbar, azul y un lila apagado para la
+// situación sin urgencia. La altura de la columna no es del grupo sino de la necesidad del municipio (alturaNecesidad).
+export const CUADRANTES: Record<IdCuadrante, Clase> = {
+  oportunidad: { id: "oportunidad", orden: 0, nombre: "Necesita y puede atraer", color: [0, 158, 115], altura: 6000,
+    resumen: "Necesita actividad y el modelo lo sitúa en la mitad alta de viabilidad." },
+  apoyo: { id: "apoyo", orden: 1, nombre: "Necesita, le cuesta atraer", color: [230, 159, 0], altura: 6000,
+    resumen: "Necesita actividad, pero atraer empresas por sí solo probablemente no baste." },
+  autonomo: { id: "autonomo", orden: 2, nombre: "Va por su cuenta", color: [0, 114, 178], altura: 2500,
+    resumen: "Poca necesidad y viabilidad en la mitad alta." },
+  vigilar: { id: "vigilar", orden: 3, nombre: "Sin urgencia", color: [150, 138, 178], altura: 2500,
+    resumen: "Ni la necesidad ni la viabilidad destacan: conviene seguir su evolución." },
+};
+
+/** Altura de la columna según la necesidad (percentil 0-100): crece más que en línea recta para que destaquen. */
+export function alturaNecesidad(necesidad: number): number {
+  return Math.round(350 + Math.pow(Math.max(0, Math.min(100, necesidad)) / 100, 1.5) * 8650);
+}
+
+/** Situación de cada municipio en el mapa de «Dónde actuar»: color del cuadrante y altura de su necesidad. La
+ *  posición ordena por necesidad (para los rótulos); Madrid capital, fuera del análisis. */
+export function situacionesActuar(d: Diagnostico, municipios: Municipio[]): Map<string, Situacion> {
+  const filas = new Map(d.municipios.map((m) => [m.ine5, m]));
+  const orden = new Map([...d.municipios].sort((a, b) => b.necesidad - a.necesidad).map((m, k) => [m.ine5, k + 1]));
+  const salida = new Map<string, Situacion>();
+  for (const m of municipios) {
+    const f = filas.get(m.ine5);
+    salida.set(m.ine5, f
+      ? { clase: { ...CUADRANTES[f.cuadrante], altura: alturaNecesidad(f.necesidad) }, posicion: orden.get(m.ine5)!, desglose: null }
+      : { clase: FUERA, posicion: null, desglose: null });
+  }
+  return salida;
+}
+
+/** Percentil en palabras, para seguir a «más necesidad…»: «que el 63 % de los municipios». */
+export function enPalabras(p: number): string {
+  return `que el ${Math.round(Math.max(0, Math.min(100, p)))} % de los municipios`;
 }

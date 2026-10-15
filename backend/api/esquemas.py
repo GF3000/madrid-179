@@ -228,3 +228,55 @@ class RespuestaExplicacion(BaseModel):
     peor: list[str]
     apoyos: dict[str, list[list[str]]] = Field(description="Hechos de la ficha en que se apoya cada frase")
     comprobacion: ComprobacionExplicacion
+
+
+class ComponenteNecesidad(BaseModel):
+    columna: str
+    etiqueta: str
+    sentido: Literal["alto", "bajo"]
+
+
+class Necesidad(BaseModel):
+    componentes: list[ComponenteNecesidad]
+    nota: str
+
+
+class Cuadrante(BaseModel):
+    id: Literal["oportunidad", "apoyo", "autonomo", "vigilar"]
+    nombre: str
+    lectura: str
+
+
+class ValorComponente(BaseModel):
+    valor: float
+    percentil: float
+
+
+class Freno(BaseModel):
+    termino: str
+    etiqueta: str
+    aportacion_pp: float
+    tipo: Literal["palanca", "estructural"]
+    lectura: str | None
+
+
+class MunicipioDiagnostico(BaseModel):
+    ine5: str
+    municipio: str
+    poblacion: int
+    distancia: str = Field(description="Estado del nodo Distancia_Madrid (Cerca, Media, Lejos)")
+    candidato: bool
+    necesidad: float = Field(description="Media de percentiles de los componentes (0-100)")
+    componentes: dict[str, ValorComponente]
+    viabilidad: float = Field(description="Percentil 0-100 de la predicción del GA²M entre los 178")
+    cuadrante: Literal["oportunidad", "apoyo", "autonomo", "vigilar"]
+    frenos: list[Freno]
+    freno_palanca: Freno | None
+
+
+class RespuestaDiagnostico(BaseModel):
+    corte: float
+    aviso: str
+    necesidad: Necesidad
+    cuadrantes: list[Cuadrante]
+    municipios: list[MunicipioDiagnostico]

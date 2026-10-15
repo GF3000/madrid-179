@@ -1,7 +1,7 @@
 // Pestaña «Dónde abrir»: asistente, lo que le importa al usuario, sus requisitos y el resultado por grupos.
 import { useEffect, useRef, useState } from "react";
 import type { Filtros, Importancia, Interpretacion, Meta, Municipio, Peticion, PreferenciaCatalogo } from "../api";
-import { CLASES, FILTRADO, OPCIONES_IMPORTANCIA, type Clase, type Situacion } from "../modelo";
+import { CLASES, FILTRADO, OPCIONES_IMPORTANCIA, pesoMinimoModelo, type Clase, type Situacion } from "../modelo";
 import Asistente from "./Asistente";
 import { nombreLegible } from "./Ficha";
 import { Columna, Segmentado } from "./piezas";
@@ -91,7 +91,7 @@ export default function PanelDecidir(p: Props) {
               "Has quitado tus preferencias: cada municipio vuelve a depender solo de sus condiciones.")}>Quitar todas</button>
           )}
         </div>
-        {activas.length > 0 && <Reparto pesos={p.pesos} activas={activas} />}
+        {activas.length > 0 && <Reparto pesos={p.pesos} activas={activas} tope={p.meta.tope_preferencias} />}
         {[...porGrupo.entries()].map(([grupo, lista]) => {
           const n = lista.filter((c) => importancia(c.clave) !== "Me da igual").length;
           const abierto = gruposPref.has(grupo);
@@ -219,8 +219,9 @@ export default function PanelDecidir(p: Props) {
   );
 }
 
-/** Cuánto pesa cada cosa en el orden: el modelo siempre al menos la mitad (tope del backend). */
-function Reparto({ pesos, activas }: { pesos: Record<string, number>; activas: PreferenciaCatalogo[] }) {
+/** Cuánto pesa cada cosa en el orden: el modelo siempre al menos 1 / (1 + tope) (tope del backend). */
+function Reparto({ pesos, activas, tope }: { pesos: Record<string, number>; activas: PreferenciaCatalogo[]; tope: number }) {
+  const minimo = pesoMinimoModelo(tope);
   const total = 1 + activas.reduce((s, c) => s + pesos[c.clave], 0);
   return (
     <div className="reparto-pesos">
@@ -232,7 +233,7 @@ function Reparto({ pesos, activas }: { pesos: Record<string, number>; activas: P
         ))}
       </div>
       <p className="nota">
-        <i className="punto modelo" /> Las condiciones del municipio deciden al menos la mitad;{" "}
+        <i className="punto modelo" /> Las condiciones del municipio deciden al menos {minimo};{" "}
         <i className="punto pref" /> tus preferencias, el resto.
       </p>
     </div>
