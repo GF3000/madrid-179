@@ -23,6 +23,9 @@ export interface MandoMapa {
   alternarVista: () => void;
   norte: () => void;
   girar: (grados: number) => void;
+  // Para la intro: lon/lat → píxeles en pantalla con la cámara actual (giro e inclinación incluidos)
+  proyectar: (puntos: Position[]) => [number, number][];
+  cargado: () => boolean;
 }
 
 interface Props {
@@ -36,11 +39,12 @@ interface Props {
   onCamara: (c: Camara) => void;
   onMando: (m: MandoMapa) => void;
   margenes: { izquierda: number; derecha: number };
+  entrar: boolean; // la intro ha terminado: inclinar y levantar columnas
 }
 
 const PAPEL: Rgb = [246, 242, 236];
 const TINTA: Rgb = [38, 28, 32];
-const ATENUADO: Rgb = [222, 216, 208];
+const ATENUADO: Rgb = [228, 231, 235]; // frío, para no confundirse con «Poco favorable»
 const ESCALA_ALTURA = 1.15;
 const VISTA_INICIAL = { center: [-3.72, 40.5] as [number, number], zoom: 8.25, pitch: 0, bearing: 0 };
 const VISTA_3D = { zoom: 8.75, pitch: 50, bearing: -14 };
@@ -126,7 +130,8 @@ export default function Mapa(p: Props) {
       const avisar = () => llamadas.current.onCamara({ rumbo: m.getBearing(), inclinacion: m.getPitch() });
       m.on("rotate", avisar);
       m.on("pitch", avisar);
-      m.on("load", () => setListo(true));
+      let cargado = false;
+      m.on("load", () => { cargado = true; setListo(true); });
 
       const padding = () => ({ left: llamadas.current.margenes.izquierda, right: llamadas.current.margenes.derecha,
         top: 40, bottom: 120 });
@@ -136,6 +141,14 @@ export default function Mapa(p: Props) {
           ? { pitch: 0, bearing: 0, duration: 900 } : { pitch: VISTA_3D.pitch, bearing: VISTA_3D.bearing, duration: 900 }),
         norte: () => m.easeTo({ bearing: 0, duration: 700 }),
         girar: (g) => m.easeTo({ bearing: m.getBearing() + g, duration: 700 }),
+        proyectar: (puntos) => {
+          const caja = m.getContainer().getBoundingClientRect();
+          return puntos.map(([x, y]) => {
+            const q = m.project([x, y]);
+            return [caja.left + q.x, caja.top + q.y];
+          });
+        },
+        cargado: () => cargado,
       });
     });
     return () => {
@@ -147,7 +160,7 @@ export default function Mapa(p: Props) {
 
   // ------------------------------------- entrada: inclinar y levantar columnas
   useEffect(() => {
-    if (!listo || !mapa.current) return;
+    if (!listo || !p.entrar || !mapa.current) return;
     const m = mapa.current;
     // con un enlace directo a una ficha, la cámara va al municipio (efecto de selección) en vez de a la región
     const espera = setTimeout(() => !llamadas.current.seleccionado && m.easeTo({ ...VISTA_3D, center: VISTA_INICIAL.center, duration: 2600,
@@ -163,7 +176,7 @@ export default function Mapa(p: Props) {
     id = requestAnimationFrame(paso);
     return () => { cancelAnimationFrame(id); clearTimeout(espera); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listo]);
+  }, [listo, p.entrar]);
 
   // -------------------------------------------- cámara al seleccionar
   useEffect(() => {

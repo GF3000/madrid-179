@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { api, type Filtros, type Interpretacion, type Meta } from "../api";
 import { describirFiltro, palabraImportancia } from "../modelo";
+import { EstrellasPensando } from "./piezas";
 
 interface Props {
   meta: Meta;
@@ -62,8 +63,10 @@ export default function Asistente({ meta, onAplicar, onDeshacer }: Props) {
               {inventando ? "Inventando…" : "Inventar un ejemplo"}
             </button>
           </span>
-          <button className="boton-primario" disabled={estado === "pensando" || texto.trim().length < 10} onClick={interpretar}>
-            {estado === "pensando" ? "Leyendo…" : "Interpretar"}
+          <button className={`boton-primario${estado === "pensando" ? " leyendo" : ""}`}
+            disabled={estado === "pensando" || texto.trim().length < 10} onClick={interpretar}
+            aria-label={estado === "pensando" ? "Leyendo tu descripción" : undefined}>
+            {estado === "pensando" ? <EstrellasPensando /> : "Interpretar"}
           </button>
         </div>
       </div>

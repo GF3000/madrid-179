@@ -74,16 +74,24 @@ export function Buscador({ municipios, onSeleccionar }: { municipios: Municipio[
   );
 }
 
-export function Leyenda({ resaltada, onResaltar, modo }: {
-  resaltada: string | null; onResaltar: (c: string | null) => void; modo: "decidir" | "perfiles";
+// Pasar el ratón por un grupo lo resalta en el mapa (vista previa); un clic lo fija y se pueden fijar varios.
+export function Leyenda({ resaltada, fijadas, onResaltar, onFijar, onLimpiar, modo }: {
+  resaltada: string | null; fijadas: Set<string>; onResaltar: (c: string | null) => void;
+  onFijar: (c: string) => void; onLimpiar: () => void; modo: "decidir" | "perfiles";
 }) {
   return (
-    <div className="leyenda" onMouseLeave={() => onResaltar(null)}>
-      <span className="leyenda-titulo">{modo === "perfiles" ? "Con este perfil" : "Condiciones para una oficina"}</span>
+    <div className={`leyenda${fijadas.size > 0 ? " con-fijadas" : ""}`} onMouseLeave={() => onResaltar(null)}>
+      {fijadas.size > 0
+        ? <button className="leyenda-titulo leyenda-quitar" onClick={onLimpiar} title="Volver a ver todos los grupos">
+            Solo {fijadas.size === 1 ? "1 grupo" : `${fijadas.size} grupos`}<span>Ver todos</span>
+          </button>
+        : <span className="leyenda-titulo">{modo === "perfiles" ? "Con este perfil" : "Condiciones para una oficina"}</span>}
       <div className="leyenda-clases">
         {[...CLASES, FILTRADO, FUERA].map((c) => (
-          <button key={c.id} className={resaltada === c.id ? "activa" : ""} onMouseEnter={() => onResaltar(c.id)}
-            onFocus={() => onResaltar(c.id)} onBlur={() => onResaltar(null)} title={c.resumen}>
+          <button key={c.id} className={`${resaltada === c.id ? "activa" : ""}${fijadas.has(c.id) ? " fijada" : ""}`}
+            aria-pressed={fijadas.has(c.id)} onMouseEnter={() => onResaltar(c.id)} onClick={() => onFijar(c.id)}
+            onFocus={() => onResaltar(c.id)} onBlur={() => onResaltar(null)}
+            title={`${c.resumen} ${fijadas.has(c.id) ? "Clic para dejar de mostrar solo este grupo." : "Clic para mostrar solo este grupo."}`}>
             <Columna clase={c} />
             <span>{c.nombre}</span>
           </button>

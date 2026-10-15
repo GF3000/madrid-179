@@ -1,6 +1,6 @@
 // Piezas pequeñas de la interfaz, dibujadas a medida (sin librerías de iconos).
 import type { ReactNode } from "react";
-import type { Clase, Fuerza } from "../modelo";
+import { CLASES, type Clase, type Fuerza } from "../modelo";
 
 export function Segmentado<T extends string>(p: {
   opciones: readonly { valor: T; etiqueta: string }[];
@@ -27,7 +27,7 @@ export function Segmentado<T extends string>(p: {
 /** Columna en miniatura con el color del grupo: la misma metáfora que el mapa. */
 export function Columna({ clase, grande }: { clase: Clase; grande?: boolean }) {
   const h = grande ? 34 : 18;
-  const alto = Math.max(3, Math.round((clase.altura / 7200) * h));
+  const alto = Math.max(3, Math.round((clase.altura / CLASES[0].altura) * h));
   const [r, g, b] = clase.color;
   return (
     <svg className={`columna${grande ? " grande" : ""}`} width={grande ? 21 : 14} height={(h + 5) * (grande ? 1.5 : 1)}
@@ -91,12 +91,12 @@ export function Seccion({ titulo, children, nota }: { titulo: string; children: 
 
 // Bandera de la Comunidad de Madrid (símbolo público, dibujado aquí): carmesí con siete estrellas blancas de cinco
 // puntas, cuatro arriba y tres abajo, en proporción 3:2. Las estrellas aparecen una a una.
-const ESTRELLA = Array.from({ length: 10 }, (_, k) => {
+export const ESTRELLA = Array.from({ length: 10 }, (_, k) => {
   const r = k % 2 ? 4.2 : 10.5;
   const a = (k * Math.PI) / 5 - Math.PI / 2;
   return `${(r * Math.cos(a)).toFixed(2)},${(r * Math.sin(a)).toFixed(2)}`;
 }).join(" ");
-const POSICIONES = [[30, 36], [60, 36], [90, 36], [120, 36], [45, 66], [75, 66], [105, 66]];
+export const POSICIONES = [[30, 36], [60, 36], [90, 36], [120, 36], [45, 66], [75, 66], [105, 66]];
 
 export function Bandera({ ancho = 36 }: { ancho?: number }) {
   return (
@@ -106,6 +106,19 @@ export function Bandera({ ancho = 36 }: { ancho?: number }) {
       {POSICIONES.map(([x, y], k) => (
         <g key={k} transform={`translate(${x} ${y})`}>
           <polygon points={ESTRELLA} style={{ animationDelay: `${300 + k * 60}ms` }} />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+// Las siete estrellas sin el fondo (lo pone el botón rojo), titilando en el orden de lectura: «estamos leyendo»
+export function EstrellasPensando() {
+  return (
+    <svg className="estrellas-pensando" viewBox="18 24 114 54" aria-hidden>
+      {POSICIONES.map(([x, y], k) => (
+        <g key={k} transform={`translate(${x} ${y})`}>
+          <polygon points={ESTRELLA} style={{ animationDelay: `${k * 110}ms` }} />
         </g>
       ))}
     </svg>
