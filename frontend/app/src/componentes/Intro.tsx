@@ -2,7 +2,8 @@
 // (primero en forma de constelación), las estrellas se colocan como en la bandera y el carmesí entra por detrás y las
 // recorta en blanco. Al terminar, el carmesí se transforma en el contorno de la Comunidad justo donde lo dibuja el
 // mapa (con la cámara que tenga, girada o inclinada), las estrellas vuelan a la bandera de la cabecera y el carmesí
-// se funde en los colores de los municipios.
+// se funde en los colores de los municipios: las columnas empiezan a subir en cuanto el contorno aterriza, mientras
+// el carmesí se desvanece, para que no quede un instante de mapa plano.
 // La animación espera a los datos reales: si no han llegado, las estrellas titilan antes de que entre el carmesí.
 import { useEffect, useRef } from "react";
 import type { Position } from "geojson";
@@ -29,6 +30,7 @@ const ESPERA_MAPA = 2500; // ms que se espera a que cargue el mapa antes de sali
 const PRISA_MOVIL = 2.2; // en móvil la intro dura ≈ 2,5 s: la misma secuencia, sin hacer esperar
 const ESPERA_MAPA_MOVIL = 1200;
 const MUESTRAS = 320; // puntos de la transformación bandera → contorno
+const ATERRIZAJE = 0.4; // fracción de la salida en que el contorno ya casi está en su sitio: arrancan las columnas
 
 const limitar = (x: number) => Math.min(1, Math.max(0, x));
 const tramo = (v: number, desde: number, dura: number) => limitar((v - desde) / dura);
@@ -117,17 +119,18 @@ interface Props {
   mapa: MandoMapa | null; // para proyectar el contorno con la cámara real
   contorno: Geometria["contorno"] | null;
   onRevelar: () => void; // montar la app por debajo (entra el carmesí)
+  onAterrizar: () => void; // el contorno ha llegado al mapa: levantar columnas mientras se funde el carmesí
   onFin: () => void;
 }
 
-export default function Intro({ listo, mapa, contorno, onRevelar, onFin }: Props) {
+export default function Intro({ listo, mapa, contorno, onRevelar, onAterrizar, onFin }: Props) {
   const raiz = useRef<HTMLDivElement>(null);
   const listoRef = useRef(listo);
   listoRef.current = listo;
   const mapaRef = useRef({ mapa, contorno });
   mapaRef.current = { mapa, contorno };
-  const avisos = useRef({ onRevelar, onFin });
-  avisos.current = { onRevelar, onFin };
+  const avisos = useRef({ onRevelar, onAterrizar, onFin });
+  avisos.current = { onRevelar, onAterrizar, onFin };
   const prisa = useRef(1);
 
   useEffect(() => {
@@ -157,6 +160,7 @@ export default function Intro({ listo, mapa, contorno, onRevelar, onFin }: Props
     let v = reducido ? T.salir - 1 : 0;
     let antes = performance.now();
     let revelada = false;
+    let aterrizada = false;
     let vuelo: { dx: number; dy: number; s: number } | null = null;
     let morfo: Morfo | null = null;
     let esperaMapa = 0;
@@ -290,6 +294,11 @@ export default function Intro({ listo, mapa, contorno, onRevelar, onFin }: Props
         if (vuelo.s === 1) lienzo.style.opacity = String(1 - pv);
         fondo.style.opacity = String(1 - pv);
         textos.forEach((t) => (t.style.opacity = String(Math.min(Number(t.style.opacity || 1), 1 - limitar(pv * 3)))));
+      }
+
+      if (!aterrizada && revelada && ps >= ATERRIZAJE) {
+        aterrizada = true;
+        avisos.current.onAterrizar();
       }
 
       if (v >= T.fin) avisos.current.onFin();

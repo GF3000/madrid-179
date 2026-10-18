@@ -54,7 +54,7 @@ export default function App() {
   const [camara, setCamara] = useState<Camara>({ rumbo: 0, inclinacion: 0 });
   const [mando, setMando] = useState<MandoMapa | null>(null);
   const [dialogo, setDialogo] = useState<Dialogo | null>(() => (enlaceEquipo() ? "acerca" : null)); // /#equipo
-  const [intro, setIntro] = useState<"carga" | "revelando" | "fin">("carga");
+  const [intro, setIntro] = useState<"carga" | "revelando" | "entrando" | "fin">("carga");
   const [viajes, setViajes] = useState<Trayecto[] | null>(null);
   const [recorrido, setRecorrido] = useState<{ id: number; paradas: Parada[] } | null>(null);
   const [destacado, setDestacado] = useState<string | null>(null); // parada actual del recorrido
@@ -328,7 +328,8 @@ export default function App() {
   if (error && !datos) return <div className="pantalla-aviso"><Marca /><p>{error}</p></div>;
   // La intro tapa la carga; cuando entra el carmesí de la bandera se monta la app por debajo
   const pantallaIntro = intro !== "fin" && (
-    <Intro listo={!!datos && !!ranking} mapa={mando} contorno={datos?.geometria.contorno ?? null} onRevelar={() => setIntro("revelando")} onFin={() => setIntro("fin")} />);
+    <Intro listo={!!datos && !!ranking} mapa={mando} contorno={datos?.geometria.contorno ?? null} onRevelar={() => setIntro("revelando")}
+      onAterrizar={() => setIntro((s) => (s === "fin" ? s : "entrando"))} onFin={() => setIntro("fin")} />);
   if (!datos || !ranking || intro === "carga") return pantallaIntro;
   const izquierda = panelAbierto ? IZQ_PANEL : IZQ_SIN_PANEL;
 
@@ -348,7 +349,7 @@ export default function App() {
       <Mapa geometria={datos.geometria} situaciones={situacionesMapa}
         seleccionado={seleccionado ?? (pestana === "actuar" ? diagnosticado : null)} destacado={destacado}
         resaltados={resaltados} etiquetas={etiquetas} onSeleccionar={seleccionar} onPasar={setPasando}
-        onCamara={setCamara} onMando={setMando} entrar={intro === "fin"}
+        onCamara={setCamara} onMando={setMando} entrar={intro === "entrando" || intro === "fin"}
         margenes={movil ? { izquierda: 0, derecha: 0, abajo }
           : { izquierda: izquierda, derecha: seleccionado ? ANCHO_FICHA + 32 : 0 }} />
 

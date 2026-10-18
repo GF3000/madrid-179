@@ -52,7 +52,7 @@ interface Props {
   onCamara: (c: Camara) => void;
   onMando: (m: MandoMapa) => void;
   margenes: Margenes;
-  entrar: boolean; // la intro ha terminado: inclinar y levantar columnas
+  entrar: boolean; // el contorno de la intro ha aterrizado: inclinar y levantar columnas
 }
 
 const PAPEL: Rgb = [246, 242, 236];
@@ -308,13 +308,13 @@ export default function Mapa(p: Props) {
     if (!listo || !p.entrar || !mapa.current) return;
     const m = mapa.current;
     // con un enlace directo a una ficha, la cámara va al municipio (efecto de selección) en vez de a la región
-    const espera = setTimeout(() => {
-      if (llamadas.current.seleccionado) return;
+    // sin espera: la intro avisa justo cuando su contorno coincide con el del mapa y el carmesí se funde en las columnas
+    if (!llamadas.current.seleccionado) {
       const padding = relleno({ ...llamadas.current.margenes, derecha: 0 }, MARGEN_ARRIBA, MARGEN_ABAJO, m);
       m.easeTo({ ...vista3d(m, padding), center: VISTA_INICIAL.center, duration: 2600, padding,
         easing: (t) => 1 - Math.pow(1 - t, 3) });
-    }, 350);
-    const t0 = performance.now() + 350;
+    }
+    const t0 = performance.now();
     let id = 0;
     const paso = (t: number) => {
       const x = Math.min(1, Math.max(0, (t - t0) / 2200));
@@ -322,7 +322,7 @@ export default function Mapa(p: Props) {
       if (x < 1) id = requestAnimationFrame(paso);
     };
     id = requestAnimationFrame(paso);
-    return () => { cancelAnimationFrame(id); clearTimeout(espera); };
+    return () => cancelAnimationFrame(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listo, p.entrar]);
 
