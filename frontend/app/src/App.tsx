@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { api, type Consulta, type Diagnostico, type Ficha as TFicha, type Geometria, type IdCuadrante, type Interpretacion,
   type Meta, type Municipio, type Negocio, type Peticion, type Ranking } from "./api";
 import { clasificar, describirFiltro, FILTROS_VACIOS, palabraImportancia, situacionesActuar, type Situacion } from "./modelo";
-import Mapa, { type Camara, type MandoMapa } from "./componentes/Mapa";
+import Mapa, { precargarEstilo, type Camara, type MandoMapa } from "./componentes/Mapa";
 import Ficha from "./componentes/Ficha";
 import PanelDecidir, { type Cambio } from "./componentes/PanelDecidir";
 import PanelPerfiles from "./componentes/PanelPerfiles";
@@ -100,6 +100,7 @@ export default function App() {
 
   // ------------------------------------------------------------- carga
   useEffect(() => {
+    precargarEstilo();
     Promise.all([api.meta(), api.municipios(), api.geometria(), api.ranking(PETICION_INICIAL),
       document.fonts.ready])
       .then(([meta, municipios, geometria, r]) => {
@@ -329,11 +330,13 @@ export default function App() {
   }, [movil, montada, alto]);
 
   if (error && !datos) return <div className="pantalla-aviso"><Marca /><p>{error}</p></div>;
-  // La intro tapa la carga; cuando entra el carmesí de la bandera se monta la app por debajo
+  // La intro tapa la carga; con la bandera ya completa (carmesí y título) se monta la app por debajo
   const pantallaIntro = intro !== "fin" && (
     <Intro listo={!!datos && !!ranking} mapa={mando} contorno={datos?.geometria.contorno ?? null} onRevelar={() => setIntro("revelando")}
       onAterrizar={() => setIntro((s) => (s === "fin" ? s : "entrando"))} onFin={() => setIntro("fin")} />);
-  if (!datos || !ranking || intro === "carga") return pantallaIntro;
+  // la intro va siempre de segunda en el fragmento: si cambiara de sitio al montarse la app, React la volvería a
+  // montar y la animación empezaría de nuevo
+  if (!datos || !ranking || intro === "carga") return <>{null}{pantallaIntro}</>;
   const izquierda = panelAbierto ? IZQ_PANEL : IZQ_SIN_PANEL;
 
   const fichaEl = seleccionado && (

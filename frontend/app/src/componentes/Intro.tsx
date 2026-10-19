@@ -5,6 +5,8 @@
 // se funde en los colores de los municipios: las columnas empiezan a subir en cuanto el contorno aterriza, mientras
 // el carmesí se desvanece, para que no quede un instante de mapa plano.
 // La animación espera a los datos reales: si no han llegado, las estrellas titilan antes de que entre el carmesí.
+// Con la bandera completa y quieta se monta la app y la intro espera a que el mapa esté listo (shaders compilados
+// incluidos), para que los tirones de la primera carga caigan donde no hay nada en movimiento.
 import { useEffect, useRef } from "react";
 import type { Position } from "geojson";
 import type { Geometria } from "../api";
@@ -26,11 +28,14 @@ const TRAZO = "M" + [0, 1, 2, 3, 4, 5, 6, 3].map((k) => OSA[k].join(" ")).join("
 const T = { juntar: 1050, trazar: 1800, deslizar: 2300, telon: 2950, salir: 3800, fin: 5300 };
 const DURACION_TELON = 650;
 const CLAVE_VISTA = "madrid179-intro-vista";
-const ESPERA_MAPA = 2500; // ms que se espera a que cargue el mapa antes de salir sin él
+const ESPERA_MAPA = 3000; // ms que se espera a que cargue el mapa antes de salir sin él
 const PRISA_MOVIL = 2.2; // en móvil la intro dura ≈ 2,5 s: la misma secuencia, sin hacer esperar
-const ESPERA_MAPA_MOVIL = 1200;
+const ESPERA_MAPA_MOVIL = 1500;
 const MUESTRAS = 320; // puntos de la transformación bandera → contorno
 const ATERRIZAJE = 0.4; // fracción de la salida en que el contorno ya casi está en su sitio: arrancan las columnas
+// La app se monta por debajo cuando la bandera ya está quieta (carmesí y título completos): montar el mapa y compilar
+// los shaders de deck.gl bloquea el hilo principal hasta 1,5 s en la primera visita y congelaría lo que se mueva
+const REVELAR = T.telon + 700;
 
 const limitar = (x: number) => Math.min(1, Math.max(0, x));
 const tramo = (v: number, desde: number, dura: number) => limitar((v - desde) / dura);
@@ -118,7 +123,7 @@ interface Props {
   listo: boolean; // han llegado los datos
   mapa: MandoMapa | null; // para proyectar el contorno con la cámara real
   contorno: Geometria["contorno"] | null;
-  onRevelar: () => void; // montar la app por debajo (entra el carmesí)
+  onRevelar: () => void; // montar la app por debajo (con la bandera ya completa y quieta)
   onAterrizar: () => void; // el contorno ha llegado al mapa: levantar columnas mientras se funde el carmesí
   onFin: () => void;
 }
@@ -241,7 +246,7 @@ export default function Intro({ listo, mapa, contorno, onRevelar, onAterrizar, o
       titulo.style.opacity = String(pti);
       titulo.style.transform = `translateY(${(1 - pti) * 10}px)`;
 
-      if (listo && v >= T.telon && !revelada) {
+      if (listo && v >= REVELAR && !revelada) {
         revelada = true;
         avisos.current.onRevelar();
       }

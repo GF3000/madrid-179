@@ -167,6 +167,10 @@ async function estiloBase(): Promise<StyleSpecification> {
   }
 }
 
+// El estilo se pide al arrancar la app, mientras corre la intro (solo red): así el mapa no lo espera al montarse
+let estiloPedido: Promise<StyleSpecification> | null = null;
+export const precargarEstilo = () => (estiloPedido ??= estiloBase());
+
 function mascara(contorno: Geometria["contorno"]): Position[][] {
   const g = contorno.geometry;
   const huecos = g.type === "Polygon" ? [g.coordinates[0]] : g.coordinates.map((p) => p[0]);
@@ -192,6 +196,11 @@ export default function Mapa(p: Props) {
   const mapa = useRef<maplibregl.Map | null>(null);
   const capa = useRef<MapboxOverlay | null>(null);
   const [listo, setListo] = useState(false);
+  // Las capas de deck.gl se crean en cuanto carga el mapa (aunque no se vean hasta que aterrice la intro): crearlas
+  // compila sus shaders, que en la primera visita bloquea el hilo principal más de un segundo. La intro no sale hasta que
+  // el mapa ha pintado con ellas, así que ese tirón cae mientras la bandera está quieta y no a mitad del contorno
+  const dibujado = useRef(false);
+  const esperandoDibujo = useRef(false);
   const [subida, setSubida] = useState(0); // 0 → 1: las columnas crecen al entrar
   const [cerca, setCerca] = useState(false); // zoom ≥ ZOOM_TODOS: se rotulan todos los municipios visibles
   const [caben, setCaben] = useState<Set<string>>(new Set()); // rótulos del resto que no chocan
@@ -215,7 +224,8 @@ export default function Mapa(p: Props) {
   // ------------------------------------------------------------ montaje
   useEffect(() => {
     let cancelado = false;
-    estiloBase().then((style) => {
+    precargarEstilo().then((pedido) => {
+      const style = structuredClone(pedido); // copia: MapLibre no debe tocar la que se guarda
       if (cancelado || !nodo.current) return;
       const caja = nodo.current;
       const inicial = esMovil() ? { ...VISTA_INICIAL, zoom: Math.max(7, Math.min(VISTA_INICIAL.zoom,
@@ -272,7 +282,7 @@ export default function Mapa(p: Props) {
             return [caja.left + q.x, caja.top + q.y];
           });
         },
-        cargado: () => cargado,
+        cargado: () => cargado && dibujado.current,
         volarA: (centro, o) => m.flyTo({ center: centro as [number, number], zoom: 9.55,
           pitch: esMovil() ? INCLINACION_MOVIL : 52, bearing: o.rumbo,
           padding: { ...padding(), right: o.derecha }, duration: o.duracion, curve: 1.3, essential: true }),
@@ -374,8 +384,9 @@ export default function Mapa(p: Props) {
   const indices = useMemo(() => new Map(p.geometria.features.map((f, k) => [f.properties.ine5, k])), [p.geometria]);
 
   useEffect(() => {
-    if (!capa.current) return;
+    if (!capa.current || !listo) return;
     const { situaciones, resaltados, seleccionado, destacado } = p;
+    const opacidad = p.entrar ? 1 : 0; // hasta que aterriza la intro, el mapa base solo (como antes de crear las capas)
     const clave = [situaciones.size, [...situaciones.values()].map((s) => s.clase.id).join(""),
       resaltados ? [...resaltados].join(",") : "-", seleccionado, destacado].join("|");
     const situ = (f: Rasgo) => situaciones.get(f.properties.ine5);
@@ -415,12 +426,12 @@ export default function Mapa(p: Props) {
       layers: [
         new SolidPolygonLayer({
           id: "mascara", data: [{ anillos }], getPolygon: ((d: { anillos: Position[][] }) => d.anillos) as never,
-          getFillColor: [...PAPEL, 150], pickable: false,
+          getFillColor: [...PAPEL, 150], pickable: false, opacity: opacidad,
         }),
         new GeoJsonLayer<PropsMunicipio>({
           id: "municipios",
           data: p.geometria as never,
-          extruded: true, wireframe: false, filled: true, stroked: false, pickable: true,
+          extruded: true, wireframe: false, filled: true, stroked: false, pickable: true, opacity: opacidad,
           // en táctil el resaltado lo fija el toque (el automático se quedaría pegado donde se levantó el dedo)
           autoHighlight: !tactil, highlightColor: [255, 255, 255, 80],
           highlightedObjectIndex: tactil ? (marcado ? indices.get(marcado) ?? -1 : -1) : null,
@@ -443,11 +454,11 @@ export default function Mapa(p: Props) {
         }),
         new PathLayer({
           id: "seleccion", data: seleccion, getPath: (d: Position[]) => d as never,
-          getColor: [...TINTA, 255], getWidth: 2.5, widthUnits: "pixels", pickable: false, jointRounded: true,
+          getColor: [...TINTA, 255], getWidth: 2.5, widthUnits: "pixels", pickable: false, jointRounded: true, opacity: opacidad,
         }),
         new PathLayer({
           id: "contorno", data: bordes, getPath: (d: Position[]) => d as never,
-          getColor: [...TINTA, 170], getWidth: 1.6, widthUnits: "pixels", pickable: false,
+          getColor: [...TINTA, 170], getWidth: 1.6, widthUnits: "pixels", pickable: false, opacity: opacidad,
         }),
         new TextLayer({
           id: "rotulos", data: rotulos,
@@ -464,7 +475,7 @@ export default function Mapa(p: Props) {
           id: "rotulos-resto", data: resto.filter((r) => caben.has(r.ine5)),
           getPosition: (d: Rotulo) => [d.centro[0], d.centro[1], d.altura * subida * ESCALA_ALTURA + 250],
           getText: (d: Rotulo) => d.texto,
-          getSize: TAM_RESTO, getColor: [...TINTA, 215], fontFamily: FUENTE, fontWeight: 500, characterSet: "auto",
+          getSize: TAM_RESTO, getColor: [...TINTA, 215], fontFamily: FUENTE, fontWeight: 500, characterSet: "auto", opacity: opacidad,
           background: true, getBackgroundColor: [255, 253, 250, 205], backgroundPadding: [5, 2, 5, 2],
           getTextAnchor: "middle", getAlignmentBaseline: "bottom", billboard: true, sizeUnits: "pixels",
           updateTriggers: { getPosition: [clave, subida, realce] },
@@ -472,10 +483,24 @@ export default function Mapa(p: Props) {
         }),
       ],
     });
+    // primera vez: setProps acaba de crear las capas (y compilar sus shaders); el mapa cuenta como listo para la intro
+    // cuando ha pintado un par de cuadros con ellas
+    const m = mapa.current;
+    if (m && !dibujado.current && !esperandoDibujo.current) {
+      esperandoDibujo.current = true;
+      let cuadros = 0;
+      const contar = () => {
+        if (++cuadros < 2) return m.triggerRepaint();
+        m.off("render", contar);
+        dibujado.current = true;
+      };
+      m.on("render", contar);
+      m.triggerRepaint();
+    }
     // sin «p» entero en las dependencias: cada movimiento del ratón vuelve a pintar App y rehacía todas las capas
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [p.situaciones, p.resaltados, p.seleccionado, p.destacado, p.etiquetas, p.geometria, subida, realce, cerca, caben,
-    anillos, bordes, centros, indices, marcado]);
+  }, [listo, p.entrar, p.situaciones, p.resaltados, p.seleccionado, p.destacado, p.etiquetas, p.geometria, subida, realce,
+    cerca, caben, anillos, bordes, centros, indices, marcado]);
 
   // Al cambiar qué se rotula (grupos, foco, zoom), se recalculan los choques; al mover el mapa, en «moveend»
   useEffect(() => recolocar.current(), [cerca, p.situaciones, p.resaltados, p.etiquetas, p.destacado, p.seleccionado,
