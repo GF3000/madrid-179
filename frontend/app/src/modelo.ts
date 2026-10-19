@@ -288,14 +288,14 @@ export function puntosFuertes(ficha: Ficha, pesos: Record<string, number>, petic
 // con daltonismo) y fuera de la rampa carmesí de «Dónde abrir»: verde azulado, ámbar, azul y un lila apagado para la
 // situación sin urgencia. La altura de la columna no es del grupo sino de la necesidad del municipio (alturaNecesidad).
 export const CUADRANTES: Record<IdCuadrante, Clase> = {
-  oportunidad: { id: "oportunidad", orden: 0, nombre: "Necesita y puede atraer", color: [0, 158, 115], altura: 6000,
-    resumen: "Necesita actividad y el modelo lo sitúa en la mitad alta de viabilidad." },
-  apoyo: { id: "apoyo", orden: 1, nombre: "Necesita, le cuesta atraer", color: [230, 159, 0], altura: 6000,
-    resumen: "Necesita actividad, pero atraer empresas por sí solo probablemente no baste." },
-  autonomo: { id: "autonomo", orden: 2, nombre: "Va por su cuenta", color: [0, 114, 178], altura: 2500,
-    resumen: "Poca necesidad y viabilidad en la mitad alta." },
-  vigilar: { id: "vigilar", orden: 3, nombre: "Sin urgencia", color: [150, 138, 178], altura: 2500,
-    resumen: "Ni la necesidad ni la viabilidad destacan: conviene seguir su evolución." },
+  oportunidad: { id: "oportunidad", orden: 0, nombre: "Necesita crecer, buen pronóstico", color: [0, 158, 115], altura: 6000,
+    resumen: "Necesita crecer y el saldo esperado de empresas para su perfil está en la mitad alta." },
+  apoyo: { id: "apoyo", orden: 1, nombre: "Necesita crecer, pronóstico débil", color: [230, 159, 0], altura: 6000,
+    resumen: "Necesita crecer, pero atraer empresas por sí solo probablemente no baste." },
+  autonomo: { id: "autonomo", orden: 2, nombre: "Sin urgencia, buen pronóstico", color: [0, 114, 178], altura: 2500,
+    resumen: "Poca necesidad y saldo esperado de empresas en la mitad alta." },
+  vigilar: { id: "vigilar", orden: 3, nombre: "Sin urgencia, pronóstico débil", color: [150, 138, 178], altura: 2500,
+    resumen: "Ni la necesidad ni el saldo esperado de empresas destacan: conviene seguir su evolución." },
 };
 
 /** Altura de la columna según la necesidad (percentil 0-100): crece más que en línea recta para que destaquen. */

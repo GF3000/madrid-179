@@ -388,8 +388,8 @@ s.addNotes("[8:00] La pregunta práctica de la empresa: ¿qué puedo pedir? El a
 
 // 11 · Dónde actuar
 s = contenido("Para la Administración", titulo("Dónde actuar ", "y qué lo frena"), "Impacto y cierre");
-[["33", "Necesita actividad y puede atraerla", "009E73", "FFFFFF"], ["56", "Necesita actividad y le cuesta atraerla", "E69F00", HEX.tinta],
-  ["57", "Va por su cuenta", "0072B2", "FFFFFF"], ["32", "Sin urgencia, poca viabilidad", "968AB2", HEX.tinta]]
+[["33", "Necesita crecer, buen pronóstico", "009E73", "FFFFFF"], ["56", "Necesita crecer, pronóstico débil", "E69F00", HEX.tinta],
+  ["57", "Sin urgencia, buen pronóstico", "0072B2", "FFFFFF"], ["32", "Sin urgencia, pronóstico débil", "968AB2", HEX.tinta]]
   .forEach(([n, nom, fill, col], k) => {
     const x = X0 + (k % 2) * 2.45, y = 1.42 + Math.floor(k / 2) * 1.75, w = 2.3, h = 1.6;
     tarjeta(s, x, y, w, h, { fill });
