@@ -113,6 +113,7 @@ Decisión tomada (2026-10-07): las ayudas **no** son nodo de la red. Por defecto
   - Nombre del proyecto: **Madrid 179** (portada de las dos presentaciones, cierre y cabecera/pie del documento de fuentes).
   - El artifact de Slides anterior (https://claude.ai/artifact/HGbA9mjGd4HFkbcwY3BCtW) queda obsoleto.
 
+- [ ] **#55 P1 · Presentación final (10 min).** · **Avance 2026-10-19:** `infra/presentacion/presentacion_final.js` (pptxgenjs; `npm install` y `node presentacion_final.js`) → `docs/presentaciones/4_Presentacion_final.pptx` (13 diapositivas con la identidad de la app: papel, carmesí, Fraunces y Hanken Grotesk, tema y layouts propios, editable; notas del orador con tiempos, vídeo incrustado; **fuera de git** porque el vídeo lleva la canción de Lara). Cifras verificadas con los datos del proyecto (49 % de la población y 56 % de las unidades productivas en la capital; 172 de 178 con freno principal estructural). Falta: volver a generarla cuando se rehaga el vídeo, ensayar y grabar la demo de respaldo.
 - [ ] **#33 P2 · Actualizar `docs/informe/INFORME.md`.** Está anterior a la red bayesiana.
 - [ ] **#34 P3 · Consolidar `docs/fuentes/CATALOGO_FUENTES.md`** con `docs/informe/FICHAS_FUENTES.md`. El primero usa los bloques antiguos, extrapolados de un prompt cortado.
 - [ ] **#35 P2 · Regenerar anexos** (diagrama, `Calculo_CPTs_CAM.pdf`, `Aproximacion_tecnica_CAM.pdf`) cada vez que cambie la red (#3, #4). Los scripts ya lo hacen; solo hay que ejecutarlos.
