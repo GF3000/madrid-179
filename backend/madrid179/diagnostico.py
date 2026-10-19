@@ -15,17 +15,19 @@ AVISO = "Diagnóstico según los datos de 2020 a 2024: describe la situación, n
 NOTA_NECESIDAD = ("Media de percentiles (0-100, pesos iguales) de cada componente en el sentido que indica necesidad, "
                   "entre los 178 municipios. Propuesta provisional. Madrid capital queda fuera: es la referencia.")
 CUADRANTES = [
-    {"id": "oportunidad", "nombre": "Necesita actividad y puede atraerla",
-     "lectura": "Su situación pide actividad y el modelo lo sitúa entre los de mejor saldo esperado de empresas: "
+    # Nombres: «necesita crecer» = necesidad en la mitad alta (sobre todo demográfica); «pronóstico» = saldo de empresas
+    # que el GA²M espera para su perfil (no lo observado). Los ids se conservan por compatibilidad con la API.
+    {"id": "oportunidad", "nombre": "Necesita crecer, buen pronóstico",
+     "lectura": "Necesita crecer y su perfil es el de los municipios con mejor saldo esperado de empresas: "
                 "atraer empresas puede funcionar."},
-    {"id": "apoyo", "nombre": "Necesita actividad y le cuesta atraerla",
-     "lectura": "Su situación pide actividad, pero el modelo lo sitúa en la mitad baja: atraer empresas por sí solo "
-                "probablemente no baste."},
-    {"id": "autonomo", "nombre": "Va por su cuenta",
-     "lectura": "Necesidad por debajo de la mitad y viabilidad en la mitad alta: según los datos, avanza sin "
-                "necesitar prioridad."},
-    {"id": "vigilar", "nombre": "Sin urgencia, poca viabilidad",
-     "lectura": "Ni la necesidad ni la viabilidad destacan: conviene seguir su evolución."},
+    {"id": "apoyo", "nombre": "Necesita crecer, pronóstico débil",
+     "lectura": "Necesita crecer, pero el saldo esperado de empresas para su perfil está en la mitad baja: atraer "
+                "empresas por sí solo probablemente no baste."},
+    {"id": "autonomo", "nombre": "Sin urgencia, buen pronóstico",
+     "lectura": "Necesidad por debajo de la mitad y saldo esperado de empresas en la mitad alta: según los datos, "
+                "no es prioritario."},
+    {"id": "vigilar", "nombre": "Sin urgencia, pronóstico débil",
+     "lectura": "Ni la necesidad ni el saldo esperado de empresas destacan: conviene seguir su evolución."},
 ]
 NODO_DISTANCIA = "Distancia_Madrid"
 CONTEXTO_NOTA = ("Datos de contexto, no resultado del modelo: la presencia de un programa no mide su efecto en la "

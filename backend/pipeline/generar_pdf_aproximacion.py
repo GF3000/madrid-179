@@ -276,9 +276,9 @@ story += [
     *B([
         "<b>Ámbito:</b> tramo de población, distancia a Madrid, municipios sin oficinas o municipios en LEADER.",
         "<b>Diagnóstico en cuatro grupos:</b> <i>necesidad de reequilibrio</i> (media de percentiles de crecimiento de población bajo, "
-        "pocos menores de 45 años, paro alto y población pequeña) frente a <i>viabilidad</i> (percentil del GA²M). Resultado: "
-        "necesita actividad y puede atraerla (33), necesita actividad y le cuesta atraerla (56), va por su cuenta (57) y sin "
-        "urgencia, con poca viabilidad (32).",
+        "pocos menores de 45 años, paro alto y población pequeña) frente a <i>pronóstico empresarial</i> (percentil del saldo "
+        "de empresas que el GA²M espera para su perfil). Resultado: necesita crecer, buen pronóstico (33); necesita crecer, "
+        "pronóstico débil (56); sin urgencia, buen pronóstico (57), y sin urgencia, pronóstico débil (32).",
         "<b>Frenos:</b> las aportaciones negativas del GA²M de cada municipio, marcadas como <i>palanca</i> (algo que una política "
         "puede mover a medio plazo, como la especialización o la oferta de oficinas) o <i>estructural</i>. El resultado es "
         "revelador: el modelo atribuye casi todo a factores estructurales (crecimiento, densidad, distancia).",
@@ -298,7 +298,7 @@ story.append(KeepTogether([
       "neta empresarial al año), seguido del <b>valor de la vivienda</b>, que el modelo lee como señal de demanda (−0,09), de la "
       "densidad (−0,05) y del nivel formativo (−0,04). La distancia a Madrid, en cambio, le suma (+0,15). La red coincide: "
       "Dinamismo Bajo y Densidad Media, con P(Viabilidad Alta) = 0,22 y P(Baja) = 0,56. En «Dónde actuar» queda en el grupo "
-      "«necesita actividad y le cuesta atraerla», con frenos estructurales. Lectura para el técnico: las políticas que atraigan "
+      "«necesita crecer, pronóstico débil», con frenos estructurales. Lectura para el técnico: las políticas que atraigan "
       "población (vivienda, servicios) probablemente rindan más aquí que las ayudas directas a la empresa. Está en el grupo LEADER "
       "GALSINMA (Sierra Norte) y, por tener menos de 2.500 habitantes, quien se traslade puede optar a las deducciones del IRPF.", "body"),
 ]))

@@ -35,7 +35,8 @@ const CORREO = "";
 // cuadrada de 176 px) son opcionales: sin foto, las iniciales
 const EQUIPO = [
   { nombre: "Gregorio García Velasco", corto: "Gregorio García", centro: "Universidad Carlos III de Madrid",
-    linkedin: "https://www.linkedin.com/in/gregorio-garc%C3%ADa-velasco-481847265/", github: "", foto: "" },
+    linkedin: "https://www.linkedin.com/in/gregorio-garc%C3%ADa-velasco-481847265/", github: "",
+    foto: "/equipo/gregorio-garcia.jpg" },
   { nombre: "Guillermo Franco Gimeno", corto: "Guillermo Franco", centro: "Universidad Politécnica de Madrid",
     linkedin: "https://www.linkedin.com/in/guillermo-franco-gimeno-335256229/", github: "",
     foto: "/equipo/guillermo-franco.jpg" },

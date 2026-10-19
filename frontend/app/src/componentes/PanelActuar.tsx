@@ -1,4 +1,4 @@
-// Pestaña «Dónde actuar» (Administración): qué municipios necesitan actividad, cuáles pueden atraerla y qué les
+// Pestaña «Dónde actuar» (Administración): qué municipios necesitan crecer, cuál es su pronóstico empresarial y qué les
 // frena. Diagnóstico de la situación 2020-2024 (/api/v1/diagnostico); no es un simulador ni habla de efectos.
 import { useEffect, useRef } from "react";
 import type { ContextoPolitica, Diagnostico, IdCuadrante, MunicipioDiagnostico } from "../api";
@@ -68,7 +68,7 @@ export default function PanelActuar(p: Props) {
   if (p.error) {
     return (
       <div className="panel-contenido">
-        <p className="entradilla">Qué municipios necesitan actividad, cuáles pueden atraerla y qué les frena.</p>
+        <p className="entradilla">Qué municipios necesitan crecer, cuál es su pronóstico empresarial y qué les frena.</p>
         <p className="nota">El diagnóstico no está disponible ahora mismo. Comprueba que el servidor está actualizado y
           vuelve a intentarlo.</p>
       </div>
@@ -85,8 +85,9 @@ export default function PanelActuar(p: Props) {
   return (
     <div className="panel-contenido actuar">
       <p className="entradilla">
-        Qué municipios <b>necesitan actividad</b>, cuáles <b>pueden atraerla</b> y qué les frena. Cada columna se
-        levanta según la necesidad del municipio; el color dice en qué situación está.
+        Qué municipios <b>necesitan crecer</b>, cuál es su <b>pronóstico empresarial</b> y qué les frena. Cada
+        columna se levanta según la necesidad del municipio; el color dice en qué situación está. El pronóstico es el
+        saldo de empresas que el modelo espera para su perfil, no lo que ha pasado.
       </p>
 
       <div className="bloque">
@@ -205,7 +206,7 @@ function DiagnosticoMunicipio({ m, d, onPerfil, onFicha }: {
       </div>
       {c && <p className="diagnostico-situacion"><b>{c.nombre}.</b> {c.lectura}</p>}
 
-      <Medida titulo="Necesidad de actividad" que="necesidad" valor={m.necesidad} corte={d.corte} />
+      <Medida titulo="Necesidad de crecer" que="necesidad" valor={m.necesidad} corte={d.corte} />
       <ul className="componentes">
         {d.necesidad.componentes.map((k) => {
           const x = m.componentes[k.columna];
@@ -221,7 +222,7 @@ function DiagnosticoMunicipio({ m, d, onPerfil, onFicha }: {
         })}
       </ul>
 
-      <Medida titulo="Viabilidad empresarial" que="viabilidad" valor={m.viabilidad} corte={d.corte}
+      <Medida titulo="Pronóstico empresarial" que="viabilidad" valor={m.viabilidad} corte={d.corte}
         nota="Saldo esperado de empresas según el modelo (orientativo)." />
 
       <h4 className="frenos-titulo">Qué le frena</h4>
