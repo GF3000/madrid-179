@@ -159,7 +159,11 @@ La ficha del municipio:
 - **aportaciones del GA²M** por término (intercepto + 14 efectos principales + 10 interacciones en el modelo v2), que suman la predicción;
 - **red bayesiana:** estados de los nodos, P(Baja/Media/Alta) y los padres directos que la explican (en el modelo v2, Dinamismo Demográfico y Densidad);
 - **aviso de discrepancia** si el GA²M y la red no coinciden (p. ej. puntuación en el tercio superior con P(Alta) < 0,33);
-- utilidades de transporte y nivel de ayudas.
+- utilidades de transporte y nivel de ayudas;
+- `ayudas` (LEADER, IRPF de < 2.500 hab.) y `convocatorias`: las abiertas de la BDNS restringidas a municipios de su tamaño (p. ej. comercio en < 1.000 hab.).
+
+### `GET /convocatorias`
+Convocatorias abiertas para pymes y autónomos (estatales y de la Comunidad de Madrid, BDNS) que valen para cualquier municipio, con perfil (`contratar`, `innovar`, `exportar`…), plazo, nota y enlace a la ficha oficial, más `fecha_consulta`, `aviso` y el diccionario de `perfiles`. Las genera `backend/pipeline/convocatorias_bdns.py`; si falta la tabla, `404`. No puntúan. `POST /interpretar` devuelve además `perfiles_ayudas` para filtrarlas según el negocio.
 
 ### `POST /consulta`
 Consultas con evidencia parcial a la red: «¿qué viabilidad cabe esperar con talento alto y lejos de Madrid?».

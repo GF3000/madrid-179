@@ -75,12 +75,12 @@ CAM = [
     ("Instituto de Estadística de la Comunidad de Madrid",
      "Portal de datos abiertos <i>datos.comunidad.madrid</i>: padrón, censo anual, renta disponible bruta municipal, afiliación a la "
      "Seguridad Social, estadísticas del Catastro por municipio",
-     "Demografía, talento, renta, empleo y coste inmobiliario. Canal de 6 de las 8 variables del modelo", "Integrada"),
+     "Demografía, juventud, talento, renta, paro, coste inmobiliario y oferta de oficinas. Canal de 9 de las 12 variables de la red", "Integrada"),
     ("Dirección General de Economía e Industria (Consejería de Economía, Hacienda y Empleo)",
      "Dinámica Empresarial y Colectivo Empresarial, publicados por el Instituto de Estadística",
      "<b>Variable objetivo</b> (tasa neta de creación de unidades productivas) y especialización en servicios profesionales", "Integrada"),
     ("Dirección General del Servicio Público de Empleo (Consejería de Economía, Hacienda y Empleo)",
-     "Paro registrado por municipio, publicado por el Instituto de Estadística", "Mercado laboral local", "Integrada"),
+     "Paro registrado por municipio, publicado por el Instituto de Estadística", "Nodo de paro de la red", "Integrada"),
     ("Consorcio Regional de Transportes de Madrid",
      "Portal de datos abiertos del Consorcio: redes GTFS de Metro, Metro Ligero, Cercanías, EMT y autobuses; Encuesta Domiciliaria de "
      "Movilidad 2018", "Acceso ferroviario, distancia a la estación más cercana, densidad de paradas, flujos de movilidad", "Integrada"),
@@ -92,9 +92,10 @@ CAM = [
     ("Dirección General de Suelo", "Portal del Suelo: parcelas de suelo público ofertadas", "Suelo terciario e industrial disponible", "Descargada"),
     ("Registros de la Comunidad de Madrid", "Centros sanitarios, oficinas de farmacia, entidades deportivas, estaciones de calidad del aire",
      "Servicios y calidad de vida para el dashboard", "Descargada"),
-    ("BOCM y programas de la Comunidad", "Plan de Reequilibrio Territorial, Pueblos con Vida, deducción fiscal por residencia en "
-     "municipios de menos de 2.500 habitantes", "Nivel de ayudas por elegibilidad (capa informativa, filtro o peso opcional)",
-     "Parcial: listas oficiales en verificación"),
+    ("BOCM y programas de la Comunidad", "Convenios LEADER 2023-2027 con los tres grupos de acción local (BOCM 18-01-2025, "
+     "anexo I); deducciones del IRPF por residencia en municipios de menos de 2.500 habitantes (Ley 5/2024); PIR 2022-2026",
+     "Ayudas que alcanzan a cada municipio: ficha, diagnóstico, preferencia y filtro. No entran en el modelo",
+     "Integrada (LEADER y menos de 2.500 hab.); Pueblos con Vida, pendiente"),
 ]
 
 VARIABLES = [
@@ -106,6 +107,11 @@ VARIABLES = [
     ("Coste inmobiliario", "Valor catastral residencial por unidad urbana, 2026", "Dirección General del Catastro", "Instituto de Estadística · <i>1002054</i>"),
     ("Distancia a Madrid", "Km del centroide municipal a la Puerta del Sol", "Cálculo propio", "Comunidad de Madrid · <i>secciones_censales</i>"),
     ("Acceso ferroviario", "Estaciones de Metro, Metro Ligero o Cercanías", "Consorcio Regional de Transportes (CAM)", "Portal de datos abiertos del Consorcio"),
+    ("Densidad", "Habitantes por km²", "Padrón municipal · INE; superficie propia", "Instituto de Estadística · <i>padron_por_sexo</i>"),
+    ("Juventud", "% de población menor de 45 años, 2025", "Padrón municipal · INE", "Instituto de Estadística · <i>grado_juventud_por_edad</i>"),
+    ("Paro", "Paro registrado por 100 habitantes, 2025", "Servicio Público de Empleo (CAM)", "Instituto de Estadística · <i>1902280</i>"),
+    ("Sanidad", "Centros sanitarios y farmacias por 1.000 hab.", "OpenStreetMap (ODbL)", "Overpass API"),
+    ("Oferta de oficinas (solo GA²M)", "Locales de uso oficinas por 1.000 hab., 2026", "Dirección General del Catastro", "Instituto de Estadística · <i>unidades_urbanas_por_uso</i>"),
 ]
 
 OTRAS = [
@@ -113,11 +119,11 @@ OTRAS = [
      "Renta y formación por sección censal; empresas por actividad y tamaño", "Parcial"),
     ("Dirección General del Catastro", "Edificios y parcelas INSPIRE de los 179 municipios", "Superficie y uso de los edificios; base del 3D", "Descargada"),
     ("Tesorería General de la Seguridad Social y SEPE", "Afiliación y paro por municipio (también vía el Instituto de Estadística)", "Empleo", "Integrada"),
-    ("Base de Datos Nacional de Subvenciones (IGAE)", "Convocatorias y concesiones con ámbito Madrid (API abierta)", "Ayudas aplicables por perfil de negocio", "Descargada"),
+    ("Base de Datos Nacional de Subvenciones (IGAE)", "Convocatorias y concesiones con ámbito Madrid (API abierta)", "Convocatorias abiertas para pymes y autónomos según el perfil del negocio (no entran en el modelo)", "Integrada"),
     ("Ministerio para la Transformación Digital", "Cobertura de fibra FTTH y 5G por municipio", "Conectividad (filtro opcional)", "Prevista"),
     ("Ayuntamiento de Madrid", "Portal de datos abiertos (674 conjuntos): distritos, barrios, locales y actividades", "Detalle intramunicipal de la capital", "Parcial"),
     ("CNIG / IGN", "Límites, modelos digitales del terreno, usos del suelo", "Relieve y usos del suelo para el mapa 3D", "Prevista"),
-    ("OpenStreetMap", "153.517 puntos de interés en 18 categorías (licencia ODbL)", "Servicios para trabajadores: restauración, guarderías, coworking, sanidad, deporte", "Integrada"),
+    ("OpenStreetMap", "153.517 puntos de interés en 18 categorías (licencia ODbL)", "Sanidad (nodo de la red) y servicios para la plantilla: restauración, guarderías, coworking, deporte", "Integrada"),
 ]
 
 PRIVADAS = [
@@ -137,7 +143,7 @@ story = [
       "de su portal de datos abiertos o de organismos de la Comunidad, y se unen por el código INE de cada uno de los 179 municipios. "
       "Las fuentes estatales y colaborativas complementan esa base, y las privadas son opcionales: el sistema funciona sin ellas.", "body"),
     Spacer(1, 4),
-    cifras([("8 de 8", "variables del modelo obtenidas de fuentes de la Comunidad"),
+    cifras([("11 de 12", "variables de la red obtenidas de fuentes de la Comunidad"),
             ("621", "tablas municipales descargadas de datos.comunidad.madrid"),
             ("2.263", "conjuntos de datos del portal catalogados"),
             ("179", "municipios unidos por código INE")]),

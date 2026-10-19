@@ -34,7 +34,7 @@ P = lambda t, s="cell": Paragraph(t, st[s])
 PUBLICAS = [
     ("Estadística oficial regional",
      "Instituto de Estadística de la Comunidad de Madrid: portal de datos abiertos, Banco de Datos Municipal, Nomecalles",
-     "Padrón, censo anual, dinámica y colectivo empresarial, renta disponible, afiliación, paro. Fuente del <b>target</b> y de la mayoría de nodos de la red",
+     "Padrón, juventud, censo anual, dinámica y colectivo empresarial, renta disponible, paro, Catastro municipal. Fuente del <b>objetivo</b> y de 9 de los 12 nodos de la red",
      "Integrada"),
     ("Estadística oficial nacional",
      "INE: padrón continuo, Censo 2021, Atlas de Distribución de Renta, Directorio Central de Empresas, migraciones",
@@ -45,8 +45,10 @@ PUBLICAS = [
      "Detalle por distrito y barrio de la capital; censo de locales y actividades; equipamientos",
      "Parcial"),
     ("Ayudas e incentivos",
-     "Base de Datos Nacional de Subvenciones, BOCM, planes de reequilibrio territorial y ordenanzas fiscales municipales",
-     "Convocatorias y concesiones con ámbito Madrid; municipios elegibles; tipos y bonificaciones de IBI, IAE e ICIO",
+     "BOCM (convenios LEADER 2023-2027 con los tres grupos de acción local), Ley 5/2024 de deducciones del IRPF, "
+     "Base de Datos Nacional de Subvenciones (convocatorias abiertas para pymes y autónomos); ordenanzas fiscales, previstas",
+     "Municipios que optan a cada programa y convocatorias abiertas según el perfil del negocio: ficha, diagnóstico, "
+     "preferencia y filtro del usuario. <b>No entran en el modelo</b>. Los tipos de IBI e IAE, pendientes",
      "Parcial"),
     ("Inmobiliario y suelo",
      "Dirección General del Catastro (servicios INSPIRE y estadísticas), Portal del Suelo de la CAM, Ministerio de Vivienda",
@@ -70,7 +72,7 @@ PUBLICAS = [
      "Integrada"),
     ("Datos colaborativos abiertos",
      "OpenStreetMap (Overpass API y extractos regionales), licencia ODbL",
-     "Densidad de servicios para trabajadores: restauración, gimnasios, guarderías, coworking, oficinas, uso del suelo",
+     "Sanidad por habitante (nodo de la red) y servicios para la plantilla: restauración, gimnasios, guarderías, coworking, deporte",
      "Integrada"),
 ]
 
@@ -135,7 +137,7 @@ story = [
     P("Fuentes de datos para la localización de oficinas en la Comunidad de Madrid", "title"),
     P("La solución propuesta estima la viabilidad de abrir o trasladar oficinas en los 179 municipios de la Comunidad de Madrid, "
       "con el objetivo de descongestionar la capital y dinamizar los municipios periféricos y rurales. Combina una red bayesiana "
-      "explicable, un modelo aditivo (GA²M) y un dashboard 3D. Este anexo enumera, agrupadas por categoría, las fuentes públicas "
+      "explicable, un modelo aditivo (GA²M) y una aplicación web con mapa 3D (madrid179.web.app). Este anexo enumera, agrupadas por categoría, las fuentes públicas "
       "y privadas que alimentan la solución.", "lede"),
     P("Todas las fuentes se integran por el <b>código INE municipal</b> (5 dígitos), por la <b>sección censal</b> (10 dígitos) "
       "o por <b>coordenadas</b> (ETRS89 / UTM 30N), lo que permite trabajar a escala de municipio, distrito, sección o punto.", "body"),
@@ -158,7 +160,7 @@ story += [
     *[Paragraph(t, st["bullet"], bulletText="•") for t in [
         "<b>Prioridad a lo abierto.</b> El modelo funciona solo con fuentes públicas; las privadas mejoran la precisión del coste operativo.",
         "<b>Licencias y atribución.</b> Se respeta la atribución exigida (OpenStreetMap ODbL, Dirección General del Catastro, "
-        "reutilización de datos del sector público) y las condiciones de uso de la BDNS.",
+        "reutilización de datos del sector público) y las de cada boletín oficial.",
         "<b>Datos personales.</b> Solo se usan datos agregados por territorio; los beneficiarios individuales de ayudas no se publican ni se perfilan.",
         "<b>Actualización.</b> Las fuentes mensuales (afiliación, paro, ayudas) y anuales (padrón, renta, catastro) se recargan "
         "con los scripts del proyecto; el resto se revisa en cada edición.",

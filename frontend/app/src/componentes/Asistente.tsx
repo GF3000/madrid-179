@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { api, type Filtros, type Interpretacion, type Meta } from "../api";
 import { describirFiltro, palabraImportancia } from "../modelo";
+import { ConvocatoriasNegocio } from "./Convocatorias";
 import { EstrellasPensando } from "./piezas";
 
 interface Props {
@@ -109,6 +110,7 @@ export default function Asistente({ meta, onAplicar, onDeshacer }: Props) {
               ))}
             </ul>
           )}
+          {estado === "listo" && <ConvocatoriasNegocio perfiles={resultado.perfiles_ayudas ?? []} />}
           {resultado.dudas.length > 0 && (
             <div className="dudas">
               <h4>Para afinar</h4>

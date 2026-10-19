@@ -170,6 +170,28 @@ class AyudasFicha(BaseModel):
     anio_padron: str = Field(description="Padrón a 1 de enero con que se aplica el umbral de 2.500 habitantes")
 
 
+class Convocatoria(BaseModel):
+    """Convocatoria abierta para pymes y autónomos según la BDNS (revisada una a una; fuera del modelo)."""
+    num: str = Field(description="Número de la convocatoria en la BDNS")
+    nivel: str = Field(description="Estado o Comunidad de Madrid")
+    organo: str
+    titulo: str
+    para_quien: str
+    perfiles: list[str]
+    fin_solicitud: str | None = Field(description="Fin del plazo según la BDNS; null si no consta")
+    nota: str | None = Field(description="Aviso sobre el plazo o el ámbito")
+    url: str = Field(description="Ficha oficial en infosubvenciones.es")
+    max_habitantes: int | None = Field(description="Solo municipios por debajo de este tamaño; null si vale para todos")
+    fecha_consulta: str
+
+
+class RespuestaConvocatorias(BaseModel):
+    fecha_consulta: str | None
+    aviso: str
+    perfiles: dict[str, str] = Field(description="Perfiles de ayuda que puede deducir el asistente -> etiqueta")
+    convocatorias: list[Convocatoria]
+
+
 class Ficha(BaseModel):
     ine5: str
     municipio: str
@@ -185,6 +207,8 @@ class Ficha(BaseModel):
     preferencias: dict[str, PreferenciaFicha]
     wikipedia: Wikipedia | None = Field(None, description="Resumen (CC BY-SA 4.0) y foto de Commons con su licencia")
     ayudas: AyudasFicha | None = Field(None, description="null si falta data/processed/ayudas_oficiales.csv")
+    convocatorias: list[Convocatoria] = Field(default_factory=list,
+                                              description="Convocatorias abiertas restringidas a municipios de su tamaño")
 
 
 class MunicipioConsulta(BaseModel):
@@ -211,6 +235,7 @@ class RespuestaInterpretar(BaseModel):
     sector: str | None
     preferencias: dict[str, PreferenciaInterpretada]
     filtros: dict[str, float | int | bool]
+    perfiles_ayudas: list[str] = Field(default_factory=list, description="Tipos de ayuda que encajan con el negocio")
     dudas: list[str]
     avisos: list[str]
 

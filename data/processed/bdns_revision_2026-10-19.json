@@ -1,0 +1,835 @@
+[
+ {
+  "num": "934425",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "exportar"
+  ],
+  "titulo": "ICEX Next · Programa de iniciación y consolidación de la exportación",
+  "para_quien": "PYME y personas físicas con actividad económica; ayudas para iniciar o consolidar la exportación (ICEX Next).",
+  "motivo": "Concurrencia competitiva abierta a PYME y autónomos; fecha fin de solicitud 30/10/2026.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "931767",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "ICEX · Ayuda para participar en la feria Midest - Global Industrie (Lyon)",
+  "para_quien": "PYME de fabricación de maquinaria, material eléctrico, muebles, minerales no metálicos y caucho/plástico; feria en Lyon.",
+  "motivo": "Programa ICEX abierto a empresas con plazo hasta 06/11/2026; sectores solo industriales, ajenos a oficina.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "931749",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "ICEX · Ayuda para participar en la feria Expo Riva Schuh & Garda Bags",
+  "para_quien": "PYME del sector del cuero y de otros productos de materiales similares; participación en la feria de Riva del Garda.",
+  "motivo": "Programa ICEX abierto a empresas con plazo hasta 04/12/2026; sector ajeno a oficina.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "931709",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "ICEX · Ayuda para participar en la feria Heimtextil (Frankfurt)",
+  "para_quien": "PYME de industria textil; participación en la feria Heimtextil de Frankfurt (enero 2027).",
+  "motivo": "Programa ICEX abierto a empresas con plazo hasta 20/11/2026; sector textil, ajeno a oficina.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "931705",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "ICEX · Ayuda para participar en la feria R+T 2027 (Stuttgart)",
+  "para_quien": "PYME de industria textil; participación en la feria R+T 2027 de Stuttgart (febrero 2027).",
+  "motivo": "Programa ICEX abierto a empresas con plazo hasta 31/10/2026; sector textil, ajeno a oficina.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "931703",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "ICEX · Ayuda para participar en la feria Milano Unica (Milán)",
+  "para_quien": "PYME de industria textil; participación en la feria Milano Unica de Milán (febrero 2027).",
+  "motivo": "Programa ICEX abierto a empresas con plazo hasta 26/10/2026; sector textil, ajeno a oficina.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "931701",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "ICEX · Ayuda para participar en la feria Colombiatex 2027 (Medellín)",
+  "para_quien": "PYME de industria textil; participación en la feria Colombiatex 2027 de Medellín (enero 2027).",
+  "motivo": "Programa ICEX abierto a empresas; 19/10/2026 es el último día de plazo. Sector textil, ajeno a oficina.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "931689",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "ICEX · Ayuda para participar en la feria SIRHA (Lyon)",
+  "para_quien": "PYME de fabricación de maquinaria, material eléctrico, muebles, minerales no metálicos y caucho/plástico; feria SIRHA Lyon.",
+  "motivo": "Programa ICEX abierto a empresas con plazo hasta 30/11/2026; sectores solo industriales, ajenos a oficina.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "931664",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "ICEX · Ayuda para participar en la feria NAFEM Show (Orlando)",
+  "para_quien": "PYME de fabricación de maquinaria, material eléctrico, muebles, minerales no metálicos y caucho/plástico; feria NAFEM Show.",
+  "motivo": "Programa ICEX abierto a empresas con plazo hasta 30/11/2026; sectores solo industriales, ajenos a oficina.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "920153",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "dudoso",
+  "perfiles": [
+   "energia"
+  ],
+  "titulo": "IDAE · Incentivos a proyectos singulares de ahorro y eficiencia energética (Innovae)",
+  "para_quien": "Grandes empresas, personas jurídicas sin actividad y PYME; eficiencia energética en medidas de industria y edificios.",
+  "motivo": "Concurrencia competitiva con plazo hasta 18/11/2026; el objetivo es industrial y de proyectos singulares, encaje para oficina dudoso.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "918684",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "AEI · Programa de Doctorados Industriales (I+D en empresas)",
+  "para_quien": "Grandes empresas y PYME con actividad económica; ayudas del Programa de Doctorados Industriales (art. 25), sujetas al RGEC.",
+  "motivo": "Concurrencia competitiva abierta con plazo hasta 26/10/2026.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "918680",
+  "solicitable": "dudoso",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "AEI · Ayudas a Plataformas Tecnológicas de I+D",
+  "para_quien": "Grandes empresas y PYME; ayudas a plataformas tecnológicas de I+D. Los datos no dicen quién presenta la solicitud.",
+  "motivo": "La fecha fin (17/11/2026) está vigente, pero el plazo empieza el 27/10/2026; no consta si la solicitud la hacen las empresas o las plataformas.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "918657",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "AEI · Ayudas Torres Quevedo de I+D",
+  "para_quien": "Grandes empresas y PYME con actividad económica; ayudas Torres Quevedo para proyectos de I+D (art. 25).",
+  "motivo": "Concurrencia competitiva abierta con plazo hasta 29/10/2026.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "915674",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [
+   "exportar",
+   "comercio"
+  ],
+  "titulo": "ICEX · Participación agrupada en Cosmoprof North America (Miami)",
+  "para_quien": "PYME de comercio al por mayor e industria química; participación agrupada en la feria Cosmoprof North America (Miami).",
+  "motivo": "Feria sectorial de cosmética: no es general para una oficina, igual que las demás ferias sectoriales del ICEX.",
+  "revisor": "revisión manual",
+  "nota": ""
+ },
+ {
+  "num": "915199",
+  "solicitable": "dudoso",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "MAPA · Bonificación del principal de financiación a explotaciones agrarias (Oriente Medio)",
+  "para_quien": "Titulares de explotaciones agrarias y operadores agroalimentarios y pesqueros; bonificación del principal de financiación.",
+  "motivo": "Sector agrario y concesión directa sin procedimiento de solicitud claro; fecha fin 30/09/2028 vigente según la BDNS.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "898121",
+  "solicitable": "no",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "financiacion"
+  ],
+  "titulo": "Fondo de Impacto Social · Participación en fondos de inversión",
+  "para_quien": "PYME y grandes empresas; financiación de riesgo mediante participación del fondo en fondos de inversión.",
+  "motivo": "Participación en fondos de inversión: la empresa no presenta solicitud directa. Abierto sin fechas en la BDNS.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "898069",
+  "solicitable": "dudoso",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "Fondo de Impacto Social · Asistencia técnica y ayudas a PYME",
+  "para_quien": "PYME y grandes empresas; consultoría, prospección, innovación de procesos y formación. No consta quién solicita.",
+  "motivo": "Abierto sin fechas en la BDNS; el art. 12.1.D sugiere asistencia técnica del propio fondo, no está claro que la empresa solicite.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "893084",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "CDTI · Línea de ayuda a infraestructuras de ensayo y experimentación",
+  "para_quien": "Grandes empresas y PYME; préstamo para invertir en infraestructuras de ensayo y experimentación (art. 26 bis).",
+  "motivo": "Infraestructuras de ensayo y experimentación: demasiado específica para una oficina.",
+  "revisor": "revisión manual",
+  "nota": ""
+ },
+ {
+  "num": "890304",
+  "solicitable": "no",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "financiacion"
+  ],
+  "titulo": "Reafianzamiento del programa de avales para PYME 2026 (InvestEU)",
+  "para_quien": "Reafianzamiento del programa de avales para PYME; la empresa no lo solicita directamente.",
+  "motivo": "Reafianzamiento a entidades intermedias, no solicitable por la empresa. Vigente hasta 31/12/2026.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "890300",
+  "solicitable": "no",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "financiacion"
+  ],
+  "titulo": "Reafianzamiento del programa de avales para PYME 2026 (InvestEU, PYME)",
+  "para_quien": "Reafianzamiento del programa de avales para PYME; la empresa no lo solicita directamente.",
+  "motivo": "Reafianzamiento a entidades intermedias, no solicitable por la empresa. Vigente hasta 31/12/2026.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "890292",
+  "solicitable": "no",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "financiacion"
+  ],
+  "titulo": "Reafianzamiento del programa de avales para PYME 2026 (de minimis)",
+  "para_quien": "Reafianzamiento del programa de avales para PYME; la empresa no lo solicita directamente.",
+  "motivo": "Reafianzamiento a entidades intermedias, no solicitable por la empresa. Vigente hasta 31/12/2026.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "890291",
+  "solicitable": "no",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "financiacion"
+  ],
+  "titulo": "Reafianzamiento de avales para pymes (2026)",
+  "para_quien": "Pymes y personas físicas con actividad económica; reafianzamiento de avales (instrumento de garantía).",
+  "motivo": "Reafianzamiento a sociedades de garantía, que la empresa no solicita directamente; fecha fin 31-12-2026 (vigente).",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "883316",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "financiacion"
+  ],
+  "titulo": "Línea de financiación ICO Crecimiento (préstamos para pymes)",
+  "para_quien": "Pymes y personas físicas con actividad económica; financiación en forma de préstamo según condiciones de elegibilidad y admisión.",
+  "motivo": "Condiciones de admisión de operaciones para pymes y autónomos; fecha fin 01-04-2028 (futura).",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "881660",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "innovar",
+   "financiacion"
+  ],
+  "titulo": "CDTI · Ayudas para financiar la innovación (2026)",
+  "para_quien": "Gran empresa y pymes; financiación de ayudas a la innovación en forma de préstamo.",
+  "motivo": "Convocatoria abierta (abierto=true) sin fechas que indiquen plazo cerrado o no iniciado.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "881647",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "CDTI · Ayudas para proyectos de I+D (2026)",
+  "para_quien": "Gran empresa y pymes; financiación de proyectos de investigación y desarrollo (art. 25), en forma de préstamo.",
+  "motivo": "Convocatoria abierta (abierto=true) sin fechas que indiquen plazo cerrado o no iniciado.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "931557",
+  "solicitable": "dudoso",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Programa de orientación, formación e inserción con compromiso de contratación",
+  "para_quien": "Pymes, grandes empresas y personas físicas con actividad económica; programa de orientación y formación con compromiso de contratación.",
+  "motivo": "Fecha fin 29-10-2026 (vigente); no consta si la solicitud la presenta la empresa o una entidad que ejecuta el programa.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "929317",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "Cheque Innovación 2026 para pymes de la Comunidad de Madrid",
+  "para_quien": "Pymes y personas físicas con actividad económica; subvención dineraria para investigación, desarrollo e innovación.",
+  "motivo": "Convocatoria abierta (abierto=true) sin fechas que indiquen plazo cerrado o no iniciado.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "928011",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda por contratar jóvenes en prácticas profesionales (ampliación 2026)",
+  "para_quien": "Grandes empresas y pymes que den de alta a jóvenes contratados; subvención dineraria sin contraprestación.",
+  "motivo": "Abierta (abierto=true); altas desde 01-01-2026 hasta 31-12-2026, requisito el alta en Seguridad Social de la persona contratada.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "927895",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda por contratar jóvenes en prácticas profesionales (ampliación 2026)",
+  "para_quien": "Grandes empresas y pymes que den de alta a jóvenes contratados; subvención dineraria sin contraprestación.",
+  "motivo": "Duplicado de 928011 (misma línea L3, otra ampliación).",
+  "revisor": "revisión manual",
+  "nota": ""
+ },
+ {
+  "num": "927888",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda por contratar jóvenes en formación alternante (ampliación 2026)",
+  "para_quien": "Grandes empresas y pymes que den de alta a jóvenes en formación alternante; subvención dineraria sin contraprestación.",
+  "motivo": "Abierta (abierto=true); altas desde 01-01-2026 hasta 31-12-2026, requisito el alta en Seguridad Social de la persona contratada.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "927885",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda por contratación estable de personas jóvenes (ampliación 2026)",
+  "para_quien": "Grandes empresas y pymes que den de alta a jóvenes con contrato estable; subvención dineraria sin contraprestación.",
+  "motivo": "Abierta (abierto=true); altas desde 01-01-2026 hasta 31-12-2026, requisito el alta en Seguridad Social de la persona contratada.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "919777",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda por contratar jóvenes en formación alternante (ampliación 2026)",
+  "para_quien": "Grandes empresas y pymes que den de alta a jóvenes en formación alternante; subvención dineraria sin contraprestación.",
+  "motivo": "Duplicado de 927888 (misma línea L4, otra ampliación).",
+  "revisor": "revisión manual",
+  "nota": ""
+ },
+ {
+  "num": "903189",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "autonomos"
+  ],
+  "titulo": "Ayudas para el crecimiento o la consolidación de autónomos y microempresas",
+  "para_quien": "Personas físicas autónomas y microempresas madrileñas; subvención dineraria para crecer o consolidar su actividad.",
+  "motivo": "Convocatoria abierta (abierto=true) sin fechas que indiquen plazo cerrado o no iniciado.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "894616",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "Ayuda a la movilidad sostenible para pymes y autónomos en zona de bajas emisiones",
+  "para_quien": "Pymes y autónomos; ayuda por compra de vehículo o achatarramiento dentro de zona de bajas emisiones (ZBE).",
+  "motivo": "Se solicita tras la compra o achatarramiento del vehículo (plazo de tres meses); abierto=true hasta 31-12-2026.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "894615",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "Ayuda a la movilidad sostenible para pymes y autónomos fuera de zona de bajas emisiones",
+  "para_quien": "Pymes y autónomos; ayuda por compra de vehículo o achatarramiento fuera de zona de bajas emisiones (ZBE).",
+  "motivo": "Se solicita tras la compra o achatarramiento del vehículo (plazo de tres meses); abierto=true hasta 31-12-2026.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "889058",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Programa de fomento de la responsabilidad social y la conciliación laboral (2026)",
+  "para_quien": "Pymes y personas físicas con actividad económica; ayuda al fomento de la responsabilidad social y la conciliación laboral.",
+  "motivo": "Convocatoria abierta (abierto=true) sin fechas que indiquen plazo cerrado o no iniciado.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "883369",
+  "solicitable": "si",
+  "abierta": "dudoso",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "emprender",
+   "autonomos"
+  ],
+  "titulo": "Abono de cuotas de la Seguridad Social con prestación por desempleo en pago único",
+  "para_quien": "Personas físicas y pymes con actividad económica; abono de cuotas de la Seguridad Social con prestación de desempleo en pago único.",
+  "motivo": "Tramitación anticipada sin fechas; abierto=true pero el plazo no está concretado.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "883367",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "autonomos",
+   "emprender"
+  ],
+  "titulo": "Ayuda a trabajadores que se constituyen por cuenta propia (2026)",
+  "para_quien": "Trabajadores que inician actividad como autónomos; solicitud dentro de los tres meses siguientes al inicio de la actividad.",
+  "motivo": "Tramitación anticipada sin fechas; el plazo depende del inicio de actividad de cada persona.",
+  "revisor": "revisión manual",
+  "nota": "Tramitación anticipada: la BDNS la marca abierta, pero confirma el plazo en las bases."
+ },
+ {
+  "num": "883180",
+  "solicitable": "si",
+  "abierta": "dudoso",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "emprender"
+  ],
+  "titulo": "Emprendimiento colectivo: línea de inversiones (2026)",
+  "para_quien": "Grandes empresas, pymes y personas físicas; ayuda a inversiones para emprendimiento colectivo (3ª línea).",
+  "motivo": "Tramitación anticipada sin fechas: no se puede saber si el plazo ya está abierto.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "883178",
+  "solicitable": "si",
+  "abierta": "dudoso",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "emprender"
+  ],
+  "titulo": "Emprendimiento colectivo: incorporación de socios (2026)",
+  "para_quien": "Grandes empresas, pymes y personas físicas; ayuda por incorporación de socios en emprendimiento colectivo (4ª línea).",
+  "motivo": "Tramitación anticipada sin fechas: no se puede saber si el plazo ya está abierto.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "883177",
+  "solicitable": "dudoso",
+  "abierta": "dudoso",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "emprender"
+  ],
+  "titulo": "Emprendimiento colectivo: servicio de asesoramiento (2026)",
+  "para_quien": "Grandes empresas, pymes y personas físicas; línea de servicio de asesoramiento para emprendimiento colectivo (2ª línea).",
+  "motivo": "Tramitación anticipada sin fechas; no consta si el solicitante es la empresa o quien presta el asesoramiento.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "883176",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "emprender"
+  ],
+  "titulo": "Emprendimiento colectivo: nuevas cooperativas y sociedades laborales (2026)",
+  "para_quien": "Grandes empresas, pymes y personas físicas; ayuda para crear nuevas cooperativas y sociedades laborales (1ª línea).",
+  "motivo": "Tramitación anticipada sin fechas: no se puede saber si el plazo ya está abierto.",
+  "revisor": "revisión manual",
+  "nota": "Tramitación anticipada: la BDNS la marca abierta, pero confirma el plazo en las bases."
+ },
+ {
+  "num": "883109",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "autonomos",
+   "emprender"
+  ],
+  "titulo": "Tarifa Cero de la Comunidad de Madrid para nuevos autónomos",
+  "para_quien": "PYME y personas físicas con actividad económica; continuidad tras cada periodo de 12 meses con reducción o bonificación.",
+  "motivo": "Tramitación anticipada sin fechas de solicitud; no consta cuándo se abre el plazo ni cómo se presenta.",
+  "revisor": "revisión manual",
+  "nota": "Tramitación anticipada: la BDNS la marca abierta, pero confirma el plazo en las bases."
+ },
+ {
+  "num": "878704",
+  "solicitable": "si",
+  "abierta": "dudoso",
+  "encaja_oficina": "no",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda FSE+ por contratos formativos y de alternancia a jóvenes",
+  "para_quien": "Gran empresa, pymes y personas físicas que contraten a jóvenes en formación o alternancia; alta en Seguridad Social desde 1-1-2026.",
+  "motivo": "Misma línea de contratación de jóvenes que las ampliaciones ya incluidas.",
+  "revisor": "revisión manual",
+  "nota": ""
+ },
+ {
+  "num": "878700",
+  "solicitable": "si",
+  "abierta": "dudoso",
+  "encaja_oficina": "no",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda FSE+ por contratos de prácticas profesionales a jóvenes",
+  "para_quien": "Gran empresa, pymes y personas físicas que contraten a jóvenes en prácticas profesionales; alta en Seguridad Social desde 1-1-2026.",
+  "motivo": "Misma línea de contratación de jóvenes que las ampliaciones ya incluidas.",
+  "revisor": "revisión manual",
+  "nota": ""
+ },
+ {
+  "num": "878698",
+  "solicitable": "si",
+  "abierta": "dudoso",
+  "encaja_oficina": "no",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda FSE+ por contratación estable de personas jóvenes",
+  "para_quien": "Gran empresa, pymes y personas físicas que hagan contratos estables a personas jóvenes; alta en Seguridad Social desde 1-1-2026.",
+  "motivo": "Misma línea de contratación de jóvenes que las ampliaciones ya incluidas.",
+  "revisor": "revisión manual",
+  "nota": ""
+ },
+ {
+  "num": "878381",
+  "solicitable": "si",
+  "abierta": "dudoso",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda para contratar en empresas de inserción y centros especiales de empleo",
+  "para_quien": "Gran empresa, pymes y personas físicas; incentivo de inserción laboral en empresas de inserción y CEE (línea 6).",
+  "motivo": "Beneficiarios incluyen pymes; figura como tramitación anticipada sin fechas de solicitud.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "877771",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda para contratar a personas de colectivos especialmente vulnerables",
+  "para_quien": "Gran empresa, pymes y personas físicas que contraten a personas de colectivos especialmente vulnerables; alta en SS desde 1-1-2026.",
+  "motivo": "Ayuda a la empresa que contrata; figura como tramitación anticipada sin fechas de solicitud.",
+  "revisor": "revisión manual",
+  "nota": "Tramitación anticipada: la BDNS la marca abierta, pero confirma el plazo en las bases."
+ },
+ {
+  "num": "877770",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda para contratar a personas con discapacidad",
+  "para_quien": "Gran empresa, pymes y personas físicas; subvenciones salariales por contratar a trabajadores con discapacidad (art. 33).",
+  "motivo": "Ayuda a la empresa que contrata; figura como tramitación anticipada sin fechas de solicitud.",
+  "revisor": "revisión manual",
+  "nota": "Tramitación anticipada: la BDNS la marca abierta, pero confirma el plazo en las bases."
+ },
+ {
+  "num": "877746",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Incentivo a la contratación indefinida de personas desempleadas",
+  "para_quien": "Gran empresa, pymes y personas físicas; incentivo por contratar de forma indefinida a personas desempleadas; alta en SS desde 1-1-2026.",
+  "motivo": "Ayuda a la empresa que contrata; figura como tramitación anticipada sin fechas de solicitud.",
+  "revisor": "revisión manual",
+  "nota": "Tramitación anticipada: la BDNS la marca abierta, pero confirma el plazo en las bases."
+ },
+ {
+  "num": "871698",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "Cheque Innovación de la Comunidad de Madrid",
+  "para_quien": "Pymes y personas físicas con actividad económica; ayudas de investigación, desarrollo e innovación (convocatoria 2025).",
+  "motivo": "Duplicado: queda el Cheque Innovación 2026 (929317).",
+  "revisor": "revisión manual",
+  "nota": ""
+ },
+ {
+  "num": "867180",
+  "solicitable": "dudoso",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "Ayudas para proyectos que han recibido el Sello de Excelencia (2025)",
+  "para_quien": "Gran empresa, pymes y personas físicas con proyectos de I+D+i que hayan recibido un sello de excelencia (art. 25 bis).",
+  "motivo": "No consta si se solicita o si se concede de oficio a quien tenga el sello; abierto=true sin fechas.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "918843",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "innovar"
+  ],
+  "titulo": "Ayudas para proyectos que han recibido el Sello de Excelencia (2026)",
+  "para_quien": "Gran empresa, pymes y personas físicas con proyectos de I+D+i que hayan recibido un sello de excelencia (art. 25 bis).",
+  "motivo": "No consta si se solicita o si se concede de oficio a quien tenga el sello; abierto=true sin fechas.",
+  "revisor": "revisión manual",
+  "nota": "Para pymes con Sello de Excelencia de la UE (EIC Accelerator)."
+ },
+ {
+  "num": "928115",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "Ayudas de emergencia a pymes comerciales y de servicios afectadas por incendios",
+  "para_quien": "Pymes comerciales, de servicios y artesanas afectadas por los incendios (Sierra Oeste); ayuda de emergencia.",
+  "motivo": "Abierta según BDNS y solicitable por las pymes afectadas; no encaja por ser para afectados por un suceso concreto.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "913144",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "comercio"
+  ],
+  "titulo": "Ayudas al comercio para nuevos establecimientos (municipios de menos de 1.000 hab.)",
+  "para_quien": "Pymes y personas físicas con actividad económica; ayuda para nuevo establecimiento solo en municipios de CM de menos de 1.000 habitantes.",
+  "motivo": "Plazo vigente según BDNS (textFin 31.12.2026) y abierto=true; solicitable por pymes que cumplan el ámbito municipal.",
+  "revisor": "haiku",
+  "nota": "Abierta según la BDNS; consulta el plazo en las bases (BOCM de 07-03-2025).",
+  "max_habitantes": 1000
+ },
+ {
+  "num": "912526",
+  "solicitable": "dudoso",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "comercio"
+  ],
+  "titulo": "Ayuda para reactivar establecimientos comerciales (obras de infraestructuras)",
+  "para_quien": "Pymes y personas físicas con actividad económica; reactivación de establecimientos comerciales vinculada a obras de infraestructuras.",
+  "motivo": "Abierta según BDNS; no consta quién puede solicitarla ni qué condición de afectación se exige.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "905547",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "comercio"
+  ],
+  "titulo": "Ayudas al comercio para mantener establecimientos (municipios de menos de 1.000 hab.)",
+  "para_quien": "Gran empresa, pymes y personas físicas; mantener un establecimiento comercial en municipios de CM con menos de 1.000 habitantes.",
+  "motivo": "Plazo vigente según BDNS (textFin 31.12.2026) y abierto=true; solicitable por pymes que cumplan el ámbito municipal.",
+  "revisor": "haiku",
+  "nota": "Abierta según la BDNS; consulta el plazo en las bases (BOCM de 07-03-2025).",
+  "max_habitantes": 1000
+ },
+ {
+  "num": "886788",
+  "solicitable": "dudoso",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "Ayudas para la mejora de áreas industriales de la Comunidad de Madrid",
+  "para_quien": "Gran empresa, pymes y entidades sin actividad económica; mejora de áreas industriales (infraestructuras).",
+  "motivo": "No encaja: finalidad de infraestructuras industriales y sectores de industria, agricultura y ocio; no consta quién solicita.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "886784",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "digitalizar"
+  ],
+  "titulo": "Ayudas para proyectos de digitalización de la pyme madrileña",
+  "para_quien": "Pymes y personas físicas con actividad económica; ayudas a proyectos de digitalización cofinanciadas por FEDER.",
+  "motivo": "Las pymes presentan proyectos de digitalización; plazo 1-1-2026 a 31-12-2026 y abierto=true.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "881649",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "no",
+  "perfiles": [],
+  "titulo": "Ayudas del CDTI a la inversión de empresas innovadoras",
+  "para_quien": "Gran empresa y pymes; préstamo para inversión en Galicia, Asturias, Cantabria, País Vasco y Navarra (no incluye Madrid).",
+  "motivo": "Solicitable por empresas de esas regiones; no encaja porque su ámbito no incluye la Comunidad de Madrid.",
+  "revisor": "haiku",
+  "nota": ""
+ },
+ {
+  "num": "878306",
+  "solicitable": "si",
+  "abierta": "si",
+  "encaja_oficina": "si",
+  "perfiles": [
+   "contratar"
+  ],
+  "titulo": "Ayuda por compromiso de contratación de personas desempleadas (empresas)",
+  "para_quien": "Empresas (línea 1), pymes y personas físicas con actividad económica; compromiso de contratación con presupuesto de 4,2 M€.",
+  "motivo": "Conflicto: fecha fin 2026-11-30 pero abierto=false y el inicio depende de una orden no citada en el fichero.",
+  "revisor": "revisión manual",
+  "nota": "Plazo hasta el 30-11-2026 según la BDNS; confirma el inicio en las bases."
+ }
+]

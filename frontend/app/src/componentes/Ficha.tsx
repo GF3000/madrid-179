@@ -2,11 +2,12 @@
 // Arriba, foto y resumen de Wikipedia (con sus créditos) y, si hay asistente, lo mejor y lo peor redactado por el
 // LLM a partir de los mismos hechos que enseña la ficha.
 import { useEffect, useState } from "react";
-import { api, type AyudasFicha, type Explicacion, type Ficha as TFicha, type Meta, type Negocio, type Peticion, type Wikipedia } from "../api";
+import { api, type AyudasFicha, type Convocatoria, type Explicacion, type Ficha as TFicha, type Meta, type Negocio, type Peticion, type Wikipedia } from "../api";
 import {
   factores, MOTIVOS, NODOS, nivel, palabraUtilidad, PALABRA_FUERZA, resumenFactores, type Factor, type Situacion,
 } from "../modelo";
 import { useEsTactil } from "../movil";
+import { ConvocatoriasGenerales, ListaConvocatorias } from "./Convocatorias";
 import { Ayuda, Cerrar, Columna, Escalones, MarcasFuerza, Reparto, Seccion, useAyuda } from "./piezas";
 
 interface Props {
@@ -17,12 +18,13 @@ interface Props {
   pesos: Record<string, number>;
   peticion: Peticion;
   negocio: Negocio | null;
+  perfilesAyudas: string[]; // del asistente: filtra las convocatorias generales
   onCerrar: () => void;
 }
 
 const num = (x: number) => x.toLocaleString("es-ES", { maximumFractionDigits: 0 });
 
-export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticion, negocio, onCerrar }: Props) {
+export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticion, negocio, perfilesAyudas, onCerrar }: Props) {
   if (!ficha) {
     return (
       <aside className="ficha cargando" aria-busy>
@@ -106,7 +108,7 @@ export default function Ficha({ ficha, cargando, situacion, meta, pesos, peticio
         </>
       )}
 
-      {ficha.ayudas && <Ayudas a={ficha.ayudas} meta={meta} />}
+      {ficha.ayudas && <Ayudas a={ficha.ayudas} meta={meta} convocatorias={ficha.convocatorias ?? []} perfiles={perfilesAyudas} />}
 
       <Seccion titulo="Su perfil" nota="Cada rasgo, comparado con los 179 municipios: un tercio está en cada nivel.">
         <dl className="perfil">
@@ -254,7 +256,7 @@ function Preferencias({ ficha, pesos, meta, peticion }: {
 }
 
 /** Ayudas oficiales al alcance de la empresa o de su plantilla. Contexto: solo puntúan si el usuario lo pide. */
-function Ayudas({ a, meta }: { a: AyudasFicha; meta: Meta }) {
+function Ayudas({ a, meta, convocatorias, perfiles }: { a: AyudasFicha; meta: Meta; convocatorias: Convocatoria[]; perfiles: string[] }) {
   const pref = meta.catalogo.find((c) => c.clave === "ayudas")?.nombre ?? "Poder optar a ayudas";
   return (
     <Seccion titulo="Ayudas que pueden interesarte">
@@ -276,21 +278,30 @@ function Ayudas({ a, meta }: { a: AyudasFicha; meta: Meta }) {
             para municipios de menos de 2.500 habitantes (Ley 5/2024).
           </p>
         )}
-        {!a.leader && !a.irpf_menos_2500 && (
-          <p>
-            No está en ningún grupo LEADER ni por debajo de 2.500 habitantes. Puede haber otras convocatorias estatales
-            o regionales que no recogemos aquí.
-          </p>
+        {convocatorias.length > 0 && (
+          <>
+            <p>Y, por tener menos de {miles(convocatorias[0].max_habitantes ?? 0)} habitantes, ayudas de la Comunidad
+              abiertas ahora para el comercio:</p>
+            <ListaConvocatorias lista={convocatorias} />
+          </>
         )}
+        {!a.leader && !a.irpf_menos_2500 && (
+          <p>No está en ningún grupo LEADER ni por debajo de 2.500 habitantes: no tiene ayudas propias por su ubicación.</p>
+        )}
+        <ConvocatoriasGenerales perfiles={perfiles} />
         <small>
-          Lista verificada en el BOCM (habitantes según el padrón de {a.anio_padron}); no incluye convocatorias
-          puntuales. No forman parte de la puntuación del modelo: solo cuentan en el orden si das importancia
+          Lista verificada en el BOCM (habitantes según el padrón de {a.anio_padron})
+          {convocatorias.length > 0 ? `; convocatorias según la BDNS a ${convocatorias[0].fecha_consulta}, comprueba el plazo en las bases` : ""}.
+          No forman parte de la puntuación del modelo: solo cuentan en el orden si das importancia
           a «{pref}».
         </small>
       </div>
     </Seccion>
   );
 }
+
+// «1.000» con punto, como en los títulos oficiales (toLocaleString no agrupa los números de cuatro cifras en español)
+const miles = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
 function LecturaCausal({ ficha, meta }: { ficha: TFicha; meta: Meta }) {
   const estados = meta.nodos[meta.objetivo].estados;
