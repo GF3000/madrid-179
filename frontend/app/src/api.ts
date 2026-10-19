@@ -96,6 +96,7 @@ export interface Interpretacion {
   sector: string | null;
   preferencias: Record<string, PreferenciaUsuario & { motivo: string }>;
   filtros: Partial<Filtros>;
+  perfiles_ayudas?: string[]; // tipos de ayuda que encajan con el negocio (contratar, innovar…)
   dudas: string[];
   avisos: string[];
 }
@@ -127,6 +128,29 @@ export interface Ficha {
   preferencias: Record<string, { dato: string; utilidad: Record<string, number> }>;
   wikipedia: Wikipedia | null;
   ayudas: AyudasFicha | null; // null si el servidor no tiene ayudas_oficiales.csv
+  convocatorias?: Convocatoria[]; // abiertas y restringidas a municipios de su tamaño (BDNS)
+}
+
+/** Convocatoria abierta para pymes y autónomos según la BDNS, revisada una a una. No puntúa. */
+export interface Convocatoria {
+  num: string;
+  nivel: string; // «Estado» o «Comunidad de Madrid»
+  organo: string;
+  titulo: string;
+  para_quien: string;
+  perfiles: string[];
+  fin_solicitud: string | null;
+  nota: string | null;
+  url: string;
+  max_habitantes: number | null;
+  fecha_consulta: string;
+}
+
+export interface Convocatorias {
+  fecha_consulta: string | null;
+  aviso: string;
+  perfiles: Record<string, string>;
+  convocatorias: Convocatoria[];
 }
 
 /** Ayudas oficiales que alcanzan a una empresa o a su gente (sin el PIR, que financia obras municipales). */
@@ -244,4 +268,5 @@ export const api = {
   ejemplo: () => pedir<{ texto: string; sector: string | null }>("/ejemplo", {}),
   consulta: (evidencia: Record<string, string>) => pedir<Consulta>("/consulta", { evidencia }),
   diagnostico: () => pedir<Diagnostico>("/diagnostico"),
+  convocatorias: () => pedir<Convocatorias>("/convocatorias"),
 };

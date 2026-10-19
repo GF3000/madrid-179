@@ -11,6 +11,7 @@ import pandas as pd
 from pgmpy.inference import VariableElimination
 
 from . import asistente
+from . import convocatorias as conv
 from . import diagnostico as diag
 from .config import (AVISO_SENAL, ETIQUETAS, EVIDENCIAS, FILTROS, FUERZA, LECTURAS, NODOS, OBJETIVO, PADRES_OBJETIVO,
                      PARA_QUIEN_SE_INSTALA, RAIZ, SENAL_DUDOSA)
@@ -41,6 +42,7 @@ class Servicio:
     def __init__(self, art):
         self.art = art
         self.ayudas = self._leer_ayudas()
+        self.convocatorias = conv.leer()  # BDNS, fuera del modelo (#13)
         # las ayudas oficiales no están en el artefacto: se unen antes del ranking (preferencia y filtro «ayudas»)
         self.tabla = unir_ayudas(art["tabla"], self.ayudas)
         self.inferencia = VariableElimination(art["red"])
@@ -160,7 +162,12 @@ class Servicio:
             "preferencias": self._preferencias(ine5),
             "wikipedia": self.wikipedia.get(ine5),
             "ayudas": self._ayudas_empresa(ine5),
+            "convocatorias": conv.del_municipio(self.convocatorias, int(r.poblacion)),
         }
+
+    def convocatorias_abiertas(self):
+        """Convocatorias abiertas para pymes y autónomos que valen para cualquier municipio (None si falta la tabla)."""
+        return conv.generales(self.convocatorias)
 
     def _ayudas_empresa(self, ine5):
         """Ayudas oficiales que alcanzan a una empresa o a su gente (sin el PIR, que financia obras municipales)."""

@@ -45,10 +45,10 @@ PUBLICAS = [
      "Detalle por distrito y barrio de la capital; censo de locales y actividades; equipamientos",
      "Parcial"),
     ("Ayudas e incentivos",
-     "BOCM (convenios LEADER 2023-2027 con los tres grupos de acción local), Ley 5/2024 de deducciones del IRPF; "
-     "Base de Datos Nacional de Subvenciones y ordenanzas fiscales, previstas",
-     "Municipios que optan a cada programa: información en la ficha y en el diagnóstico, preferencia y filtro del usuario. "
-     "<b>No entran en el modelo</b>. Las convocatorias por perfil de negocio (BDNS) y los tipos de IBI e IAE, pendientes",
+     "BOCM (convenios LEADER 2023-2027 con los tres grupos de acción local), Ley 5/2024 de deducciones del IRPF, "
+     "Base de Datos Nacional de Subvenciones (convocatorias abiertas para pymes y autónomos); ordenanzas fiscales, previstas",
+     "Municipios que optan a cada programa y convocatorias abiertas según el perfil del negocio: ficha, diagnóstico, "
+     "preferencia y filtro del usuario. <b>No entran en el modelo</b>. Los tipos de IBI e IAE, pendientes",
      "Parcial"),
     ("Inmobiliario y suelo",
      "Dirección General del Catastro (servicios INSPIRE y estadísticas), Portal del Suelo de la CAM, Ministerio de Vivienda",

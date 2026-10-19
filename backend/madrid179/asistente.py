@@ -21,6 +21,7 @@ import httpx
 
 from . import limites
 from .config import clave_api
+from .convocatorias import PERFILES as PERFILES_AYUDAS
 from .preferencias import CATALOGO, POR_CLAVE
 
 log = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ def instrucciones():
         + (f' Sentido obligatorio: {" o ".join(repr(v) for v, _ in p.sentidos)}.' if p.sentidos else "")
         for p in CATALOGO)
     filtros = "\n".join(f'- "{k}" ({t.__name__}): {d}' for k, (t, _, _, d) in FILTROS_LLM.items())
+    perfiles = ", ".join(f'"{k}" ({v.lower()})' for k, v in PERFILES_AYUDAS.items())
     return f"""Eres el asistente de Madrid 179, una herramienta que recomienda en qué municipios de la Comunidad de
 Madrid abrir o trasladar una oficina. Tu única tarea es traducir la descripción que hace el usuario de su negocio
 en preferencias y requisitos que la herramienta entiende. No recomiendes municipios ni des cifras.
@@ -80,12 +82,18 @@ obligatorios o da una cifra concreta; nunca te inventes números:
 Si algo relevante no queda claro (por ejemplo, si necesita tren o si prefiere ciudad o pueblo), no lo
 supongas: añade una pregunta corta en "dudas" (como mucho 3).
 
+Tipos de ayuda pública que le pueden interesar ("perfiles_ayudas"): elige de esta lista solo los que se deducen
+de lo que cuenta (por ejemplo, "contratar" si va a crecer en plantilla, "innovar" si hace I+D o tecnología propia,
+"exportar" si vende fuera, "autonomos" si es un autónomo o va a darse de alta); lista vacía si no hay pistas:
+{perfiles}
+
 Responde solo con un objeto JSON, en español, con esta forma:
 {{"resumen": "una o dos frases en segunda persona sobre lo que has entendido",
   "sector": "actividad del negocio en pocas palabras o null",
   "preferencias": {{"<clave>": {{"importancia": "Poco importante|Muy importante", "sentido": "<valor o null>",
                     "motivo": "por qué, en pocas palabras"}}}},
   "filtros": {{"<nombre>": <valor>}},
+  "perfiles_ayudas": ["<perfil>"],
   "dudas": ["pregunta corta"]}}"""
 
 
@@ -156,9 +164,15 @@ def sanear(bruto):
         filtros.pop("poblacion_min"), filtros.pop("poblacion_max")
 
     dudas = [str(d)[:200] for d in (bruto.get("dudas") or []) if isinstance(d, str) and d.strip()][:3]
+    perfiles = []
+    for p in bruto.get("perfiles_ayudas") or []:
+        if p not in PERFILES_AYUDAS:
+            avisos.append(f"Perfil de ayudas desconocido descartado: {p}")
+        elif p not in perfiles:
+            perfiles.append(p)
     sector = bruto.get("sector")
     return {"resumen": str(bruto.get("resumen") or "")[:600], "sector": str(sector)[:80] if sector else None,
-            "preferencias": prefs, "filtros": filtros, "dudas": dudas}, avisos
+            "preferencias": prefs, "filtros": filtros, "perfiles_ayudas": perfiles, "dudas": dudas}, avisos
 
 
 def interpretar(texto, cliente=None):

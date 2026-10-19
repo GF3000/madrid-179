@@ -19,7 +19,7 @@ from madrid179.config import ARTEFACTO, RAIZ
 from madrid179.servicio import ErrorEvidencia, Servicio
 
 from .esquemas import (Ficha, Meta, Municipio, PeticionConsulta, PeticionExplicacion, PeticionInterpretar,
-                       PeticionRanking, RespuestaConsulta, RespuestaDiagnostico, RespuestaEjemplo,
+                       PeticionRanking, RespuestaConsulta, RespuestaConvocatorias, RespuestaDiagnostico, RespuestaEjemplo,
                        RespuestaExplicacion, RespuestaInterpretar, RespuestaRanking)
 
 PROTOTIPO = RAIZ / "frontend" / "prototipo"
@@ -119,6 +119,16 @@ def diagnostico(request: Request):
     """Diagnóstico territorial (Administración, «Dónde actuar»): necesidad de reequilibrio, viabilidad según el
     GA²M y frenos (palanca o estructural) de los 178 municipios sin la capital. Describe; no simula políticas."""
     return servicio(request).diagnostico()
+
+
+@v1.get("/convocatorias", response_model=RespuestaConvocatorias)
+def convocatorias(request: Request):
+    """Convocatorias abiertas para pymes y autónomos (estatales y de la Comunidad, BDNS) que valen para cualquier
+    municipio, con su perfil (contratar, innovar…) y la fecha de consulta. Contexto: no puntúan."""
+    r = servicio(request).convocatorias_abiertas()
+    if r is None:
+        raise HTTPException(404, "Falta convocatorias_abiertas.csv: ejecuta backend/pipeline/convocatorias_bdns.py")
+    return r
 
 
 @v1.post("/interpretar", response_model=RespuestaInterpretar)

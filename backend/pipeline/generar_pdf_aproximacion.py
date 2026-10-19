@@ -146,6 +146,7 @@ PREGUNTAS = [
     ("¿Dónde me conviene abrir una oficina?", "«Dónde abrir»: ranking del GA²M ajustado por las preferencias y filtros del usuario", "Disponible"),
     ("¿Qué favorece y qué frena a un municipio?", "Ficha: aportación de cada factor (GA²M), lectura de la red bayesiana y ayudas que le alcanzan", "Disponible"),
     ("¿Qué municipios necesitan actividad y cuáles pueden atraerla?", "«Dónde actuar»: necesidad de reequilibrio frente a viabilidad, en cuatro grupos, con frenos y contexto", "Disponible"),
+    ("¿Qué ayudas abiertas tengo para mi negocio?", "Convocatorias de la BDNS para pymes y autónomos, filtradas por lo que cuenta el usuario", "Disponible"),
     ("¿Qué municipios encajan con un perfil?", "«Explorar perfiles»: consulta a la red con información parcial", "Disponible"),
     ("¿Cuánto reequilibrio produce una recomendación?", "Peso de municipios pequeños y en LEADER en el top del ranking, con y sin preferencias", "Disponible"),
     ("¿Qué pasaría si se bonifica el alquiler o se crea un vivero?", "Simulador: intervención do() sobre la palanca del modelo, con intervalo de incertidumbre", "En desarrollo"),
@@ -259,7 +260,8 @@ story += [
     *B([
         "<b>Asistente:</b> el usuario describe su negocio en texto libre. Un LLM solo lo <i>traduce</i> a preferencias y filtros del "
         "catálogo (JSON saneado contra el catálogo); la aplicación muestra lo que ha entendido y permite deshacerlo. También se "
-        "puede ajustar cada preferencia a mano (me da igual, poco o muy importante, imprescindible).",
+        "puede ajustar cada preferencia a mano (me da igual, poco o muy importante, imprescindible). Además deduce qué tipo de "
+        "ayudas le encajan (contratar, innovar, exportar…) y enseña las <b>convocatorias abiertas</b> de la BDNS para ese perfil.",
         "<b>Mapa 3D:</b> cada municipio es una columna con la altura y el color de su grupo (cinco quintiles, «no cumple tus "
         "requisitos» y «fuera del análisis»). Al cambiar una preferencia, las columnas se recolocan y un panel explica qué ha "
         "cambiado. Un recorrido guiado vuela por los mejores municipios.",
@@ -328,9 +330,10 @@ story += [
         "<b>Necesidad de reequilibrio.</b> Su definición es provisional: hoy correlaciona mucho con el tamaño (ρ = −0,66 con la "
         "población), así que los grupos de necesidad alta se llenan de pueblos muy pequeños. Sus variables y pesos deben validarse "
         "con técnicos de la Comunidad.",
-        "<b>Ayudas.</b> Integradas las listas oficiales de LEADER y las reglas para menos de 2.500 habitantes. Faltan Pueblos con "
-        "Vida, las ayudas estatales al reto demográfico y las convocatorias vigentes por perfil de negocio (Base de Datos Nacional "
-        "de Subvenciones, ya descargada pero sin integrar).",
+        "<b>Ayudas.</b> Integradas las listas oficiales de LEADER, las reglas para menos de 2.500 habitantes y 23 convocatorias "
+        "abiertas para pymes y autónomos de la BDNS (a 19-10-2026, revisadas una a una; caducan y hay que refrescarlas). Faltan Pueblos con "
+        "Vida, las ayudas estatales al reto demográfico y las convocatorias municipales (en la BDNS casi solo publica el "
+        "Ayuntamiento de Madrid).",
         "<b>Coste de oficinas.</b> El coste inmobiliario es un indicador residencial. Las rentas de oficinas, de acceso privado, la "
         "superficie de oficinas del Catastro y la cobertura de fibra y 5G mejorarían el modelo.",
         "<b>Validación con técnicos de la Comunidad de Madrid</b> del grafo, los umbrales, los textos de la ficha y los pesos de las "

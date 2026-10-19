@@ -19,6 +19,8 @@ normalizar_municipios.py                                            → data/pro
 osm_a_secciones.py, gtfs_paradas_por_municipio.py                   → conteos por municipio
 construir_dataset_bn.py                                             → data/processed/dataset_bn_municipios.csv
 red_bayesiana_viabilidad.py                                         → umbrales, CPT, GA²M, ranking
+ayudas_oficiales.py                                                 → ayudas_oficiales.csv (LEADER, < 2.500 hab.)
+convocatorias_bdns.py descargar | candidatas | fusionar             → convocatorias_abiertas.csv (BDNS, revisadas; caducan)
 ```
 
 ## Convenciones

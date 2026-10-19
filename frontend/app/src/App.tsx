@@ -122,24 +122,27 @@ export default function App() {
   }, [peticion, situaciones, datos]);
 
   // Lo que entiende el asistente se aplica al momento y sustituye a lo marcado a mano; se puede deshacer
-  const antesDelAsistente = useRef<{ peticion: Peticion; negocio: Negocio | null } | null>(null);
+  const antesDelAsistente = useRef<{ peticion: Peticion; negocio: Negocio | null; perfilesAyudas: string[] } | null>(null);
   const [negocio, setNegocio] = useState<Negocio | null>(null); // lo que contó de su negocio: adapta las explicaciones
+  const [perfilesAyudas, setPerfilesAyudas] = useState<string[]>([]); // tipos de ayuda que le encajan (convocatorias)
   const aplicarAsistente = useCallback((i: Interpretacion) => {
-    antesDelAsistente.current = { peticion, negocio };
+    antesDelAsistente.current = { peticion, negocio, perfilesAyudas };
     if (esMovil()) { // fuera el teclado y la hoja a media altura: que se vean el mapa, las estrellas y el recorrido
       (document.activeElement as HTMLElement | null)?.blur();
       setHoja(1);
     }
     setNegocio(i.sector || i.resumen ? { sector: i.sector, resumen: i.resumen } : null);
+    setPerfilesAyudas(i.perfiles_ayudas ?? []);
     desdeAsistente.current = true;
     const preferencias = Object.fromEntries(Object.entries(i.preferencias)
       .map(([k, v]) => [k, { importancia: v.importancia, sentido: v.sentido }]));
     cambiarPeticion({ preferencias, filtros: { ...FILTROS_VACIOS, ...i.filtros } },
       "Hemos aplicado lo que describiste: el mapa combina ahora las condiciones de cada municipio con tus preferencias.");
-  }, [cambiarPeticion, peticion, negocio]);
+  }, [cambiarPeticion, peticion, negocio, perfilesAyudas]);
   const deshacerAsistente = useCallback(() => {
     if (!antesDelAsistente.current) return;
     setNegocio(antesDelAsistente.current.negocio);
+    setPerfilesAyudas(antesDelAsistente.current.perfilesAyudas);
     cambiarPeticion(antesDelAsistente.current.peticion, "Has deshecho lo que aplicó el asistente: vuelves a lo que tenías marcado.");
     antesDelAsistente.current = null;
   }, [cambiarPeticion]);
@@ -336,7 +339,7 @@ export default function App() {
   const fichaEl = seleccionado && (
     <Ficha ficha={ficha?.ine5 === seleccionado ? ficha : null} cargando={false}
       situacion={situaciones.get(seleccionado)} meta={datos.meta} pesos={ranking.pesos} peticion={peticion}
-      negocio={negocio} onCerrar={() => setSeleccionado(null)} />);
+      negocio={negocio} perfilesAyudas={perfilesAyudas} onCerrar={() => setSeleccionado(null)} />);
   // En móvil, cambiar de modo con la hoja plegada la abre para ver el contenido
   const elegirModoMovil = (m: Modo) => {
     if (m !== pestana) cambiarModo(m);

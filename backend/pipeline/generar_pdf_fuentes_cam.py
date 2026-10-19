@@ -119,7 +119,7 @@ OTRAS = [
      "Renta y formación por sección censal; empresas por actividad y tamaño", "Parcial"),
     ("Dirección General del Catastro", "Edificios y parcelas INSPIRE de los 179 municipios", "Superficie y uso de los edificios; base del 3D", "Descargada"),
     ("Tesorería General de la Seguridad Social y SEPE", "Afiliación y paro por municipio (también vía el Instituto de Estadística)", "Empleo", "Integrada"),
-    ("Base de Datos Nacional de Subvenciones (IGAE)", "Convocatorias y concesiones con ámbito Madrid (API abierta)", "Convocatorias por perfil de negocio (pendiente; no entra en el modelo)", "Descargada"),
+    ("Base de Datos Nacional de Subvenciones (IGAE)", "Convocatorias y concesiones con ámbito Madrid (API abierta)", "Convocatorias abiertas para pymes y autónomos según el perfil del negocio (no entran en el modelo)", "Integrada"),
     ("Ministerio para la Transformación Digital", "Cobertura de fibra FTTH y 5G por municipio", "Conectividad (filtro opcional)", "Prevista"),
     ("Ayuntamiento de Madrid", "Portal de datos abiertos (674 conjuntos): distritos, barrios, locales y actividades", "Detalle intramunicipal de la capital", "Parcial"),
     ("CNIG / IGN", "Límites, modelos digitales del terreno, usos del suelo", "Relieve y usos del suelo para el mapa 3D", "Prevista"),
