@@ -170,15 +170,6 @@ export default function PanelActuar(p: Props) {
         {elegido && d && <DiagnosticoMunicipio m={elegido} d={d} onPerfil={p.onPerfil} onFicha={p.onFicha} />}
       </div>
 
-      <div className="bloque en-desarrollo" aria-disabled>
-        <h3><span className="paso-n">4</span>Escenario <span className="etiqueta-desarrollo">En desarrollo</span></h3>
-        <p className="nota">
-          El simulador de políticas llegará cuando el modelo tenga intervalos de incertidumbre y probabilidades que se
-          muevan siempre en el sentido esperado. Hasta entonces no mostramos efectos: un efecto sin su incertidumbre
-          prometería más de lo que los datos permiten.
-        </p>
-      </div>
-
       {d && (
         <div className="pie-actuar">
           <p className="nota">{d.aviso}</p>

@@ -861,12 +861,6 @@ b, strong { font-weight: 650; }
 .contexto-politica small { color: var(--tinta-3); font-size: 11.5px; line-height: 1.4; }
 .diagnostico-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 2px; }
 
-.en-desarrollo { opacity: 0.75; }
-.en-desarrollo .paso-n { background: var(--tinta-3); }
-.etiqueta-desarrollo {
-  margin-left: 8px; padding: 2px 7px; border-radius: 999px; border: 1px dashed var(--tinta-3);
-  font-size: 10px; letter-spacing: 0.04em; color: var(--tinta-2);
-}
 .pie-actuar { padding-top: 10px; }
 .pie-actuar .nota { font-size: 11.5px; }
 .pie-actuar b { color: var(--tinta-2); }
