@@ -1,0 +1,9 @@
+{
+  "name": "madrid179-presentacion",
+  "private": true,
+  "description": "Genera docs/presentaciones/4_Presentacion_final.pptx con la identidad de la app (node presentacion_final.js)",
+  "type": "commonjs",
+  "dependencies": {
+    "pptxgenjs": "3.12.0"
+  }
+}

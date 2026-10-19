@@ -37,3 +37,6 @@ data/processed/modelo.joblib
 *.egg-info/
 .pytest_cache/
 .dot
+# Presentación final: lleva el vídeo con «Madrid» (Agustín Lara), protegida por derechos de autor; solo para la sala
+docs/presentaciones/4_Presentacion_final.pptx
+docs/presentaciones/4_Presentacion_final.pdf
