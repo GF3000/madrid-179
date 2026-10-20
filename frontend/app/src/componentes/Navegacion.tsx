@@ -9,7 +9,7 @@ export type Dialogo = "como" | "video" | "acerca";
 
 // Vídeo de presentación: dejar vacío mientras no exista (se ocultan el botón y la sección). URL de inserción,
 // p. ej. "https://www.youtube-nocookie.com/embed/<id>"
-export const VIDEO = "";
+export const VIDEO = "https://www.youtube-nocookie.com/embed/KIdwPDTpWN4?rel=0"; // youtu.be/KIdwPDTpWN4
 
 const MODOS: { id: Modo; texto: string; icono: () => ReactNode }[] = [
   { id: "decidir", texto: "Dónde abrir", icono: () => <IconoColumnas /> },
